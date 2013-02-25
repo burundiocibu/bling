@@ -12,6 +12,7 @@
 
 namespace nRF24L01
 {
+   //===============================================================================================
    // This part of the namespace is the hardware-dependant part of the interface
 #define nRF24L01_IO_DEBUG1(str) RunTime::puts(); printf("  %s %.2x\n", str, data)
 #define nRF24L01_IO_DEBUG2(str) RunTime::puts(); printf("  %s ",str); dump(data, len)
@@ -72,6 +73,7 @@ namespace nRF24L01
 
    //===============================================================================================
    //Code below should be low-level hardware independant
+
    void write_reg(char reg, char data)
    {
       char buff[2] = {(char)(W_REGISTER | reg), data};
@@ -101,49 +103,15 @@ namespace nRF24L01
       write_data(buff, len+1);
    };
 
-   void power_up_prx()
-   {
-      char config = read_reg(CONFIG);
-      if ((config & CONFIG_PWR_UP) != 0)
-         return;
-      nRF24L01_IO_DEBUG3("powering up");
-      config |= CONFIG_PWR_UP;
-      write_reg(CONFIG, config);
-      delay_us(1500);
-   }
 
-   void power_up_PTX()
+   void configure_base()
    {
-      char config = read_reg(CONFIG);
-      nRF24L01_IO_DEBUG3("powering up");
-      config |= CONFIG_PWR_UP;
-      write_reg(CONFIG, config);
-   };
-
-   void pulse_CE()
-   {
-      nRF24L01_IO_DEBUG3("CE high");
-      set_ce();
-      delay_us(10);
-      nRF24L01_IO_DEBUG3("CE low");
-      clear_ce();
-   }
-
-
-   // Setup device as the primary transmitter
-   void configure_PTX(void)
-   {
-      nRF24L01_IO_DEBUG3("config PTX");
       write_reg(CONFIG, CONFIG_EN_CRC | CONFIG_MASK_TX_DS | CONFIG_MASK_MAX_RT);
       write_reg(SETUP_RETR, SETUP_RETR_ARC_0); // auto retransmit off
       write_reg(SETUP_AW, SETUP_AW_3BYTES);  // 3 byte addresses
       write_reg(RF_SETUP, 0x07);  // 1Mbps data rate, 0dBm
       write_reg(RF_CH, 0x02); // use channel 2
 
-      // Note the TX_ADDR must be equal the RX_ADDR_P0 in the PTX
-      char tx_addr[]={0xE1, 0xE3, 0xE5};
-      write_reg(TX_ADDR, tx_addr, sizeof(tx_addr)); // tx address
-      write_reg(RX_ADDR_P0, tx_addr, sizeof(tx_addr)); // rx address
       // Clear the various interrupt bits
       write_reg(STATUS, STATUS_TX_DS|STATUS_RX_DR|STATUS_MAX_RT);
       write_reg(STATUS, STATUS_TX_DS);
@@ -152,6 +120,57 @@ namespace nRF24L01
       write_reg(EN_AA, 0x00); //disable auto-ack, RX mode
    }
 
+   // Setup device as primary receiver
+   void configure_PRX(void)
+   {
+      nRF24L01_IO_DEBUG3("config PRX");
+      configure_base();
+
+      char buff[addr_len];
+      memcpy(buff, prx_addr, addr_len);
+      write_reg(TX_ADDR, buff, addr_len);
+
+      memcpy(buff, prx_addr, addr_len);
+      write_reg(RX_ADDR_P0, buff, addr_len);
+   }
+
+   void power_up_PRX()
+   {
+      write_data(FLUSH_RX);
+      char config = read_reg(CONFIG);
+      if ((config & CONFIG_PWR_UP) != 0)
+         return;
+      nRF24L01_IO_DEBUG3("powering up");
+      config |= CONFIG_PWR_UP;
+      write_reg(CONFIG, config);
+      delay_us(1500);
+      set_ce();
+   }
+
+
+   // Setup device as the primary transmitter
+   void configure_PTX(void)
+   {
+      nRF24L01_IO_DEBUG3("config PTX");
+      configure_base();
+
+      // Note the TX_ADDR must be equal the RX_ADDR_P0 in the PTX
+      char buff[addr_len];
+      memcpy(buff, ptx_addr, addr_len);
+      write_reg(TX_ADDR, buff, addr_len);
+
+      memcpy(buff, ptx_addr, addr_len);
+      write_reg(RX_ADDR_P0, buff, addr_len);
+   }
+
+   void power_up_PTX()
+   {
+      write_data(FLUSH_TX);
+      char config = read_reg(CONFIG);
+      nRF24L01_IO_DEBUG3("powering up");
+      config |= CONFIG_PWR_UP;
+      write_reg(CONFIG, config);
+   };
 
    void write_tx_payload(void* data, unsigned int len)
    {
@@ -159,6 +178,24 @@ namespace nRF24L01
       buff[0]=W_TX_PAYLOAD;
       memcpy(buff+1, data, len);
       write_data(buff, len+1);
+   }
+
+   void read_rx_payload(void* data, unsigned int len)
+   {
+      char buff[len+1];
+      buff[0]=R_RX_PAYLOAD;
+      clear_ce();
+      write_data(buff, len+1);
+      set_ce();
+   }
+
+   void pulse_CE()
+   {
+      nRF24L01_IO_DEBUG3("CE high");
+      set_ce();
+      delay_us(10);
+      nRF24L01_IO_DEBUG3("CE low");
+      clear_ce();
    }
 
 } // end of namespace nRF24L01

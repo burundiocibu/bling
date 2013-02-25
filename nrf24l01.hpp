@@ -256,15 +256,29 @@ namespace nRF24L01
 
    //===============================================================================================
    //Code below should be low-level hardware independant
+
+   static const size_t addr_len=3;
+   static const char ptx_addr[addr_len]={0xE1, 0xE3, 0xE5};
+   static const char prx_addr[addr_len]{0xB1, 0xB3, 0xB5};
+//   char ptx_addr[]={0xE1, 0xE3, 0xE5};
+//   char prx_addr[]={0xB1, 0xB3, 0xB5};
+
    void write_reg(char reg, char data);
    char read_reg(char reg);
    void write_reg(char reg, char* data, size_t len);
    void read_reg(char reg, char* data, size_t len);
-   void power_up_prx();
+
+   void configure_base();
+
+   void configure_PRX();
+   void power_up_PRX();
+
+   void configure_PTX();
    void power_up_PTX();
-   void pulse_CE();
-   void configure_PTX(void);
+
    void write_tx_payload(void* data, unsigned int len);
+   void read_rx_payload(void* data, unsigned int len);
+   void pulse_CE();
 
 }
 

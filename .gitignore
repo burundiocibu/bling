@@ -1,3 +1,5 @@
 *.o
-tx-test
 spi-time
+spidev_test
+tx-test
+rx-test
