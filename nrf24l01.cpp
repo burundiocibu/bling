@@ -114,7 +114,6 @@ namespace nRF24L01
 
       // Clear the various interrupt bits
       write_reg(STATUS, STATUS_TX_DS|STATUS_RX_DR|STATUS_MAX_RT);
-      write_reg(STATUS, STATUS_TX_DS);
 
       //shouldn't have to do this, but it won't TX if you don't
       write_reg(EN_AA, 0x00); //disable auto-ack, RX mode
@@ -126,25 +125,39 @@ namespace nRF24L01
       nRF24L01_IO_DEBUG3("config PRX");
       configure_base();
 
+      char config = read_reg(CONFIG);
+      config |= CONFIG_PRIM_RX;
+      write_reg(CONFIG, config);
+
       char buff[addr_len];
-      memcpy(buff, prx_addr, addr_len);
+      memcpy(buff, ptx_addr, addr_len);
       write_reg(TX_ADDR, buff, addr_len);
 
-      memcpy(buff, prx_addr, addr_len);
+      memcpy(buff, ptx_addr, addr_len);
       write_reg(RX_ADDR_P0, buff, addr_len);
+      // Enable just pipe 0
+      write_reg(EN_RXADDR, 0x01);
    }
 
    void power_up_PRX()
    {
       write_data(FLUSH_RX);
       char config = read_reg(CONFIG);
-      if ((config & CONFIG_PWR_UP) != 0)
-         return;
       nRF24L01_IO_DEBUG3("powering up");
       config |= CONFIG_PWR_UP;
       write_reg(CONFIG, config);
       delay_us(1500);
       set_ce();
+   }
+
+   void read_rx_payload(void* data, unsigned int len)
+   {
+      char buff[len+1];
+      buff[0]=R_RX_PAYLOAD;
+      clear_ce();
+      write_data(buff, len+1);
+      set_ce();
+      memcpy(data, buff+1, len);
    }
 
 
@@ -178,15 +191,6 @@ namespace nRF24L01
       buff[0]=W_TX_PAYLOAD;
       memcpy(buff+1, data, len);
       write_data(buff, len+1);
-   }
-
-   void read_rx_payload(void* data, unsigned int len)
-   {
-      char buff[len+1];
-      buff[0]=R_RX_PAYLOAD;
-      clear_ce();
-      write_data(buff, len+1);
-      set_ce();
    }
 
    void pulse_CE()

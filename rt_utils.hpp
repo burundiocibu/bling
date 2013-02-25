@@ -1,5 +1,5 @@
-#ifndef RT_UTILS_HPP
-#define RT_UTILS_HPP
+#ifndef _RT_UTILS_HPP
+#define _RT_UTILS_HPP
 
 #include <cstdint>
 #include <sys/time.h>
@@ -8,6 +8,9 @@ class RunTime
 {
 public:
    RunTime();
+
+   // Updates the off set to match the provided time.
+   static void step(uint32_t t_ms);
 
    // returns the time since start in seconds
    static float sec();

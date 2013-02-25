@@ -1,18 +1,13 @@
 // An interface to a nrf24l01 chip
-#ifndef NRF24L01_HPP
-#define NRF24L01_HPP
+#ifndef _NRF24L01_HPP
+#define _NRF24L01_HPP
 
 #include <stddef.h>
 
 namespace nRF24L01
 {
    ////////////////////////////////////////////////////////////////////////////////////
-   // SPI commands
-   //
-   // The following are defines for all of the commands and data masks on the SPI 
-   //   interface.
-   ////////////////////////////////////////////////////////////////////////////////////
-   //SPI command defines
+   // Commands (table 20)
    const char R_REGISTER = 0x00;
    const char W_REGISTER = 0x20;
    const char R_RX_PAYLOAD = 0x61;
@@ -27,10 +22,7 @@ namespace nRF24L01
    const char W_REGISTER_DATA = 0x1F;
 
    ////////////////////////////////////////////////////////////////////////////////////
-   // Register definitions
-   //
-   // Below are the defines for each register's address in the 24L01.
-   ////////////////////////////////////////////////////////////////////////////////////
+   // Register definitions (table 28)
    const char CONFIG = 0x00;
    const char EN_AA = 0x01;
    const char EN_RXADDR = 0x02;
@@ -57,54 +49,7 @@ namespace nRF24L01
    const char FIFO_STATUS = 0x17;
 
    ////////////////////////////////////////////////////////////////////////////////////
-   // Default register values
-   //
-   // Below are the defines for each register's default value in the 24L01. Multi-byte
-   //   registers use notation B<X>, where "B" represents "byte" and <X> is the byte
-   //   number.
-   ////////////////////////////////////////////////////////////////////////////////////
-   const char CONFIG_DEFAULT_VAL = 0x08;
-   const char EN_AA_DEFAULT_VAL = 0x3F;
-   const char EN_RXADDR_DEFAULT_VAL = 0x03;
-   const char SETUP_AW_DEFAULT_VAL = 0x03;
-   const char SETUP_RETR_DEFAULT_VAL = 0x03;
-   const char RF_CH_DEFAULT_VAL = 0x02;
-   const char RF_SETUP_DEFAULT_VAL = 0x0F;
-   const char STATUS_DEFAULT_VAL = 0x0E;
-   const char OBSERVE_TX_DEFAULT_VAL = 0x00;
-   const char CD_DEFAULT_VAL = 0x00;
-   const char RX_ADDR_P0_B0_DEFAULT_VAL = 0xE7;
-   const char RX_ADDR_P0_B1_DEFAULT_VAL = 0xE7;
-   const char RX_ADDR_P0_B2_DEFAULT_VAL = 0xE7;
-   const char RX_ADDR_P0_B3_DEFAULT_VAL = 0xE7;
-   const char RX_ADDR_P0_B4_DEFAULT_VAL = 0xE7;
-   const char RX_ADDR_P1_B0_DEFAULT_VAL = 0xC2;
-   const char RX_ADDR_P1_B1_DEFAULT_VAL = 0xC2;
-   const char RX_ADDR_P1_B2_DEFAULT_VAL = 0xC2;
-   const char RX_ADDR_P1_B3_DEFAULT_VAL = 0xC2;
-   const char RX_ADDR_P1_B4_DEFAULT_VAL = 0xC2;
-   const char RX_ADDR_P2_DEFAULT_VAL = 0xC3;
-   const char RX_ADDR_P3_DEFAULT_VAL = 0xC4;
-   const char RX_ADDR_P4_DEFAULT_VAL = 0xC5;
-   const char RX_ADDR_P5_DEFAULT_VAL = 0xC6;
-   const char TX_ADDR_B0_DEFAULT_VAL = 0xE7;
-   const char TX_ADDR_B1_DEFAULT_VAL = 0xE7;
-   const char TX_ADDR_B2_DEFAULT_VAL = 0xE7;
-   const char TX_ADDR_B3_DEFAULT_VAL = 0xE7;
-   const char TX_ADDR_B4_DEFAULT_VAL = 0xE7;
-   const char RX_PW_P0_DEFAULT_VAL = 0x00;
-   const char RX_PW_P1_DEFAULT_VAL = 0x00;
-   const char RX_PW_P2_DEFAULT_VAL = 0x00;
-   const char RX_PW_P3_DEFAULT_VAL = 0x00;
-   const char RX_PW_P4_DEFAULT_VAL = 0x00;
-   const char RX_PW_P5_DEFAULT_VAL = 0x00;
-   const char FIFO_STATUS_DEFAULT_VAL = 0x11;
-
-   ////////////////////////////////////////////////////////////////////////////////////
-   // Register bitwise definitions
-   //
-   // Below are the defines for each register's bitwise fields in the 24L01.
-   ////////////////////////////////////////////////////////////////////////////////////
+   // Register bitwise definitions (table 28)
    //CONFIG register bitwise definitions
    const char CONFIG_RESERVED = 0x80;
    const char CONFIG_MASK_RX_DR = 0x40;
@@ -256,12 +201,9 @@ namespace nRF24L01
 
    //===============================================================================================
    //Code below should be low-level hardware independant
-
    static const size_t addr_len=3;
    static const char ptx_addr[addr_len]={0xE1, 0xE3, 0xE5};
    static const char prx_addr[addr_len]{0xB1, 0xB3, 0xB5};
-//   char ptx_addr[]={0xE1, 0xE3, 0xE5};
-//   char prx_addr[]={0xB1, 0xB3, 0xB5};
 
    void write_reg(char reg, char data);
    char read_reg(char reg);

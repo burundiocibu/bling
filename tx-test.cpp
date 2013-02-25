@@ -1,34 +1,14 @@
 #include <cstdlib>
 #include <cstdio>
 
+#include <bcm2835.h>
+
 #include "rt_utils.hpp"
 #include "nrf24l01.hpp"
-
-
-#include <arpa/inet.h>
-
-struct HeartbeatMsg 
-{
-   HeartbeatMsg() 
-      : id(0x01), t_ms(0)
-   {}
-
-   void send(const uint32_t t)
-   {
-      id=0x01;
-      t_ms=htonl(t);
-      nRF24L01::write_tx_payload(this, sizeof(*this));
-      nRF24L01::pulse_CE();
-   }
-
-   uint8_t id;
-   uint32_t t_ms;
-} __attribute__((packed));
-
+#include "HeartbeatMsg.hpp"
 
 using namespace std;
 using namespace nRF24L01;
-
 
 int main(int argc, char **argv)
 {
@@ -38,11 +18,18 @@ int main(int argc, char **argv)
    power_up_PTX();
    write_data(FLUSH_TX);
 
-   HeartbeatMsg hb;
-   for (int i=0; i<5; i++)
+   const int LED=RPI_GPIO_P1_07;
+   bcm2835_gpio_fsel(LED, BCM2835_GPIO_FSEL_OUTP);
+
+   HeartbeatMsg heartbeat;
+   for (int i=0; ; i++)
    {
-      printf("\ni:%d\n", i);
-      hb.send(rt.msec());
+      heartbeat.encode(rt.msec());
+      write_tx_payload(&heartbeat, sizeof(heartbeat));
+      pulse_CE();
+      heartbeat.decode();
+
+      rt.puts(); printf(" #%d %ld\n", i, heartbeat.t_ms);
       for(int j=0; ((read_reg(STATUS) & STATUS_TX_DS)== 0x00) && j<100; j++)
          delay_us(10);
       write_reg(STATUS, STATUS_TX_DS); //Clear the data sent notice
@@ -50,7 +37,11 @@ int main(int argc, char **argv)
       // wait till next second
       struct timeval tv;
       rt.tv(tv);
+      delay_us(1000000 - tv.tv_usec - 250000);
+      bcm2835_gpio_write(LED, LOW);
+      rt.tv(tv);
       delay_us(1000000 - tv.tv_usec);
+      bcm2835_gpio_write(LED, HIGH);
    }
 
    rpi_shutdown();

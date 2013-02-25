@@ -13,6 +13,16 @@ RunTime::RunTime()
    }
 }
 
+void RunTime::step(uint32_t t_ms)
+{
+   int32_t dt_ms = t_ms - RunTime::msec();
+   int32_t dt_sec = dt_ms/1000;
+   int32_t dt_usec = dt_ms*1000 - dt_sec*1000000;
+   printf("dt: %d %d\n", dt_sec, dt_usec);
+   RunTime::tv0.tv_sec -= dt_sec;
+   RunTime::tv0.tv_usec -= dt_usec;
+}
+
 float RunTime::sec()
 {
    struct timeval dt_tv;
@@ -39,11 +49,16 @@ void RunTime::tv(struct timeval& dt_tv)
    gettimeofday(&dt_tv, NULL);
    dt_tv.tv_sec -= tv0.tv_sec;
    dt_tv.tv_usec -= tv0.tv_usec;
+   if (dt_tv.tv_usec < 0)
+   {
+      dt_tv.tv_sec -= 1;
+      dt_tv.tv_usec += 1000000;
+   }
 }
 
 void RunTime::puts()
 {
-   printf("%.6f us", RunTime::sec());
+   printf("%.6f", RunTime::sec());
 }
 
 struct timeval RunTime::tv0;
