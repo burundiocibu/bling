@@ -24,6 +24,11 @@ int main(int argc, char **argv)
    HeartbeatMsg heartbeat;
    for (int i=0; ; i++)
    {
+      rt.puts(); printf("  LOW\n");
+      bcm2835_gpio_write(LED, LOW);
+      delay_us(250000);
+      bcm2835_gpio_write(LED, HIGH);
+
       heartbeat.encode(rt.msec());
       write_tx_payload(&heartbeat, sizeof(heartbeat));
       pulse_CE();
@@ -37,11 +42,8 @@ int main(int argc, char **argv)
       // wait till next second
       struct timeval tv;
       rt.tv(tv);
-      delay_us(1000000 - tv.tv_usec - 250000);
-      bcm2835_gpio_write(LED, LOW);
-      rt.tv(tv);
+      rt.puts(); printf("  delay_us %ld\n", 1000000 - tv.tv_usec);
       delay_us(1000000 - tv.tv_usec);
-      bcm2835_gpio_write(LED, HIGH);
    }
 
    rpi_shutdown();

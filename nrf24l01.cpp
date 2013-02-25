@@ -14,9 +14,9 @@ namespace nRF24L01
 {
    //===============================================================================================
    // This part of the namespace is the hardware-dependant part of the interface
-#define nRF24L01_IO_DEBUG1(str) RunTime::puts(); printf("  %s %.2x\n", str, data)
-#define nRF24L01_IO_DEBUG2(str) RunTime::puts(); printf("  %s ",str); dump(data, len)
-#define nRF24L01_IO_DEBUG3(str) RunTime::puts(); printf("  %s\n",str)
+#define nRF24L01_IO_DEBUG1(str) //RunTime::puts(); printf("  %s %.2x\n", str, data)
+#define nRF24L01_IO_DEBUG2(str) //RunTime::puts(); printf("  %s ",str); dump(data, len)
+#define nRF24L01_IO_DEBUG3(str) //RunTime::puts(); printf("  %s\n",str)
 
    char write_data(char data)
    {
