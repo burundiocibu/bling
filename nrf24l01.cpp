@@ -104,8 +104,11 @@ namespace nRF24L01
    };
 
 
-   void configure_base()
+   bool configure_base()
    {
+      if (read_reg(CONFIG) == 0xff || read_reg(STATUS) == 0xff)
+         return false;
+
       write_reg(CONFIG, CONFIG_EN_CRC | CONFIG_MASK_TX_DS | CONFIG_MASK_MAX_RT);
       write_reg(SETUP_RETR, SETUP_RETR_ARC_0); // auto retransmit off
       write_reg(SETUP_AW, SETUP_AW_3BYTES);  // 3 byte addresses
@@ -117,13 +120,13 @@ namespace nRF24L01
 
       //shouldn't have to do this, but it won't TX if you don't
       write_reg(EN_AA, 0x00); //disable auto-ack, RX mode
+      return true;
    }
 
    // Setup device as primary receiver
    void configure_PRX(void)
    {
       nRF24L01_IO_DEBUG3("config PRX");
-      configure_base();
 
       char config = read_reg(CONFIG);
       config |= CONFIG_PRIM_RX;
@@ -165,7 +168,6 @@ namespace nRF24L01
    void configure_PTX(void)
    {
       nRF24L01_IO_DEBUG3("config PTX");
-      configure_base();
 
       // Note the TX_ADDR must be equal the RX_ADDR_P0 in the PTX
       char buff[addr_len];

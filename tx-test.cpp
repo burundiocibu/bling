@@ -14,6 +14,11 @@ int main(int argc, char **argv)
 {
    RunTime rt;
    rpi_setup();
+   if (!configure_base())
+   {
+      printf("Failed to find nRF24l01. Exiting.\n");
+      return -1;
+   }
    configure_PTX();
    power_up_PTX();
    write_data(FLUSH_TX);

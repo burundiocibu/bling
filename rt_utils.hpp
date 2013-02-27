@@ -22,6 +22,9 @@ public:
    static void tv(struct timeval& dt_tv);
    // prints to stdout the time 
    static void puts();
+   // keeps the tv_usec between 0..999999
+   static void normalize(struct timeval& dt_tv);
+
 
 private:
    static struct timeval tv0;

@@ -210,7 +210,8 @@ namespace nRF24L01
    void write_reg(char reg, char* data, size_t len);
    void read_reg(char reg, char* data, size_t len);
 
-   void configure_base();
+   // returns true on success
+   bool configure_base();
 
    void configure_PRX();
    void power_up_PRX();

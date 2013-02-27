@@ -7,53 +7,95 @@
 #include "nrf24l01.hpp"
 #include "HeartbeatMsg.hpp"
 
+
+class OutState
+{
+public:
+   OutState(uint8_t _pin)
+   : pin(_pin)
+   {
+      bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_OUTP);
+      bcm2835_gpio_write(pin, HIGH);
+      led_state=HIGH;
+   }
+
+   inline void set_high()
+   {
+      if (led_state==LOW)
+      {
+         bcm2835_gpio_write(pin, HIGH);
+         led_state=HIGH;
+      }
+   }
+
+   inline void set_low()
+   {
+      if (led_state==HIGH)
+      {
+         bcm2835_gpio_write(LOW, HIGH);
+         led_state=LOW;
+      }
+   }
+
+private:
+   uint8_t pin;
+   uint8_t state;
+}
+
+
 using namespace std;
 using namespace nRF24L01;
 
 int main(int argc, char **argv)
 {
+   int debug=1;
+
    RunTime rt;
    rpi_setup();
+
+   if (!configure_base())
+   {
+      printf("Failed to find nRF24l01. Exiting.\n");
+      return -1;
+   }
+
    configure_PRX();
    power_up_PRX();
 
-   const int LED=RPI_GPIO_P1_07;
-   bcm2835_gpio_fsel(LED, BCM2835_GPIO_FSEL_OUTP);
+   OutState led(RPI_GPIO_P1_07);
 
    // Set up the expected message length for pipe 0
    write_reg(RX_PW_P0, sizeof(HeartbeatMsg));
 
+   struct timeval tv;
    while(1)
    {
-      rt.puts(); printf("  LOW\n");
-      bcm2835_gpio_write(LED, LOW);
-      delay_us(250000);
-      bcm2835_gpio_write(LED, HIGH);
-
-      //wait until a packet has been received
-      for (int j=0; ((read_reg(STATUS) & STATUS_RX_DR) == 0x00) & j<50; j++)
-         delay_us(100);
+      rt.tv(tv);
+      if (tv.tv_usec <= 250000)
+         led.set_low();
+      else
+         led.set_high();
+      
+      // see if we got something...
       if ((read_reg(STATUS) & STATUS_RX_DR) == 0x00)
       {
-         rt.puts(); printf("  Nope\n");
+         delay_us(2000);
          continue;
       }
 
+      uint32_t trx = rt.msec();
       HeartbeatMsg heartbeat;
-      read_rx_payload((char*)&heartbeat, sizeof(heartbeat)); //read the packet into data
+      read_rx_payload((char*)&heartbeat, sizeof(heartbeat));
       write_reg(STATUS, STATUS_RX_DR); // clear data received bit
-      
       heartbeat.decode();
-      rt.puts();
-      printf("  heartbeat:%d\n", heartbeat.t_ms);
-      rt.step(heartbeat.t_ms);
-      rt.puts(); printf("  stepped\n");
 
-      // wait till next second
-      struct timeval tv;
-      rt.tv(tv);
-      rt.puts(); printf("  delay_us %ld\n", 1000000 - tv.tv_usec);
-      delay_us(1000000 - tv.tv_usec);
+      int dt = heartbeat.t_ms - trx;
+      rt.puts(); printf("  heartbeat:%.3f, dt=%d ms\n", 1e-3*heartbeat.t_ms, dt);
+      if (abs(dt)>10)
+      {
+         rt.step(heartbeat.t_ms);
+         rt.puts(); printf("  stepped %d ms\n", dt);
+      }
    }
 
    rpi_shutdown();
