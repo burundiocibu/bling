@@ -16,31 +16,31 @@ public:
    {
       bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_OUTP);
       bcm2835_gpio_write(pin, HIGH);
-      led_state=HIGH;
+      state=HIGH;
    }
 
    inline void set_high()
    {
-      if (led_state==LOW)
+      if (state==LOW)
       {
          bcm2835_gpio_write(pin, HIGH);
-         led_state=HIGH;
+         state=HIGH;
       }
    }
 
    inline void set_low()
    {
-      if (led_state==HIGH)
+      if (state==HIGH)
       {
-         bcm2835_gpio_write(LOW, HIGH);
-         led_state=LOW;
+         bcm2835_gpio_write(pin, LOW);
+         state=LOW;
       }
    }
 
 private:
    uint8_t pin;
    uint8_t state;
-}
+};
 
 
 using namespace std;
