@@ -1,34 +1,27 @@
-#include <arpa/inet.h>
-#include <cstdint>
+#include "HeartbeatMsg.hpp"
 
-struct HeartbeatMsg 
+#include <string.h>
+
+#ifdef AVR
+// seems like avr don't have these
+#define ntohs(x) (((x>>8) & 0xFF) | ((x & 0xFF)<<8))
+#define htons(x) (((x>>8) & 0xFF) | ((x & 0xFF)<<8))
+#define ntohl(x) ( ((x>>24) & 0xFF) | ((x>>8) & 0xFF00) | \
+                   ((x & 0xFF00)<<8) | ((x & 0xFF)<<24)   \
+                   )
+#define htonl(x) ( ((x>>24) & 0xFF) | ((x>>8) & 0xFF00) |      \
+                   ((x & 0xFF00)<<8) | ((x & 0xFF)<<24)        \
+                   )
+#endif
+
+void HeartbeatMsg::decode(const uint8_t* buff)
 {
-   HeartbeatMsg() 
-      : id(0x01), t_ms(0)
-   {}
+	id=buff[0];
+	t_ms = ntohl(*((uint32_t*)(buff+1)));
+}
 
-   HeartbeatMsg(uint8_t* buff) 
-      : id(0), t_ms(0)
-   {
-      decode(uint8_t* buff);
-   }
-
-   void decode(uint8_t* buff) 
-      : id(0), t_ms(0)
-   {
-      id=buff[0];
-      t_ms = *((uint32_t*)(buff+1));
-      t_ms = ntohl(t_ms);
-   }
-
-   void send(const uint32_t t)
-   {
-      id=0x01;
-      t_ms=htonl(t);
-      nRF24L01::write_tx_payload(this, sizeof(*this));
-      nRF24L01::pulse_CE();
-   }
-
-   uint8_t id;
-   uint32_t t_ms;
-} __attribute__((packed));
+void HeartbeatMsg::encode(uint8_t* buff)
+{
+	buff[0] = 0x01;
+	*((uint32_t*)(buff+1)) = ntohl(t_ms);
+}

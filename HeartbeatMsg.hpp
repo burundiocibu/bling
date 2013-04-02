@@ -1,25 +1,12 @@
 #ifndef _HEARTBEATMSG_HPP
 #define _HEARTBEATMSG_HPP
-#include <arpa/inet.h>
-#include <cstdint>
+#include <stdint.h>
 
-class HeartbeatMsg 
+
+struct HeartbeatMsg
 {
-public:
-   inline HeartbeatMsg() 
-      : id(0x01), t_ms(0)
-   {}
-
-   inline void decode() 
-   {
-      t_ms = ntohl(t_ms);
-   }
-
-   inline void encode(const uint32_t t)
-   {
-      id=0x01;
-      t_ms=htonl(t);
-   }
+   void decode(const uint8_t* data);
+   void encode(uint8_t* data);
 
    uint8_t id;
    uint32_t t_ms;

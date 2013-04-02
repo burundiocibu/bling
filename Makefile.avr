@@ -1,0 +1,87 @@
+MCU=atmega32u4
+PROGRAMMER_MCU=m32u4
+PROJECTNAME=main
+PRJSRC=main.c 
+AVRDUDE_PROGRAMMERID=avr109
+AVRDUDE_PORT=/dev/tty.usbmodemfa121
+OPTLEVEL=s
+F_CPU = 16000000
+
+
+AVRDUDE=avrdude -p $(PROGRAMMER_MCU) -c $(AVRDUDE_PROGRAMMERID) -P $(AVRDUDE_PORT)
+
+CFLAGS=-I. $(INC) -g -mmcu=$(MCU) -O$(OPTLEVEL) \
+	-fpack-struct -fshort-enums             \
+	-DF_CPU=$(F_CPU)UL -DAVR=1              \
+	-funsigned-bitfields -funsigned-char    \
+	-Wall -Wstrict-prototypes               \
+	-Wa,-ahlms=$(firstword                  \
+	$(filter %.lst, $(<:.c=.lst)))
+
+CPPFLAGS=-fno-exceptions -Wall                   \
+	-I. $(INC) -g -mmcu=$(MCU) -O$(OPTLEVEL) \
+	-fpack-struct -fshort-enums              \
+	-DF_CPU=$(F_CPU)UL -DAVR=1               \
+	-funsigned-bitfields -funsigned-char     \
+	-Wa,-ahlms=$(firstword                   \
+	$(filter %.lst, $(<:.cpp=.lst)))
+
+
+LDFLAGS=-Wl,-Map,$(TRG).map -mmcu=$(MCU) \
+	-lm $(LIBS)
+
+CC=avr-gcc
+CPP=avr-gcc
+
+#=================================================================
+.SUFFIXES: .flash .hex .elf
+.PHONY: clean nrf_test.flash
+
+all: slave_main.hex
+
+clean:
+	rm -f *.hex *.o *.elf *.map *.lst
+
+
+avr_throbber.o: avr_throbber.cpp
+avr_spi.o: avr_spi.cpp
+avr_i2c.o: avr_i2c.cpp
+avr_tlc5940.o: avr_tlc5940.cpp
+avr_rtc.o: avr_rtc.cpp
+avr_mike.o: avr_mike.cpp
+nrf24l01.o: nrf24l01.cpp
+HeartbeatMsg.o: HeartbeatMsg.cpp
+lcd_plate.o: lcd_plate.cpp
+
+
+slave_main.o: slave_main.cpp
+tlc-test.o: slave_main.cpp
+rtc-test.o: rtc-test.cpp
+
+prog: slave_main.flash
+
+slave_main.elf: slave_main.o avr_rtc.o avr_spi.o avr_i2c.o lcd_plate.o avr_tlc5940.o avr_mike.o nrf24l01.o HeartbeatMsg.o
+
+tlc-test.elf: tlc-test.o avr_tlc5940.o
+
+rtc-test.elf: rtc-test.o lcd_plate.o avr_i2c.o avr_rtc.o
+
+getfuse:
+	$(AVRDUDE) -U lfuse:r:-:i -U hfuse:r:-:i -U efuse:r:-:i
+
+#=================================================================
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+%.o: %.cpp
+	$(CC) $(CPPFLAGS) -c $< -o $@
+
+%.elf: %.o
+	$(CC) -g -mmcu=$(MCU) -Wl,-Map,$(@:.elf=.map) -o $@ $^
+
+%.hex : %.elf
+	avr-objcopy -j .text -j .data -O ihex $^ $@
+
+%.flash : %.hex
+	while [ ! -e $(AVRDUDE_PORT) ]; do sleep 1; done
+	$(AVRDUDE) -U flash:w:$<
