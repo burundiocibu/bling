@@ -2,7 +2,6 @@ CPPFLAGS+=-std=c++0x
 ALL_BIN=spidev_test spi-time tx-test rx-test
 
 all: $(ALL_BIN)
-	rsync $(ALL_BIN) threepi:
 
 clean:
 	-rm -f $(ALL_BIN) *.o
