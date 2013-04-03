@@ -5,8 +5,7 @@
 
 #include "rt_utils.hpp"
 #include "nrf24l01.hpp"
-#include "HeartbeatMsg.hpp"
-
+#include "messages.hpp"
 
 class OutState
 {
@@ -51,7 +50,7 @@ int main(int argc, char **argv)
    int debug=1;
 
    RunTime rt;
-   rpi_setup();
+   setup();
 
    if (!configure_base())
    {
@@ -65,7 +64,7 @@ int main(int argc, char **argv)
    OutState led(RPI_GPIO_P1_07);
 
    // Set up the expected message length for pipe 0
-   write_reg(RX_PW_P0, sizeof(HeartbeatMsg));
+   write_reg(RX_PW_P0, sizeof(messages::Heartbeat));
 
    struct timeval tv;
    while(1)
@@ -79,15 +78,16 @@ int main(int argc, char **argv)
       // see if we got something...
       if ((read_reg(STATUS) & STATUS_RX_DR) == 0x00)
       {
-         delay_us(2000);
+         bcm2835_delayMicroseconds(2000);
          continue;
       }
 
       uint32_t trx = rt.msec();
-      HeartbeatMsg heartbeat;
-      read_rx_payload((char*)&heartbeat, sizeof(heartbeat));
+      messages::Heartbeat heartbeat;
+      uint8_t buff[sizeof(heartbeat)];
+      read_rx_payload((char*)buff, sizeof(heartbeat));
       write_reg(STATUS, STATUS_RX_DR); // clear data received bit
-      heartbeat.decode();
+      heartbeat.decode(buff);
 
       int dt = heartbeat.t_ms - trx;
       rt.puts(); printf("  heartbeat:%.3f, dt=%d ms\n", 1e-3*heartbeat.t_ms, dt);
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
       }
    }
 
-   rpi_shutdown();
+   shutdown();
    return 0;
 }
 

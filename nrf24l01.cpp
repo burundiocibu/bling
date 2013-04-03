@@ -56,7 +56,7 @@ void delay_us(uint32_t us)
 }
 
 
-void clear_CE()
+void clear_CE(void)
 {
 #ifdef AVR
    PORTB &= ~_BV(PB6);
@@ -66,7 +66,7 @@ void clear_CE()
 }
 
 
-void set_CE()
+void set_CE(void)
 {
 #ifdef AVR
    PORTB |= _BV(PB6);
@@ -87,7 +87,7 @@ ISR(PCINT0_vect)
 #endif
 
 
-bool setup()
+bool setup(void)
 {
 #ifdef AVR
    avr_spi::setup();
@@ -109,8 +109,8 @@ bool setup()
       return false;
 
    // This sets up P1-15 as the CE for the n24L01
-   bcm2835_gpio_fsel(CE, BCM2835_GPIO_FSEL_OUTP);
-   clear_ce(); // Make sure the chip is quiet until told otherwise
+   bcm2835_gpio_fsel(RPI_GPIO_P1_15, BCM2835_GPIO_FSEL_OUTP);
+   clear_CE(); // Make sure the chip is quiet until told otherwise
 
    bcm2835_spi_begin();
    bcm2835_spi_setBitOrder(BCM2835_SPI_BIT_ORDER_MSBFIRST);      // The default
@@ -124,7 +124,7 @@ bool setup()
 #endif
 }
 
-void shutdown()
+void shutdown(void)
 {
 #ifdef AVR
 #else
@@ -211,7 +211,7 @@ void configure_PRX(void)
 }
 
 
-   void power_up_PRX()
+   void power_up_PRX(void)
    {
 	  iobuff[0]=FLUSH_RX;
       write_data(iobuff, 1);
@@ -249,7 +249,7 @@ void configure_PRX(void)
    }
 
 
-   void power_up_PTX()
+   void power_up_PTX(void)
    {
 	  iobuff[0]=FLUSH_TX;
       write_data(iobuff, 1);
@@ -268,7 +268,7 @@ void configure_PRX(void)
    }
 
 
-   void pulse_CE()
+   void pulse_CE(void)
    {
       nRF24L01_IO_DEBUG3("CE high");
       set_CE();
@@ -276,4 +276,11 @@ void configure_PRX(void)
       nRF24L01_IO_DEBUG3("CE low");
       clear_CE();
    }
+
+   void flush_tx(void)
+   {
+      char buff=FLUSH_TX;
+      write_data(&buff, 1);
+   }
+
 }

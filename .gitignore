@@ -1,7 +1,7 @@
 *.o
 spi-time
-spidev_test
 tx-test
 rx-test
 .DS_Store
 iom32u4.h
+Makefile

@@ -1,6 +1,7 @@
-// An interface to a nrf24l01 chip
 #ifndef _NRF24L01_HPP
 #define _NRF24L01_HPP
+
+// An interface to a nrf24l01 chip
 
 #include <stddef.h>
 #include <stdint.h>
@@ -194,10 +195,10 @@ namespace nRF24L01
    // This part of the namespace is the hardware-defendant part of the interface
    void write_data(char* data, const size_t len);
    void delay_us(uint32_t us);
-   void clear_CE();
-   void set_CE();
-   bool setup();
-   void shutdown();
+   void clear_CE(void);
+   void set_CE(void);
+   bool setup(void);
+   void shutdown(void);
 
    //===============================================================================================
    //Code below should be low-level hardware independent
@@ -210,15 +211,16 @@ namespace nRF24L01
    // returns true on success
    bool configure_base(void);
 
-   void configure_PRX();
-   void power_up_PRX();
+   void configure_PRX(void);
+   void power_up_PRX(void);
 
-   void configure_PTX();
-   void power_up_PTX();
+   void configure_PTX(void);
+   void power_up_PTX(void);
 
    void write_tx_payload(void* data, const unsigned int len);
    void read_rx_payload(void* data, const unsigned int len);
-   void pulse_CE();
+   void flush_tx(void);
+   void pulse_CE(void);
 
 #ifdef AVR
    extern int rx_flag;

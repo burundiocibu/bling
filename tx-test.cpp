@@ -5,53 +5,54 @@
 
 #include "rt_utils.hpp"
 #include "nrf24l01.hpp"
-#include "HeartbeatMsg.hpp"
+#include "messages.hpp"
 
 using namespace std;
-using namespace nRF24L01;
 
 int main(int argc, char **argv)
 {
    RunTime rt;
-   rpi_setup();
-   if (!configure_base())
+   nRF24L01::setup();
+
+   if (!nRF24L01::configure_base())
    {
-      printf("Failed to find nRF24l01. Exiting.\n");
+      printf("Failed to find nRF24L01. Exiting.\n");
       return -1;
    }
-   configure_PTX();
-   power_up_PTX();
-   write_data(FLUSH_TX);
+   nRF24L01::configure_PTX();
+   nRF24L01::power_up_PTX();
+   nRF24L01::flush_tx();
 
    const int LED=RPI_GPIO_P1_07;
    bcm2835_gpio_fsel(LED, BCM2835_GPIO_FSEL_OUTP);
 
-   HeartbeatMsg heartbeat;
+   messages::Heartbeat heartbeat;
    for (int i=0; ; i++)
    {
       bcm2835_gpio_write(LED, LOW);
 
-      heartbeat.encode(rt.msec());
-      write_tx_payload(&heartbeat, sizeof(heartbeat));
-      pulse_CE();
-      heartbeat.decode();
+      heartbeat.t_ms = rt.msec();
+      uint8_t buff[sizeof(heartbeat)];
+      heartbeat.encode(buff);
+      nRF24L01::write_tx_payload(buff, sizeof(buff));
+      nRF24L01::pulse_CE();
 
       rt.puts(); printf(" #%d %ld\n", i, heartbeat.t_ms);
-      for(int j=0; ((read_reg(STATUS) & STATUS_TX_DS)== 0x00) && j<100; j++)
-         delay_us(10);
-      write_reg(STATUS, STATUS_TX_DS); //Clear the data sent notice
+      for(int j=0; ((nRF24L01::read_reg(nRF24L01::STATUS) & nRF24L01::STATUS_TX_DS)== 0x00) && j<100; j++)
+            bcm2835_delayMicroseconds(10);;
+      nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_TX_DS); //Clear the data sent notice
 
-      delay_us(125000);
+      bcm2835_delayMicroseconds(125000);
       bcm2835_gpio_write(LED, HIGH);
 
       // wait till next second
       struct timeval tv;
       rt.tv(tv);
       //rt.puts(); printf("  delay_us %ld\n", 1000000 - tv.tv_usec);
-      delay_us(1001000 - tv.tv_usec);
+      bcm2835_delayMicroseconds(1001000 - tv.tv_usec);
    }
 
-   rpi_shutdown();
+   nRF24L01::shutdown();
    return 0;
 }
 
