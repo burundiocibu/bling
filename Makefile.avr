@@ -50,7 +50,7 @@ avr_tlc5940.o: avr_tlc5940.cpp
 avr_rtc.o: avr_rtc.cpp
 avr_mike.o: avr_mike.cpp
 nrf24l01.o: nrf24l01.cpp
-HeartbeatMsg.o: HeartbeatMsg.cpp
+messages.o: messages.cpp
 lcd_plate.o: lcd_plate.cpp
 
 
@@ -60,7 +60,7 @@ rtc-test.o: rtc-test.cpp
 
 prog: slave_main.flash
 
-slave_main.elf: slave_main.o avr_rtc.o avr_spi.o avr_i2c.o lcd_plate.o avr_tlc5940.o avr_mike.o nrf24l01.o HeartbeatMsg.o
+slave_main.elf: slave_main.o avr_rtc.o avr_spi.o avr_i2c.o lcd_plate.o avr_tlc5940.o avr_mike.o nrf24l01.o messages.o
 
 tlc-test.elf: tlc-test.o avr_tlc5940.o
 

@@ -1,4 +1,8 @@
 *.o
+*.lst
+*.elf
+*.hex
+*.map
 spi-time
 tx-test
 rx-test
