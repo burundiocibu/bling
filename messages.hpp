@@ -12,7 +12,7 @@ namespace messages
       set_tlc_ch_id = 2,
       get_tlc_ch_id = 3,
       start_effect_id = 4,
-      stop_effect_id = 0
+      stop_effect_id = 5
    };
    const size_t message_size=5;
 

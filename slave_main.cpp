@@ -27,7 +27,8 @@ int main (void)
    nRF24L01::configure_base();
    nRF24L01::configure_PRX();
    nRF24L01::power_up_PRX();
-   nRF24L01::write_reg(nRF24L01::RX_PW_P0, sizeof(messages::Heartbeat));
+   nRF24L01::write_reg(nRF24L01::RX_PW_P0, messages::message_size);
+   uint8_t buff[messages::message_size];
 
    avr_tlc5940::setup();
    avr_mike::setup();
@@ -70,7 +71,6 @@ int main (void)
       if (nRF24L01::rx_flag)
       {
          // We got some data!!
-         uint8_t buff[sizeof(messages::Heartbeat)];
          nRF24L01::read_rx_payload(buff, sizeof(buff));
          nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_RX_DR); // clear data received bit
          nRF24L01::rx_flag=0;
@@ -81,7 +81,7 @@ int main (void)
             {
                messages::Heartbeat heartbeat(buff);
                lcd_plate::set_cursor(1,0);
-               printf("%8ld", heartbeat.t_ms);
+               printf("%08ld", heartbeat.t_ms);
             }
          }
 
