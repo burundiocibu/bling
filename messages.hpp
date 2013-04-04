@@ -14,7 +14,7 @@ namespace messages
       start_effect_id = 4,
       stop_effect_id = 5
    };
-   const size_t message_size=5;
+   const size_t message_size=12;
 
    inline uint8_t get_id(uint8_t* p)
    {return *p;}
