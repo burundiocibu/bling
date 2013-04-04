@@ -2,31 +2,24 @@
 
 #include <string.h>
 
-#ifdef AVR
-// seems like avr don't have these
-#define ntohs(x) (((x>>8) & 0xFF) | ((x & 0xFF)<<8))
-#define htons(x) (((x>>8) & 0xFF) | ((x & 0xFF)<<8))
-#define ntohl(x) ( ((x>>24) & 0xFF) | ((x>>8) & 0xFF00) | \
-                   ((x & 0xFF00)<<8) | ((x & 0xFF)<<24)   \
-                   )
-#define htonl(x) ( ((x>>24) & 0xFF) | ((x>>8) & 0xFF00) |      \
-                   ((x & 0xFF00)<<8) | ((x & 0xFF)<<24)        \
-                   )
-#else
-#include <arpa/inet.h>
-#endif
+template <class T>
+uint8_t* decode_var(uint8_t *p, T &v )
+{
+   v = *reinterpret_cast<T*>(p);
+   return p + sizeof(T);
+}
 
 namespace messages
 {
-   void Heartbeat::decode(const uint8_t* buff)
+   void Heartbeat::decode(uint8_t* p)
    {
-      id=buff[0];
-      t_ms = ntohl(*((uint32_t*)(buff+1)));
+      p++; // skip ID
+      p = decode_var<uint32_t>(p, t_ms);
    }
 
-   void Heartbeat::encode(uint8_t* buff)
+   void Heartbeat::encode(uint8_t* p)
    {
-      buff[0] = 0x01;
-      *((uint32_t*)(buff+1)) = ntohl(t_ms);
+      *p++ = 1;
+      *reinterpret_cast<uint32_t*>(p) = t_ms;
    }
 }

@@ -73,14 +73,19 @@ int main (void)
          uint8_t buff[sizeof(messages::Heartbeat)];
          nRF24L01::read_rx_payload(buff, sizeof(buff));
          nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_RX_DR); // clear data received bit
-         messages::Heartbeat heartbeat;
-         heartbeat.decode((uint8_t*)buff);
-
          nRF24L01::rx_flag=0;
 
+         switch (messages::get_id(buff))
+         {
+            case messages::heartbeat_id:
+            {
+               messages::Heartbeat heartbeat(buff);
+               lcd_plate::set_cursor(1,0);
+               printf("%8ld", heartbeat.t_ms);
+            }
+         }
+
          avr_led::toggle();
-         lcd_plate::set_cursor(1,0);
-         printf("%8ld", heartbeat.t_ms);
       }
       sleep_mode();
    }
