@@ -79,9 +79,15 @@ int main (void)
          {
             case messages::heartbeat_id:
             {
-               messages::Heartbeat heartbeat(buff);
+               messages::Heartbeat msg(buff);
                lcd_plate::set_cursor(1,0);
-               printf("%08ld", heartbeat.t_ms);
+               printf("%8ld", msg.t_ms);
+            }
+            case messages::set_tlc_ch_id:
+            {
+               messages::Set_tlc_ch msg(buff);
+               avr_tlc5940::set_channel(msg.ch, msg.value);
+               avr_tlc5940::output_gsdata();
             }
          }
 

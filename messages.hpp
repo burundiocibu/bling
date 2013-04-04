@@ -21,13 +21,25 @@ namespace messages
 
    struct Heartbeat
    {
+      uint32_t t_ms;
+
       Heartbeat() {};
       Heartbeat(uint8_t* p) {decode(p);};
 
       void decode(uint8_t* p);
       void encode(uint8_t* p);
+   };
 
-      uint32_t t_ms;
+   struct Set_tlc_ch
+   {
+      uint8_t ch;
+      uint8_t value;
+
+      Set_tlc_ch() {};
+      Set_tlc_ch(uint8_t* p) {decode(p);};
+
+      void decode(uint8_t* p);
+      void encode(uint8_t* p);
    };
 }
 
