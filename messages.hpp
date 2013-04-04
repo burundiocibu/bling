@@ -1,6 +1,7 @@
 #ifndef _messages_HPP
 #define _messages_HPP
 #include <stdint.h>
+#include <string.h>
 
 namespace messages
 {
@@ -13,23 +14,21 @@ namespace messages
       start_effect_id = 4,
       stop_effect_id = 0
    };
+   const size_t message_size=5;
 
    inline uint8_t get_id(uint8_t* p)
    {return *p;}
 
-   
-
    struct Heartbeat
    {
-      Heartbeat(uint8_t* p)
-      {decode(p);}
+      Heartbeat() {};
+      Heartbeat(uint8_t* p) {decode(p);};
 
       void decode(uint8_t* p);
       void encode(uint8_t* p);
-      
-      uint8_t id;
+
       uint32_t t_ms;
-   } __attribute__((packed));
+   };
 }
 
 #endif

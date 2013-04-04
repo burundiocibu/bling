@@ -19,7 +19,7 @@ namespace messages
 
    void Heartbeat::encode(uint8_t* p)
    {
-      *p++ = 1;
+      *p++ = heartbeat_id;
       *reinterpret_cast<uint32_t*>(p) = t_ms;
    }
 }
