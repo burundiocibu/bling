@@ -102,7 +102,7 @@ int main (void)
             case messages::all_stop_id:
             {
                lcd_plate::set_cursor(1,0);
-               print_time(avr_rtc::t_ms);
+               print_time(nRF24L01::t_rx);
                printf(":all stop");
                for (int ch=0; ch<14; ch++)
                   avr_tlc5940::set_channel(ch, 0);
@@ -114,10 +114,22 @@ int main (void)
             {
                messages::decode_start_effect(buff, effect.id, effect.start_time, effect.duration);
                lcd_plate::set_cursor(1,0);
-               print_time(avr_rtc::t_ms);
+               print_time(nRF24L01::t_rx);
                printf(":%02X ", effect.id);
                print_time(effect.start_time);
                printf(" %5d", effect.duration);
+               break;
+            }
+
+            case messages::set_tlc_ch_id:
+            {
+               uint8_t ch=0,value=0;
+               messages::decode_set_tlc_ch(buff, ch, value);
+               lcd_plate::set_cursor(1,0);
+               print_time(nRF24L01::t_rx);
+               printf(":%02X %02X", ch, value);
+               avr_tlc5940::set_channel(ch, value);
+               avr_tlc5940::output_gsdata();
                break;
             }
          }

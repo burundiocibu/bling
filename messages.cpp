@@ -54,7 +54,7 @@ namespace messages
       p = encode_var<uint8_t>(p, value);
    }
       
-   void decode_set_tlc_ch(uint8_t* p, uint8_t ch, uint8_t value)
+   void decode_set_tlc_ch(uint8_t* p, uint8_t &ch, uint8_t &value)
    {
       p++; // skip ID
       p = decode_var<uint8_t>(p, ch);

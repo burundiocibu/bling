@@ -19,13 +19,13 @@ namespace messages
    inline uint8_t get_id(uint8_t* p)
    {return *p;}
 
-   void encode_heartbeat(uint8_t* p, uint32_t t_ms);
+   void encode_heartbeat(uint8_t* p, uint32_t  t_ms);
    void decode_heartbeat(uint8_t* p, uint32_t &t_ms);
 
-   void encode_set_tlc_ch(uint8_t* p, uint8_t ch, uint8_t value);
-   void decode_set_tlc_ch(uint8_t* p, uint8_t ch, uint8_t value);
+   void encode_set_tlc_ch(uint8_t* p, uint8_t  ch, uint8_t  value);
+   void decode_set_tlc_ch(uint8_t* p, uint8_t &ch, uint8_t &value);
 
-   void encode_start_effect(uint8_t* p, uint8_t effect_id, uint32_t start_time, uint16_t duration);
+   void encode_start_effect(uint8_t* p, uint8_t  effect_id, uint32_t  start_time, uint16_t  duration);
    void decode_start_effect(uint8_t* p, uint8_t &effect_id, uint32_t &start_time, uint16_t &duration);
 
    // ========================================
