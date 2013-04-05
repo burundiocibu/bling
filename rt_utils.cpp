@@ -1,5 +1,3 @@
-// A catch-all place for code to be shared between the rpi and mcu430
-
 #include <cstdio>
 
 #include "rt_utils.hpp"
@@ -65,14 +63,9 @@ void RunTime::normalize(struct timeval& tv)
       tv.tv_usec -= 1000000;
    }
 }
-void RunTime::puts()
-{
-   printf("%.6f", RunTime::sec());
-}
 
 struct timeval RunTime::tv0;
 bool RunTime::initialized=false;
-
 
 
 void dump(const void* buff, size_t len)
@@ -81,5 +74,4 @@ void dump(const void* buff, size_t len)
       printf("%.2X ", ((char*)buff)[ret]);
    puts("");
 }
-
 

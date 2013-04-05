@@ -38,7 +38,7 @@ int main(int argc, char **argv)
       nRF24L01::write_tx_payload(buff, sizeof(buff));
       nRF24L01::pulse_CE();
 
-      rt.puts(); printf(" #%d %ld\n", i, heartbeat.t_ms);
+      printf(" #%d %ld\n", i, heartbeat.t_ms);
       for(int j=0; ((nRF24L01::read_reg(nRF24L01::STATUS) & nRF24L01::STATUS_TX_DS)== 0x00) && j<100; j++)
             bcm2835_delayMicroseconds(10);;
       nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_TX_DS); //Clear the data sent notice

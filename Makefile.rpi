@@ -1,5 +1,6 @@
 CPPFLAGS+=-std=c++0x
-ALL_BIN=spi-time tx-test rx-test
+ALL_BIN=master_main spi-time tx-test rx-test
+
 
 all: $(ALL_BIN)
 
@@ -10,7 +11,12 @@ clean:
 spi-time: LDLIBS+=-lbcm2835
 spi-time: spi-time.cpp
 
-tx-test rx-test: LDLIBS+=-lbcm2835 -lstdc++
+rx-test: LDLIBS+=-lbcm2835 -lstdc++
+rx-test: rx-test.o rt_utils.o nrf24l01.o messages.o
+
+tx-test: LDLIBS+=-lbcm2835 -lstdc++
 tx-test: tx-test.o rt_utils.o nrf24l01.o messages.o
 
-rx-test: rx-test.o rt_utils.o nrf24l01.o messages.o
+
+master_main: LDLIBS+=-lbcm2835 -lstdc++ -lncurses
+master_main: master_main.o rt_utils.o nrf24l01.o messages.o

@@ -90,11 +90,11 @@ int main(int argc, char **argv)
       heartbeat.decode(buff);
 
       int dt = heartbeat.t_ms - trx;
-      rt.puts(); printf("  heartbeat:%.3f, dt=%d ms\n", 1e-3*heartbeat.t_ms, dt);
+      printf("  heartbeat:%.3f, dt=%d ms\n", 1e-3*heartbeat.t_ms, dt);
       if (abs(dt)>10)
       {
          rt.step(heartbeat.t_ms);
-         rt.puts(); printf("  stepped %d ms\n", dt);
+         printf("  stepped %d ms\n", dt);
       }
    }
 
