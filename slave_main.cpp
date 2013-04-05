@@ -15,6 +15,20 @@
 #include "nrf24l01.hpp"
 #include "messages.hpp"
 
+void print_time(uint32_t t)
+{
+   char b1[11],b2[7];
+   sprintf(b1, "%10ld", t);
+   b2[0] = b1[4];
+   b2[1] = b1[5]; 
+   b2[2] = b1[6];
+   b2[3] = '.';
+   b2[4] = b1[7];
+   b2[5] = b1[8];
+   b2[6] = 0;
+   printf(b2);
+}
+
 
 int main (void)
 {
@@ -45,13 +59,6 @@ int main (void)
       
       if ((avr_rtc::t_ms & 0xf) == 0)
       {
-         lcd_plate::set_cursor(0,11);
-         printf("%3d", avr_mike::avg);
-         if (avr_mike::avg>100)
-            avr_tlc5940::set_channel(1, 1024);
-         else
-            avr_tlc5940::set_channel(1, 20);
-            
          if (throb >= 1024 || throb <= 0)
             dir = -dir;
          throb += dir;
@@ -59,13 +66,6 @@ int main (void)
          avr_tlc5940::output_gsdata();
       }
 
-      if ((avr_rtc::t_ms & 0x7f) == 0)
-      {
-         lcd_plate::set_cursor(0,0);
-         printf("%8ld", avr_rtc::t_ms);
-
-      }
-   
       // Do we have data from the radio?
       // this test is less good: nRF24L01::read_reg(nRF24L01::STATUS) & nRF24L01::STATUS_RX_DR
       if (nRF24L01::rx_flag)
@@ -80,14 +80,19 @@ int main (void)
             case messages::heartbeat_id:
             {
                messages::Heartbeat msg(buff);
-               lcd_plate::set_cursor(1,0);
-               printf("%8ld", msg.t_ms);
+               lcd_plate::set_cursor(0,0);
+               print_time(msg.t_ms);
+               break;
             }
             case messages::set_tlc_ch_id:
             {
                messages::Set_tlc_ch msg(buff);
+               lcd_plate::set_cursor(1,0);
+               print_time(avr_rtc::t_ms);
+               printf(":%02X %02X", msg.ch, msg.value);
                avr_tlc5940::set_channel(msg.ch, msg.value);
                avr_tlc5940::output_gsdata();
+               break;
             }
          }
 
