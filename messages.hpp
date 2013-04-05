@@ -28,58 +28,6 @@ namespace messages
    void encode_start_effect(uint8_t* p, uint8_t  effect_id, uint32_t  start_time, uint16_t  duration);
    void decode_start_effect(uint8_t* p, uint8_t &effect_id, uint32_t &start_time, uint16_t &duration);
 
-   // ========================================
-   struct Heartbeat
-   {
-      uint32_t t_ms;
-
-      Heartbeat() {};
-      Heartbeat(uint8_t* p) {decode(p);};
-
-      void decode(uint8_t* p);
-      void encode(uint8_t* p);
-   };
-
-
-   // ========================================
-   struct Set_tlc_ch
-   {
-      uint8_t ch;
-      uint8_t value;
-
-      Set_tlc_ch() {};
-      Set_tlc_ch(uint8_t* p) {decode(p);};
-
-      void decode(uint8_t* p);
-      void encode(uint8_t* p);
-   };
-
-
-   // ========================================
-   struct Start_effect
-   {
-      uint8_t effect_id;   // tbd
-      uint32_t start_time; // ms
-      uint16_t duration;   // ms
-
-      Start_effect() {};
-      Start_effect(uint8_t* p) {decode(p);};
-
-      void decode(uint8_t* p);
-      void encode(uint8_t* p);
-   };
-
-
-   // ========================================
-   struct All_stop
-   {
-      All_stop() {};
-      All_stop(uint8_t* p) {decode(p);};
-
-      void decode(uint8_t* p);
-      void encode(uint8_t* p);
-   };
-
 }
 
 #endif
