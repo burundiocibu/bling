@@ -40,12 +40,11 @@ int main(int argc, char **argv)
    const int LED=RPI_GPIO_P1_07;
    bcm2835_gpio_fsel(LED, BCM2835_GPIO_FSEL_OUTP);
 
-   messages::Heartbeat heartbeat;
    uint8_t buff[messages::message_size];
-
    uint8_t red=0,green=0,blue=0;
-
    unsigned hb_count=0;
+   uint32_t last_hb=0;
+
    for (int i=0; ; i++)
    {
       uint32_t t = runtime.msec();
@@ -54,15 +53,15 @@ int main(int argc, char **argv)
       else 
          bcm2835_gpio_write(LED, HIGH);
 
-      if (t - heartbeat.t_ms > 1000)
+      if (t - last_hb > 1000)
       {
-         hb_count++;
-         heartbeat.t_ms = runtime.msec();
-         heartbeat.encode(buff);
+         messages::encode_heartbeat(buff, t);
          nRF24L01::write_tx_payload(buff, sizeof(buff));
          nRF24L01::pulse_CE();
+         hb_count++;
+         last_hb = t;
          
-         mvprintw(0, 0, "%5d %8.3f  ", hb_count, 0.001* heartbeat.t_ms);
+         mvprintw(0, 0, "%5d %8.3f  ", hb_count, 0.001* t);
          for(int j=0; ((nRF24L01::read_reg(nRF24L01::STATUS) & nRF24L01::STATUS_TX_DS)== 0x00) && j<100; j++)
             bcm2835_delayMicroseconds(10);;
          nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_TX_DS); //Clear the data sent notice
@@ -72,23 +71,20 @@ int main(int argc, char **argv)
       if (key=='q')
          break;
 
-      if (key > 'A' && key < 'z')
+      if (key != 0xff)
       {
          mvprintw(2, 0, "%8.3f  %c", i, 0.0001*runtime.msec(), key);
-         uint8_t ch=0, value=0;
          switch(key)
          {
-            case 'R': red+=16;   ch=0; value=red;   break;
-            case 'r': red-=16;   ch=0; value=red;   break;
-            case 'G': green+=16; ch=1; value=green; break;
-            case 'g': green-=16; ch=1; value=green; break;
-            case 'B': blue+=16;  ch=2; value=blue;  break;
-            case 'b': blue-=16;  ch=2; value=blue;  break;
+            case 'R': red+=16;   messages::encode_set_tlc_ch(buff, 0, red);   break;
+            case 'r': red-=16;   messages::encode_set_tlc_ch(buff, 0, red);   break;
+            case 'G': green+=16; messages::encode_set_tlc_ch(buff, 1, green); break;
+            case 'g': green-=16; messages::encode_set_tlc_ch(buff, 1, green); break;
+            case 'B': blue+=16;  messages::encode_set_tlc_ch(buff, 2, blue);  break;
+            case 'b': blue-=16;  messages::encode_set_tlc_ch(buff, 2, blue);  break;
+            case ' ': messages::encode_start_effect(buff, 0, t, 1000); break;
          }
-         messages::Set_tlc_ch set_tlc_ch;
-         set_tlc_ch.ch = ch;
-         set_tlc_ch.value = value;
-         set_tlc_ch.encode(buff);
+         printw(" %3d %3d %3d", red, green, blue);
          nRF24L01::write_tx_payload(buff, sizeof(buff));
          nRF24L01::pulse_CE();
          for(int j=0; ((nRF24L01::read_reg(nRF24L01::STATUS) & nRF24L01::STATUS_TX_DS)== 0x00) && j<100; j++)
