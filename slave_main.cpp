@@ -34,7 +34,11 @@ struct Effect
    uint8_t id;
    uint32_t start_time;
    uint16_t duration;
+   bool started;
+   
+   void execute(void);
 };
+
 
 int main (void)
 {
@@ -115,9 +119,7 @@ int main (void)
                messages::decode_start_effect(buff, effect.id, effect.start_time, effect.duration);
                lcd_plate::set_cursor(1,0);
                print_time(nRF24L01::t_rx);
-               printf(":%02X ", effect.id);
-               print_time(effect.start_time);
-               printf(" %5d", effect.duration);
+               printf(":%02X %d %u", effect.id, effect.start_time - avr_rtc::t_ms, effect.duration);
                break;
             }
 
@@ -133,8 +135,31 @@ int main (void)
                break;
             }
          }
-
       }
+
+      effect.execute();
+      
       sleep_mode();
+   }
+}
+
+void Effect::execute()
+{
+   int dt = avr_rtc::t_ms - start_time;
+   if (dt>0 && dt<duration && !started)
+   {
+      started=true;
+      avr_tlc5940::set_channel(0, 1024);
+      avr_tlc5940::set_channel(1, 1024);
+      avr_tlc5940::set_channel(2, 1024);
+      avr_tlc5940::output_gsdata();
+   }
+   else if (dt>duration && started)
+   {
+      started=false;
+      avr_tlc5940::set_channel(0, 0);
+      avr_tlc5940::set_channel(1, 0);
+      avr_tlc5940::set_channel(2, 0);
+      avr_tlc5940::output_gsdata();
    }
 }
