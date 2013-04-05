@@ -64,7 +64,7 @@ int main(int argc, char **argv)
    OutState led(RPI_GPIO_P1_07);
 
    // Set up the expected message length for pipe 0
-   write_reg(RX_PW_P0, sizeof(messages::Heartbeat));
+   write_reg(RX_PW_P0, sizeof(messages::message_size));
 
    struct timeval tv;
    while(1)
@@ -83,17 +83,17 @@ int main(int argc, char **argv)
       }
 
       uint32_t trx = rt.msec();
-      messages::Heartbeat heartbeat;
-      uint8_t buff[sizeof(heartbeat)];
-      read_rx_payload((char*)buff, sizeof(heartbeat));
+      uint8_t buff[messages::message_size];
+      read_rx_payload((char*)buff, messages::message_size);
       write_reg(STATUS, STATUS_RX_DR); // clear data received bit
-      heartbeat.decode(buff);
+      uint32_t t_hb;
+      messages::decode_heartbeat(buff, t_hb);
 
-      int dt = heartbeat.t_ms - trx;
-      printf("  heartbeat:%.3f, dt=%d ms\n", 1e-3*heartbeat.t_ms, dt);
+      int dt = t_hb - trx;
+      printf("  heartbeat:%.3f, dt=%d ms\n", 1e-3*t_hb, dt);
       if (abs(dt)>10)
       {
-         rt.step(heartbeat.t_ms);
+         rt.step(t_hb);
          printf("  stepped %d ms\n", dt);
       }
    }
