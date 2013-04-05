@@ -27,18 +27,17 @@ int main(int argc, char **argv)
    const int LED=RPI_GPIO_P1_07;
    bcm2835_gpio_fsel(LED, BCM2835_GPIO_FSEL_OUTP);
 
-   messages::Heartbeat heartbeat;
    uint8_t buff[messages::message_size];
    for (int i=0; ; i++)
    {
       bcm2835_gpio_write(LED, LOW);
 
-      heartbeat.t_ms = rt.msec();
-      heartbeat.encode(buff);
+      uint32_t t = rt.msec();
+      messages::encode_heartbeat(buff, t);
       nRF24L01::write_tx_payload(buff, sizeof(buff));
       nRF24L01::pulse_CE();
 
-      printf(" #%d %ld\n", i, heartbeat.t_ms);
+      printf(" #%d %ld\n", i, t);
       for(int j=0; ((nRF24L01::read_reg(nRF24L01::STATUS) & nRF24L01::STATUS_TX_DS)== 0x00) && j<100; j++)
             bcm2835_delayMicroseconds(10);;
       nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_TX_DS); //Clear the data sent notice

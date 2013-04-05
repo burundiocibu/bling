@@ -73,7 +73,7 @@ int main(int argc, char **argv)
 
       if (key != 0xff)
       {
-         mvprintw(2, 0, "%8.3f  %c", i, 0.0001*runtime.msec(), key);
+         mvprintw(2, 0, "%8.3f  %c", i, 0.001*runtime.msec(), key);
          switch(key)
          {
             case 'R': red+=16;   messages::encode_set_tlc_ch(buff, 0, red);   break;
@@ -97,6 +97,7 @@ int main(int argc, char **argv)
 
    nRF24L01::shutdown();
    endwin();
+   bcm2835_gpio_write(LED, HIGH);
    return 0;
 }
 
