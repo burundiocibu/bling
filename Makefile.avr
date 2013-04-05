@@ -37,7 +37,7 @@ CPP=avr-gcc
 .SUFFIXES: .flash .hex .elf
 .PHONY: clean nrf_test.flash
 
-all: slave_main.hex
+all: slave_main.flash
 
 clean:
 	rm -f *.hex *.o *.elf *.map *.lst

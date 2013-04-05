@@ -15,6 +15,7 @@
 #endif
 
 #include "nrf24l01.hpp"
+#include "avr_rtc.hpp"
 
 
 //===============================================================================================
@@ -79,10 +80,12 @@ bool nrf_rx_flag=false;
 
 #ifdef AVR
 int rx_flag=0;
+uint32_t t_rx;
 
 ISR(PCINT0_vect)
 {
    rx_flag++;
+   t_rx = avr_rtc::t_ms;
 }
 #endif
 

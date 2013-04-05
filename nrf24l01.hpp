@@ -224,6 +224,7 @@ namespace nRF24L01
 
 #ifdef AVR
    extern int rx_flag;
+   extern uint32_t t_rx;
 #endif
 }
 #endif
