@@ -223,7 +223,7 @@ namespace nRF24L01
    void pulse_CE(void);
 
 #ifdef AVR
-   extern int rx_flag;
+   extern uint8_t rx_flag;
    extern uint32_t t_rx;
 #endif
 }

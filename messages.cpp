@@ -35,18 +35,18 @@ namespace messages
 
 
    // ========================================
-   void encode_set_tlc_ch(uint8_t* p, uint8_t ch, uint8_t value)
+   void encode_set_tlc_ch(uint8_t* p, uint8_t ch, uint16_t value)
    {
       *p++ = set_tlc_ch_id;
       p = encode_var<uint8_t>(p, ch);
-      p = encode_var<uint8_t>(p, value);
+      p = encode_var<uint16_t>(p, value);
    }
       
-   void decode_set_tlc_ch(uint8_t* p, uint8_t &ch, uint8_t &value)
+   void decode_set_tlc_ch(uint8_t* p, uint8_t &ch, uint16_t &value)
    {
       p++; // skip ID
       p = decode_var<uint8_t>(p, ch);
-      p = decode_var<uint8_t>(p, value);
+      p = decode_var<uint16_t>(p, value);
    }
 
    // ========================================
