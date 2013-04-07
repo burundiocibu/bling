@@ -13,7 +13,7 @@ using namespace std;
 RunTime runtime;
 
 
-void nrf_tx(uint8_t *buff, size_t len);
+void nrf_tx(uint8_t *buff, size_t len, unsigned slave_num);
 void slider(uint8_t ch, uint16_t &v, int dir);
 
 
@@ -41,7 +41,6 @@ int main(int argc, char **argv)
    nRF24L01::configure_PTX();
    nRF24L01::power_up_PTX();
    nRF24L01::flush_tx();
-   nRF24L01::write_reg(nRF24L01::RX_PW_P0, messages::message_size);
 
    const int LED=RPI_GPIO_P1_07;
    bcm2835_gpio_fsel(LED, BCM2835_GPIO_FSEL_OUTP);
@@ -63,7 +62,7 @@ int main(int argc, char **argv)
       if (t - last_hb > 1000)
       {
          messages::encode_heartbeat(buff, t);
-         nrf_tx(buff, sizeof(buff));
+         nrf_tx(buff, sizeof(buff), 0);
          hb_count++;
          last_hb = t;
          mvprintw(0, 0, "i:%5d", hb_count);
@@ -87,11 +86,11 @@ int main(int argc, char **argv)
             case 'W': slider(0, red, -1); slider(1, green, -1); slider(2, blue, -1); break;
             case ' ':
                messages::encode_start_effect(buff, 0, t, 1000);
-               nrf_tx(buff, sizeof(buff));
+               nrf_tx(buff, sizeof(buff), 0);
                break;
             case '0':
                messages::encode_all_stop(buff);
-               nrf_tx(buff, sizeof(buff));
+               nrf_tx(buff, sizeof(buff), 0);
                red=0;green=0;blue=0;
                break;
          }
@@ -109,9 +108,9 @@ int main(int argc, char **argv)
 
 
 
-void nrf_tx(uint8_t *buff, size_t len)
+void nrf_tx(uint8_t *buff, size_t len, unsigned slave_num)
 {
-   nRF24L01::write_tx_payload(buff, len);
+   nRF24L01::write_tx_payload(buff, len, slave_num);
    nRF24L01::pulse_CE();
    for(int j=0; ((nRF24L01::read_reg(nRF24L01::STATUS) & nRF24L01::STATUS_TX_DS)== 0x00) && j<100; j++)
       bcm2835_delayMicroseconds(10);;
@@ -120,7 +119,6 @@ void nrf_tx(uint8_t *buff, size_t len)
    mvprintw(2+buff[0], 0, "Tx:%8.3f  ", 0.001* runtime.msec());
    for (int i = 0; i <len; i++)
       printw("%.2X ", buff[i]);
-
 }
 
 
@@ -144,6 +142,6 @@ void slider(uint8_t ch, uint16_t &v, int dir)
    uint8_t buff[messages::message_size];
    for (int i=0; i<sizeof(buff); i++) buff[i]=0;
    messages::encode_set_tlc_ch(buff, ch, v);
-   nrf_tx(buff, sizeof(buff));
+   nrf_tx(buff, sizeof(buff),0);
 }
 

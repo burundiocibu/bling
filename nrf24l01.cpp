@@ -28,8 +28,14 @@
 namespace nRF24L01
 {
    const size_t addr_len=4;
-   const char ptx_addr[]={0xE1, 0xE3, 0xE5, 0xE6};
-   const char prx_addr[]={0xB1, 0xB3, 0xB5, 0xB6};
+   // The first address is the 'all-hands' address
+   const char slave_addr[][4]={
+      {0xE1, 0xE3, 0xE5, 0xE6},
+      {0x61, 0x63, 0x65, 0x66},
+      {0x51, 0x53, 0x55, 0x56},
+      {0x31, 0x33, 0x35, 0x36}
+   };
+
    char iobuff[messages::message_size];
 
 
@@ -180,22 +186,26 @@ namespace nRF24L01
          return false;
 
       write_reg(CONFIG, CONFIG_EN_CRC | CONFIG_MASK_TX_DS | CONFIG_MASK_MAX_RT);
-      write_reg(SETUP_RETR, SETUP_RETR_ARC_0); // auto retransmit off
-      write_reg(SETUP_AW, SETUP_AW_3BYTES);  // 3 byte addresses
+      write_reg(SETUP_RETR, SETUP_RETR_ARC_3); // auto retransmit set to 3, delay=250us
+      write_reg(SETUP_AW, SETUP_AW_4BYTES);  // 3 byte addresses
       write_reg(RF_SETUP, 0x07);  // 1Mbps data rate, 0dBm
       write_reg(RF_CH, 0x02); // use channel 2
+
+      // One size fits all!
+      nRF24L01::write_reg(nRF24L01::RX_PW_P0, messages::message_size);
+      nRF24L01::write_reg(nRF24L01::RX_PW_P1, messages::message_size);
 
       // Clear the various interrupt bits
       write_reg(STATUS, STATUS_TX_DS|STATUS_RX_DR|STATUS_MAX_RT);
 
       //shouldn't have to do this, but it won't TX if you don't
-      write_reg(EN_AA, 0x00); //disable auto-ack, RX mode
+      write_reg(EN_AA, ~EN_AA_ENAA_P0 | EN_AA_ENAA_P1); //disable auto-ack, RX mode on P0, enable on P1
       return true;
    }
 
 
-// Setup device as primary receiver
-   void configure_PRX(void)
+   // Setup device as primary receiver
+   void configure_PRX(unsigned slave_num)
    {
       nRF24L01_IO_DEBUG3("config PRX");
 
@@ -203,14 +213,21 @@ namespace nRF24L01
       config |= CONFIG_PRIM_RX;
       write_reg(CONFIG, config);
 
+      // Not sure this is ever used by a slave
       char buff[addr_len];
-      memcpy(buff, ptx_addr, addr_len);
+      memcpy(buff, slave_addr[0], addr_len);
       write_reg(TX_ADDR, buff, addr_len);
 
-      memcpy(buff, ptx_addr, addr_len);
+      // Pipe 0 is the all-hands address
+      memcpy(buff, slave_addr[0], addr_len);
       write_reg(RX_ADDR_P0, buff, addr_len);
-      // Enable just pipe 0
-      write_reg(EN_RXADDR, 0x01);
+
+      // Pipe 1 is my private address
+      memcpy(buff, slave_addr[slave_num], addr_len);
+      write_reg(RX_ADDR_P1, buff, addr_len);
+
+      // Enable just pipes 0 & 1
+      write_reg(EN_RXADDR, EN_RXADDR_ERX_P0 | EN_RXADDR_ERX_P1);
    }
 
 
@@ -227,8 +244,9 @@ namespace nRF24L01
    }
 
 
-   void read_rx_payload(void* data, const size_t len)
+   void read_rx_payload(void* data, const size_t len, uint8_t &pipe)
    {
+      pipe = (read_reg(STATUS) & 0xe) >>1;
       iobuff[0]=R_RX_PAYLOAD;
       clear_CE();
       write_data(iobuff, len+1);
@@ -242,13 +260,15 @@ namespace nRF24L01
    {
       nRF24L01_IO_DEBUG3("config PTX");
 
-      // Note the TX_ADDR must be equal the RX_ADDR_P0 in the PTX
       char buff[addr_len];
-      memcpy(buff, ptx_addr, addr_len);
+      memcpy(buff, slave_addr[0], addr_len);
       write_reg(TX_ADDR, buff, addr_len);
 
-      memcpy(buff, ptx_addr, addr_len);
+      memcpy(buff, slave_addr[0], addr_len);
       write_reg(RX_ADDR_P0, buff, addr_len);
+
+      // Enable just pipe 0
+      write_reg(EN_RXADDR, EN_RXADDR_ERX_P0);
    }
 
 
@@ -263,9 +283,19 @@ namespace nRF24L01
    }
 
 
-   void write_tx_payload(void* data, const size_t len)
+   // use a slave_num of 0 for all slaves and don't ask for an ACK
+   void write_tx_payload(void* data, const size_t len, unsigned slave_num)
    {
-      iobuff[0]=W_TX_PAYLOAD;
+      char buff[addr_len];
+      memcpy(buff, slave_addr[slave_num], addr_len);
+      write_reg(TX_ADDR, buff, addr_len);
+      memcpy(buff, slave_addr[slave_num], addr_len);
+      write_reg(RX_ADDR_P0, buff, addr_len);
+
+      if (slave_num==0)
+         iobuff[0]=W_TX_PAYLOAD_NO_ACK;
+      else
+         iobuff[0]=W_TX_PAYLOAD;
       memcpy(iobuff+1, data, len);
       write_data(iobuff, len+1);
    }

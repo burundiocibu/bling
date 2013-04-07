@@ -34,7 +34,7 @@ int main(int argc, char **argv)
 
       uint32_t t = rt.msec();
       messages::encode_heartbeat(buff, t);
-      nRF24L01::write_tx_payload(buff, sizeof(buff));
+      nRF24L01::write_tx_payload(buff, sizeof(buff), 0);
       nRF24L01::pulse_CE();
 
       printf(" #%d %ld\n", i, t);
