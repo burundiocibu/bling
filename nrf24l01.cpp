@@ -188,7 +188,7 @@ namespace nRF24L01
          return false;
 
       write_reg(CONFIG, CONFIG_EN_CRC | CONFIG_MASK_TX_DS | CONFIG_MASK_MAX_RT);
-      write_reg(SETUP_RETR, SETUP_RETR_ARC_5); // auto retransmit set to 3, delay=250us
+      write_reg(SETUP_RETR, SETUP_RETR_ARC_3); // auto retransmit set to 3, delay=250us
       write_reg(SETUP_AW, SETUP_AW_4BYTES);  // 4 byte addresses
       write_reg(RF_SETUP, 0x07);  // 1Mbps data rate, 0dBm
       write_reg(RF_CH, channel); // use channel 2
@@ -271,7 +271,6 @@ namespace nRF24L01
 
       // Enable just pipe 0
       write_reg(EN_RXADDR, EN_RXADDR_ERX_P0);
-      write_reg(RF_CH, channel);  // just to clear the OBSERVE_TX PLOS_CNT
    }
 
 
@@ -297,13 +296,12 @@ namespace nRF24L01
 
       if (slave_num==0)
       {
-         iobuff[0]=W_TX_PAYLOAD_NO_ACK;
-         write_reg(EN_AA, 0); // disenable auto-ack RX mode on P0
+         iobuff[0]=W_TX_PAYLOAD;//_NO_ACK;
       }
       else
       {
+         write_reg(EN_AA, EN_AA_ENAA_P0); //disable auto-ack, RX mode on P0, enable on P1
          iobuff[0]=W_TX_PAYLOAD;
-         write_reg(EN_AA, EN_AA_ENAA_P0); //enable auto-ack RX mode on P0
       }
 
       memcpy(iobuff+1, data, len);

@@ -117,10 +117,10 @@ int main(int argc, char **argv)
 void nrf_tx(uint8_t *buff, size_t len, unsigned slave_num)
 {
    nRF24L01::write_tx_payload(buff, len, slave_num);
+   uint8_t obs_tx = nRF24L01::read_reg(nRF24L01::OBSERVE_TX);
    nRF24L01::pulse_CE();
    for(int j=0; ((nRF24L01::read_reg(nRF24L01::STATUS) & nRF24L01::STATUS_TX_DS)== 0x00) && j<100; j++)
       bcm2835_delayMicroseconds(10);;
-   uint8_t obs_tx = nRF24L01::read_reg(nRF24L01::OBSERVE_TX);
    nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_TX_DS); //Clear the data sent notice
 
    mvprintw(0,10, "slave:%-3d tx:%02x", slave_num, obs_tx);
