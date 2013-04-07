@@ -12,12 +12,15 @@ namespace messages
       set_tlc_ch_id = 2,
       get_tlc_ch_id = 3,
       start_effect_id = 4,
-      stop_effect_id = 5
+      set_rgb_id = 5,
    };
    const size_t message_size=12;
 
    inline uint8_t get_id(uint8_t* p)
    {return *p;}
+
+   void encode_all_stop(uint8_t* p);
+   void decode_all_stop(uint8_t* p);
 
    void encode_heartbeat(uint8_t* p, uint32_t  t_ms);
    void decode_heartbeat(uint8_t* p, uint32_t &t_ms);

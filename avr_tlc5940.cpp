@@ -14,6 +14,7 @@
 //  PD5 for the greyscale data clock (SCLK)
 //  PD6 clock input to TIMER1, from GSCLOCK
 //  PD7 for the BLANK signal (to shut off output and to start the next PWM cycle)
+//  PC6 for the VPRG
 //
 // Note that it appears that the unit goes to 100% on at 1023, not 4095.
 // This is probably a bug in the way I am communicating to the. Everything
@@ -45,7 +46,10 @@ namespace avr_tlc5940
 
       //        XLAT       SCLK       BLANK   
       DDRD  |= _BV(PD4) | _BV(PD5) | _BV(PD7);
-      PORTD &= ~(_BV(PD4) | _BV(PD5) | _BV(PD7));
+      //       VPRG
+      DDRC |= _BV(PC6);
+      PORTD |= _BV(PD7);
+      PORTD &= ~(_BV(PD4) | _BV(PD5));
       // PD3 is TxD and configured with the USART 
       // PD7 is XERR, input, not used at the moment
 
@@ -55,9 +59,17 @@ namespace avr_tlc5940
       UCSR1B = _BV(RXEN1) | _BV(TXEN1); // give the pins the correct dir..
       UBRR1 = 0; // set the baud /again/. cause they say to
 
+      PORTC |= _BV(PC6);
+      PORTC &= ~_BV(PC6);
+      
       for (unsigned i=0; i<sizeof(gsdata); i++)
          gsdata[i]=0;
+
+      PORTD &= ~_BV(PD7);
       output_gsdata();
+      _delay_us(40);
+      PORTD |= _BV(PD5);
+      PORTD &= ~_BV(PD5); // additional SCLK pulse
    }
 
    void set_channel(int chan, int value)
@@ -65,10 +77,15 @@ namespace avr_tlc5940
       size_t lb = 23 - ((3*chan)>>1);
       uint16_t pwm = (chan & 1) ? value<<4 : value;
       uint16_t mask = (chan & 1) ? ~0xfff0: ~0x0fff;
-      gsdata[lb] &= mask;
-      gsdata[lb-1] &= mask >> 8;
-      gsdata[lb] |= pwm;
-      gsdata[lb-1] |= pwm >> 8;
+      uint8_t pwm_l = pwm;
+      uint8_t pwm_h = pwm>>8;
+      uint8_t mask_l = mask & 0xff;
+      uint8_t mask_h = mask>>8;
+      
+      gsdata[lb] &= mask_l;
+      gsdata[lb-1] &= mask_h;
+      gsdata[lb] |= pwm_l;
+      gsdata[lb-1] |= pwm_h;
    }
 
    unsigned get_channel(int chan)
@@ -94,6 +111,8 @@ namespace avr_tlc5940
          UDR1 = gsdata[i];
          while ( !(UCSR1A & _BV(RXC1))  ) ;
       }
+
+      _delay_us(5); //  This seems to make the flickering no occur
 
       need_xlat = 1; // indicate that there is new data to be latched
    }

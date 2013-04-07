@@ -17,7 +17,7 @@
 
 void print_time(uint32_t t)
 {
-   char b1[11],b2[7];
+   char b1[11],b2[8];
    sprintf(b1, "%10ld", t);
    b2[0] = b1[4];
    b2[1] = b1[5]; 
@@ -25,7 +25,8 @@ void print_time(uint32_t t)
    b2[3] = '.';
    b2[4] = b1[7];
    b2[5] = b1[8];
-   b2[6] = 0;
+   b2[6] = b1[9];
+   b2[7] = 0;
    printf(b2);
 }
 
@@ -34,7 +35,10 @@ struct Effect
    uint8_t id;
    uint32_t start_time;
    uint16_t duration;
-   bool started;
+   enum State
+   {
+      unstarted, started, complete
+   } state;
    
    void execute(void);
 };
@@ -62,6 +66,7 @@ int main (void)
    // TLC5940 BLANK needed  1.024 kHz
    // rtc:      1 kHz
 
+   uint32_t t_hb=0;
    Effect effect;
    for (;;)
    {
@@ -71,6 +76,9 @@ int main (void)
 
       if ((ms & 0x10) == 0)
       {
+         // Stop throbbing if we loose the heartbeat
+//         if ((avr_rtc::t_ms - t_hb) > 5000)
+//            avr_tlc5940::set_channel(15, 0);            
          if (sec & 1)
             avr_tlc5940::set_channel(15, ms);
          else
@@ -82,8 +90,6 @@ int main (void)
       // this test is less good: nRF24L01::read_reg(nRF24L01::STATUS) & nRF24L01::STATUS_RX_DR
       if (nRF24L01::rx_flag)
       {
-         avr_led::toggle();
-         // We got some data!!
          nRF24L01::read_rx_payload(buff, sizeof(buff));
          nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_RX_DR); // clear data received bit
          nRF24L01::rx_flag=0;
@@ -92,13 +98,12 @@ int main (void)
          {
             case messages::heartbeat_id:
             {
-               uint32_t t_hb;
                messages::decode_heartbeat(buff, t_hb);
                lcd_plate::set_cursor(0,0);
                int dt = t_hb - nRF24L01::t_rx;
                print_time(t_hb);
                printf(" %5d", dt);
-               if (dt > 5 || dt < 5)
+               if (dt)
                   avr_rtc::step(dt);
                break;
             }
@@ -116,20 +121,25 @@ int main (void)
 
             case messages::start_effect_id:
             {
+               effect.state = Effect::unstarted;
                messages::decode_start_effect(buff, effect.id, effect.start_time, effect.duration);
                lcd_plate::set_cursor(1,0);
                print_time(nRF24L01::t_rx);
-               printf(":%02X %d %u", effect.id, effect.start_time - avr_rtc::t_ms, effect.duration);
+               printf(":%02X %d %u",
+                      effect.id,
+                      static_cast<int>(effect.start_time - avr_rtc::t_ms),
+                      effect.duration);
                break;
             }
 
             case messages::set_tlc_ch_id:
             {
-               uint8_t ch=0,value=0;
+               uint8_t ch;
+               uint16_t value;
                messages::decode_set_tlc_ch(buff, ch, value);
                lcd_plate::set_cursor(1,0);
                print_time(nRF24L01::t_rx);
-               printf(":%02X %02X", ch, value);
+               printf(":%02X %03X  ", ch, value); 
                avr_tlc5940::set_channel(ch, value);
                avr_tlc5940::output_gsdata();
                break;
@@ -146,17 +156,17 @@ int main (void)
 void Effect::execute()
 {
    int dt = avr_rtc::t_ms - start_time;
-   if (dt>0 && dt<duration && !started)
+   if (dt>0 && dt<duration && state==unstarted)
    {
-      started=true;
-      avr_tlc5940::set_channel(0, 1024);
-      avr_tlc5940::set_channel(1, 1024);
-      avr_tlc5940::set_channel(2, 1024);
+      state=started;
+      avr_tlc5940::set_channel(0, 512);
+      avr_tlc5940::set_channel(1, 512);
+      avr_tlc5940::set_channel(2, 512);
       avr_tlc5940::output_gsdata();
    }
-   else if (dt>duration && started)
+   else if (dt>duration && state==started)
    {
-      started=false;
+      state=complete;
       avr_tlc5940::set_channel(0, 0);
       avr_tlc5940::set_channel(1, 0);
       avr_tlc5940::set_channel(2, 0);

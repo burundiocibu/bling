@@ -21,6 +21,16 @@ namespace messages
 
 
    // ========================================
+   void encode_all_stop(uint8_t* p)
+   {
+      *p++ = heartbeat_id;
+   }
+
+   void decode_all_stop(uint8_t* p)
+   {}
+
+
+   // ========================================
    void encode_heartbeat(uint8_t* p, uint32_t t_ms)
    {
       *p++ = heartbeat_id;
