@@ -23,7 +23,7 @@ namespace messages
    // ========================================
    void encode_all_stop(uint8_t* p)
    {
-      *p++ = heartbeat_id;
+      *p++ = all_stop_id;
    }
 
    void decode_all_stop(uint8_t* p)
