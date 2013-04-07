@@ -36,6 +36,8 @@ namespace nRF24L01
       {0x31, 0x33, 0x35, 0x36}
    };
 
+   const uint8_t channel = 2;
+
    char iobuff[messages::message_size];
 
 
@@ -186,10 +188,10 @@ namespace nRF24L01
          return false;
 
       write_reg(CONFIG, CONFIG_EN_CRC | CONFIG_MASK_TX_DS | CONFIG_MASK_MAX_RT);
-      write_reg(SETUP_RETR, SETUP_RETR_ARC_3); // auto retransmit set to 3, delay=250us
-      write_reg(SETUP_AW, SETUP_AW_4BYTES);  // 3 byte addresses
+      write_reg(SETUP_RETR, SETUP_RETR_ARC_5); // auto retransmit set to 3, delay=250us
+      write_reg(SETUP_AW, SETUP_AW_4BYTES);  // 4 byte addresses
       write_reg(RF_SETUP, 0x07);  // 1Mbps data rate, 0dBm
-      write_reg(RF_CH, 0x02); // use channel 2
+      write_reg(RF_CH, channel); // use channel 2
 
       // One size fits all!
       nRF24L01::write_reg(nRF24L01::RX_PW_P0, messages::message_size);
@@ -197,9 +199,7 @@ namespace nRF24L01
 
       // Clear the various interrupt bits
       write_reg(STATUS, STATUS_TX_DS|STATUS_RX_DR|STATUS_MAX_RT);
-
-      //shouldn't have to do this, but it won't TX if you don't
-      write_reg(EN_AA, ~EN_AA_ENAA_P0 | EN_AA_ENAA_P1); //disable auto-ack, RX mode on P0, enable on P1
+      write_reg(EN_AA, 0); // disenable all auto-ack
       return true;
    }
 
@@ -228,6 +228,8 @@ namespace nRF24L01
 
       // Enable just pipes 0 & 1
       write_reg(EN_RXADDR, EN_RXADDR_ERX_P0 | EN_RXADDR_ERX_P1);
+
+      write_reg(EN_AA, EN_AA_ENAA_P1); //disable auto-ack, RX mode on P0, enable on P1
    }
 
 
@@ -269,6 +271,7 @@ namespace nRF24L01
 
       // Enable just pipe 0
       write_reg(EN_RXADDR, EN_RXADDR_ERX_P0);
+      write_reg(RF_CH, channel);  // just to clear the OBSERVE_TX PLOS_CNT
    }
 
 
@@ -293,9 +296,16 @@ namespace nRF24L01
       write_reg(RX_ADDR_P0, buff, addr_len);
 
       if (slave_num==0)
+      {
          iobuff[0]=W_TX_PAYLOAD_NO_ACK;
+         write_reg(EN_AA, 0); // disenable auto-ack RX mode on P0
+      }
       else
+      {
          iobuff[0]=W_TX_PAYLOAD;
+         write_reg(EN_AA, EN_AA_ENAA_P0); //enable auto-ack RX mode on P0
+      }
+
       memcpy(iobuff+1, data, len);
       write_data(iobuff, len+1);
    }

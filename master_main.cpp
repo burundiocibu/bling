@@ -33,6 +33,8 @@ int main(int argc, char **argv)
 
    nRF24L01::setup();
 
+   int slave_num=0;
+
    if (!nRF24L01::configure_base())
    {
       printf("Failed to find nRF24L01. Exiting.\n");
@@ -62,7 +64,7 @@ int main(int argc, char **argv)
       if (t - last_hb > 1000)
       {
          messages::encode_heartbeat(buff, t);
-         nrf_tx(buff, sizeof(buff), 0);
+         nrf_tx(buff, sizeof(buff), slave_num);
          hb_count++;
          last_hb = t;
          mvprintw(0, 0, "i:%5d", hb_count);
@@ -86,13 +88,17 @@ int main(int argc, char **argv)
             case 'W': slider(0, red, -1); slider(1, green, -1); slider(2, blue, -1); break;
             case ' ':
                messages::encode_start_effect(buff, 0, t, 1000);
-               nrf_tx(buff, sizeof(buff), 0);
+               nrf_tx(buff, sizeof(buff), slave_num);
                break;
-            case '0':
+            case 'S':
+            case 's':
                messages::encode_all_stop(buff);
-               nrf_tx(buff, sizeof(buff), 0);
+               nrf_tx(buff, sizeof(buff), slave_num);
                red=0;green=0;blue=0;
                break;
+            case '0': slave_num=0; break;
+            case '1': slave_num=1; break;
+            case '2': slave_num=2; break;
          }
          mvprintw(1, 0, "RGB: %3x %3x %3x", red, green, blue);
       }
@@ -114,8 +120,10 @@ void nrf_tx(uint8_t *buff, size_t len, unsigned slave_num)
    nRF24L01::pulse_CE();
    for(int j=0; ((nRF24L01::read_reg(nRF24L01::STATUS) & nRF24L01::STATUS_TX_DS)== 0x00) && j<100; j++)
       bcm2835_delayMicroseconds(10);;
+   uint8_t obs_tx = nRF24L01::read_reg(nRF24L01::OBSERVE_TX);
    nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_TX_DS); //Clear the data sent notice
 
+   mvprintw(0,10, "slave:%-3d tx:%02x", slave_num, obs_tx);
    mvprintw(2+buff[0], 0, "Tx:%8.3f  ", 0.001* runtime.msec());
    for (int i = 0; i <len; i++)
       printw("%.2X ", buff[i]);
