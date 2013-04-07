@@ -28,6 +28,14 @@ namespace avr_rtc
       sei();
    }
 
+   void set(uint32_t t_new)
+   {
+      cli();
+      t_ms = t_new;
+      sei();
+   }
+
+
    void step(int dt_ms)
    {
       cli();

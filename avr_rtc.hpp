@@ -8,6 +8,8 @@ namespace avr_rtc
 
    void step(int dt_ms);
 
+   void set(uint32_t t_ms);
+
    void setup(void);
 }
 #endif

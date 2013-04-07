@@ -30,6 +30,7 @@ void print_time(uint32_t t)
    printf(b2);
 }
 
+
 struct Effect
 {
    uint8_t id;
@@ -53,9 +54,8 @@ int main (void)
    
    nRF24L01::setup();
    nRF24L01::configure_base();
-   nRF24L01::configure_PRX();
+   nRF24L01::configure_PRX(1);
    nRF24L01::power_up_PRX();
-   nRF24L01::write_reg(nRF24L01::RX_PW_P0, messages::message_size);
    uint8_t buff[messages::message_size];
 
    avr_tlc5940::setup();
@@ -77,9 +77,14 @@ int main (void)
       if ((ms & 0x10) == 0)
       {
          // Stop throbbing if we loose the heartbeat
-//         if ((avr_rtc::t_ms - t_hb) > 5000)
-//            avr_tlc5940::set_channel(15, 0);            
-         if (sec & 1)
+         long rx_dt = avr_rtc::t_ms - t_hb;
+         if (rx_dt > 5000 || rx_dt < -5000)
+         {
+            avr_tlc5940::set_channel(15, 0);
+            lcd_plate::set_cursor(0,0);
+            printf("dt: ??");
+         }
+         else if (sec & 1)
             avr_tlc5940::set_channel(15, ms);
          else
             avr_tlc5940::set_channel(15, 1000-ms);
@@ -90,9 +95,12 @@ int main (void)
       // this test is less good: nRF24L01::read_reg(nRF24L01::STATUS) & nRF24L01::STATUS_RX_DR
       if (nRF24L01::rx_flag)
       {
-         nRF24L01::read_rx_payload(buff, sizeof(buff));
+         uint8_t pipe;
+         nRF24L01::read_rx_payload(buff, sizeof(buff), pipe);
          nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_RX_DR); // clear data received bit
          nRF24L01::rx_flag=0;
+         lcd_plate::set_cursor(0, 15);
+         printf("%1d", pipe);
 
          switch (messages::get_id(buff))
          {
@@ -100,11 +108,18 @@ int main (void)
             {
                messages::decode_heartbeat(buff, t_hb);
                lcd_plate::set_cursor(0,0);
-               int dt = t_hb - nRF24L01::t_rx;
-               print_time(t_hb);
-               printf(" %5d", dt);
-               if (dt)
+               long dt = t_hb - nRF24L01::t_rx;
+               if (dt >100000 || dt<-100000)
+                  avr_rtc::set(t_hb);
+               else
+               {
+                  lcd_plate::set_cursor(0,0);
+                  printf("dt:%-7ld", dt);
+               }
+
+               if (dt>3 || dt<-3)
                   avr_rtc::step(dt);
+
                break;
             }
 
@@ -156,7 +171,7 @@ int main (void)
 void Effect::execute()
 {
    int dt = avr_rtc::t_ms - start_time;
-   if (dt>0 && dt<duration && state==unstarted)
+   if (dt>0 && dt<int(duration) && state==unstarted)
    {
       state=started;
       avr_tlc5940::set_channel(0, 512);
@@ -164,7 +179,7 @@ void Effect::execute()
       avr_tlc5940::set_channel(2, 512);
       avr_tlc5940::output_gsdata();
    }
-   else if (dt>duration && state==started)
+   else if (dt>int(duration) && state==started)
    {
       state=complete;
       avr_tlc5940::set_channel(0, 0);

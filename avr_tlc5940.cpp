@@ -117,10 +117,6 @@ namespace avr_tlc5940
       need_xlat = 1; // indicate that there is new data to be latched
    }
 
-   void output_dcdata(void)
-   {
-   }
-
    // Pulse BLANK  every 4096 GSCLK cycles
    // should go off 4096 / 4 MHz = 1.024 ms
    // While BLANK is active, pulse XLAT if needed
