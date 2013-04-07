@@ -10,6 +10,13 @@
 
 using namespace std;
 
+RunTime runtime;
+
+
+void nrf_tx(uint8_t *buff, size_t len);
+void slider(uint8_t ch, uint16_t &v, int dir);
+
+
 int main(int argc, char **argv)
 {
    WINDOW *win;
@@ -24,7 +31,6 @@ int main(int argc, char **argv)
    keypad(win, true);
    prev_curs = ::curs_set(0);   // we want an invisible cursor. 
 
-   RunTime runtime;
    nRF24L01::setup();
 
    if (!nRF24L01::configure_base())
@@ -41,7 +47,8 @@ int main(int argc, char **argv)
    bcm2835_gpio_fsel(LED, BCM2835_GPIO_FSEL_OUTP);
 
    uint8_t buff[messages::message_size];
-   uint8_t red=0,green=0,blue=0;
+   for (int i=0; i<sizeof(buff); i++) buff[i]=0;
+   uint16_t red=0,green=0,blue=0;
    unsigned hb_count=0;
    uint32_t last_hb=0;
 
@@ -56,15 +63,10 @@ int main(int argc, char **argv)
       if (t - last_hb > 1000)
       {
          messages::encode_heartbeat(buff, t);
-         nRF24L01::write_tx_payload(buff, sizeof(buff));
-         nRF24L01::pulse_CE();
+         nrf_tx(buff, sizeof(buff));
          hb_count++;
          last_hb = t;
-         
-         mvprintw(0, 0, "%5d %8.3f  ", hb_count, 0.001* t);
-         for(int j=0; ((nRF24L01::read_reg(nRF24L01::STATUS) & nRF24L01::STATUS_TX_DS)== 0x00) && j<100; j++)
-            bcm2835_delayMicroseconds(10);;
-         nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_TX_DS); //Clear the data sent notice
+         mvprintw(0, 0, "i:%5d", hb_count);
       }
 
       char key = getch();
@@ -73,23 +75,27 @@ int main(int argc, char **argv)
 
       if (key != 0xff)
       {
-         mvprintw(2, 0, "%8.3f  %c", i, 0.001*runtime.msec(), key);
          switch(key)
          {
-            case 'R': red+=16;   messages::encode_set_tlc_ch(buff, 0, red);   break;
-            case 'r': red-=16;   messages::encode_set_tlc_ch(buff, 0, red);   break;
-            case 'G': green+=16; messages::encode_set_tlc_ch(buff, 1, green); break;
-            case 'g': green-=16; messages::encode_set_tlc_ch(buff, 1, green); break;
-            case 'B': blue+=16;  messages::encode_set_tlc_ch(buff, 2, blue);  break;
-            case 'b': blue-=16;  messages::encode_set_tlc_ch(buff, 2, blue);  break;
-            case ' ': messages::encode_start_effect(buff, 0, t, 1000); break;
+            case 'R': slider(0, red,  -1);  break;
+            case 'r': slider(0, red,   1);  break;
+            case 'G': slider(1, green, -1); break;
+            case 'g': slider(1, green,  1); break;
+            case 'B': slider(2, blue,  -1); break;
+            case 'b': slider(2, blue,   1); break;
+            case 'w': slider(0, red,  1); slider(1, green,  1); slider(2, blue,  1); break;
+            case 'W': slider(0, red, -1); slider(1, green, -1); slider(2, blue, -1); break;
+            case ' ':
+               messages::encode_start_effect(buff, 0, t, 1000);
+               nrf_tx(buff, sizeof(buff));
+               break;
+            case '0':
+               messages::encode_all_stop(buff);
+               nrf_tx(buff, sizeof(buff));
+               red=0;green=0;blue=0;
+               break;
          }
-         printw(" %3d %3d %3d", red, green, blue);
-         nRF24L01::write_tx_payload(buff, sizeof(buff));
-         nRF24L01::pulse_CE();
-         for(int j=0; ((nRF24L01::read_reg(nRF24L01::STATUS) & nRF24L01::STATUS_TX_DS)== 0x00) && j<100; j++)
-            bcm2835_delayMicroseconds(10);;
-         nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_TX_DS); //Clear the data sent notice
+         mvprintw(1, 0, "RGB: %3x %3x %3x", red, green, blue);
       }
       // sleep 10 ms
       bcm2835_delayMicroseconds(10000);
@@ -99,5 +105,45 @@ int main(int argc, char **argv)
    endwin();
    bcm2835_gpio_write(LED, HIGH);
    return 0;
+}
+
+
+
+void nrf_tx(uint8_t *buff, size_t len)
+{
+   nRF24L01::write_tx_payload(buff, len);
+   nRF24L01::pulse_CE();
+   for(int j=0; ((nRF24L01::read_reg(nRF24L01::STATUS) & nRF24L01::STATUS_TX_DS)== 0x00) && j<100; j++)
+      bcm2835_delayMicroseconds(10);;
+   nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_TX_DS); //Clear the data sent notice
+
+   mvprintw(2+buff[0], 0, "Tx:%8.3f  ", 0.001* runtime.msec());
+   for (int i = 0; i <len; i++)
+      printw("%.2X ", buff[i]);
+
+}
+
+
+void slider(uint8_t ch, uint16_t &v, int dir)
+{
+   if (dir>0)
+   {
+      if (v==0)
+         v=1;
+      else
+         v = (v << 1) + 1;
+      if (v >=4096)
+         v=4095;
+   }
+   else
+   {
+      if (v>0)
+         v >>= 1;
+   }
+
+   uint8_t buff[messages::message_size];
+   for (int i=0; i<sizeof(buff); i++) buff[i]=0;
+   messages::encode_set_tlc_ch(buff, ch, v);
+   nrf_tx(buff, sizeof(buff));
 }
 
