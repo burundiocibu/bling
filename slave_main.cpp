@@ -174,9 +174,9 @@ void Effect::execute()
    if (dt>0 && dt<int(duration) && state==unstarted)
    {
       state=started;
-      avr_tlc5940::set_channel(0, 512);
-      avr_tlc5940::set_channel(1, 512);
-      avr_tlc5940::set_channel(2, 512);
+      avr_tlc5940::set_channel(0, 1024);
+      avr_tlc5940::set_channel(1, 1024);
+      avr_tlc5940::set_channel(2, 1024);
       avr_tlc5940::output_gsdata();
    }
    else if (dt>int(duration) && state==started)
