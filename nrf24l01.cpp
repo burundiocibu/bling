@@ -296,11 +296,12 @@ namespace nRF24L01
 
       if (slave_num==0)
       {
-         iobuff[0]=W_TX_PAYLOAD;//_NO_ACK;
+         write_reg(EN_AA, 0);
+         iobuff[0]=W_TX_PAYLOAD_NO_ACK;
       }
       else
       {
-         write_reg(EN_AA, EN_AA_ENAA_P0); //disable auto-ack, RX mode on P0, enable on P1
+         write_reg(EN_AA, EN_AA_ENAA_P0);
          iobuff[0]=W_TX_PAYLOAD;
       }
 
