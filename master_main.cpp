@@ -13,9 +13,8 @@ using namespace std;
 RunTime runtime;
 
 
-void nrf_tx(uint8_t *buff, size_t len, unsigned slave_num);
+void master_tx(uint8_t *buff, size_t len, unsigned slave_num);
 void slider(uint8_t ch, uint16_t &v, int dir);
-
 
 int main(int argc, char **argv)
 {
@@ -64,7 +63,7 @@ int main(int argc, char **argv)
       if (t - last_hb > 1000)
       {
          messages::encode_heartbeat(buff, t);
-         nrf_tx(buff, sizeof(buff), slave_num);
+         master_tx(buff, sizeof(buff), slave_num);
          hb_count++;
          last_hb = t;
          mvprintw(0, 0, "i:%5d", hb_count);
@@ -88,12 +87,12 @@ int main(int argc, char **argv)
             case 'W': slider(0, red, -1); slider(1, green, -1); slider(2, blue, -1); break;
             case ' ':
                messages::encode_start_effect(buff, 0, t, 1000);
-               nrf_tx(buff, sizeof(buff), slave_num);
+               master_tx(buff, sizeof(buff), slave_num);
                break;
             case 'S':
             case 's':
                messages::encode_all_stop(buff);
-               nrf_tx(buff, sizeof(buff), slave_num);
+               master_tx(buff, sizeof(buff), slave_num);
                red=0;green=0;blue=0;
                break;
             case '0': slave_num=0; break;
@@ -113,17 +112,37 @@ int main(int argc, char **argv)
 }
 
 
-
-void nrf_tx(uint8_t *buff, size_t len, unsigned slave_num)
+void master_tx(uint8_t *buff, size_t len, unsigned slave_num)
 {
-   nRF24L01::write_tx_payload(buff, len, slave_num);
-   uint8_t obs_tx = nRF24L01::read_reg(nRF24L01::OBSERVE_TX);
-   nRF24L01::pulse_CE();
-   for(int j=0; ((nRF24L01::read_reg(nRF24L01::STATUS) & nRF24L01::STATUS_TX_DS)== 0x00) && j<100; j++)
-      bcm2835_delayMicroseconds(10);;
-   nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_TX_DS); //Clear the data sent notice
+   static unsigned ack_err=0;
+   static unsigned tx_err=0;
 
-   mvprintw(0,10, "slave:%-3d tx:%02x", slave_num, obs_tx);
+   nRF24L01::write_tx_payload(buff, len, slave_num);
+   nRF24L01::pulse_CE();
+
+   uint8_t status;
+   for(int j=0; j<100; j++)
+   {
+      status = nRF24L01::read_reg(nRF24L01::STATUS);
+      if (status & nRF24L01::STATUS_TX_DS || status & nRF24L01::STATUS_MAX_RT)
+         break;
+      bcm2835_delayMicroseconds(10);
+   }
+
+   if (status & nRF24L01::STATUS_MAX_RT)
+   {
+      ack_err++;
+      nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_MAX_RT);
+      // data doesn't automatically removed...
+      nRF24L01::flush_tx();
+   }
+   else if (status & nRF24L01::STATUS_TX_DS)
+      nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_TX_DS); //Clear the data sent notice
+   else
+      tx_err++;
+
+   uint8_t obs_tx = nRF24L01::read_reg(nRF24L01::OBSERVE_TX);
+   mvprintw(0,10, "slave:%-3d tx_err:%-3d  obs_tx:%02x  ack_err:%-3d", slave_num, tx_err, obs_tx, ack_err);
    mvprintw(2+buff[0], 0, "Tx:%8.3f  ", 0.001* runtime.msec());
    for (int i = 0; i <len; i++)
       printw("%.2X ", buff[i]);
@@ -150,6 +169,6 @@ void slider(uint8_t ch, uint16_t &v, int dir)
    uint8_t buff[messages::message_size];
    for (int i=0; i<sizeof(buff); i++) buff[i]=0;
    messages::encode_set_tlc_ch(buff, ch, v);
-   nrf_tx(buff, sizeof(buff),0);
+   master_tx(buff, sizeof(buff), 0);
 }
 
