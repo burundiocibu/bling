@@ -33,12 +33,14 @@ void print_time(uint32_t t)
 
 struct Effect
 {
+   Effect() :
+      state(complete) {};
    uint8_t id;
    uint32_t start_time;
    uint16_t duration;
    enum State
    {
-      unstarted, started, complete
+      complete, unstarted, started
    } state;
    
    void execute(void);
@@ -68,6 +70,7 @@ int main (void)
    uint32_t t_hb=0;
    Effect effect;
    uint8_t pipe;
+   int late_count=0;
    for (;;)
    {
       uint32_t ms = avr_rtc::t_ms;
@@ -105,8 +108,10 @@ int main (void)
                messages::decode_heartbeat(buff, t_hb);
                long dt = t_hb - nRF24L01::t_rx;
                lcd_plate::set_cursor(0,0);
-               if (labs(dt) < 1000)
-                  printf("%4ld", dt);
+               if (labs(dt) < 2000)
+                  printf("%4ld %d", dt, late_count);
+               else
+                  late_count++;
                if (labs(dt)>10000)
                   avr_rtc::set(t_hb);
                else if (labs(dt)>3)

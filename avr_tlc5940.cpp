@@ -42,14 +42,12 @@ namespace avr_tlc5940
       TCCR1B = _BV(CS12) | _BV(CS11) | _BV(CS10); // ext clock source on T1 (PD6), falling edge
       OCR1A = 4096;
       TIMSK1 |= _BV(OCIE1A); // Interrupt on output compare on A  
-      sei();
-
+      
       //        XLAT       SCLK       BLANK   
       DDRD  |= _BV(PD4) | _BV(PD5) | _BV(PD7);
-      //       VPRG
-      DDRC |= _BV(PC6);
       PORTD |= _BV(PD7);
-      PORTD &= ~(_BV(PD4) | _BV(PD5));
+      PORTD &= ~_BV(PD4);
+      PORTD &= ~_BV(PD5);
       // PD3 is TxD and configured with the USART 
       // PD7 is XERR, input, not used at the moment
 
@@ -59,17 +57,13 @@ namespace avr_tlc5940
       UCSR1B = _BV(RXEN1) | _BV(TXEN1); // give the pins the correct dir..
       UBRR1 = 0; // set the baud /again/. cause they say to
 
-      PORTC |= _BV(PC6);
-      PORTC &= ~_BV(PC6);
-      
       for (unsigned i=0; i<sizeof(gsdata); i++)
          gsdata[i]=0;
 
-      PORTD &= ~_BV(PD7);
       output_gsdata();
-      _delay_us(40);
       PORTD |= _BV(PD5);
       PORTD &= ~_BV(PD5); // additional SCLK pulse
+      sei();
    }
 
    void set_channel(int chan, int value)
@@ -112,13 +106,9 @@ namespace avr_tlc5940
          while ( !(UCSR1A & _BV(RXC1))  ) ;
       }
 
-      _delay_us(5); //  This seems to make the flickering no occur
+      _delay_us(5); //  This seems to make the flickering not occur
 
       need_xlat = 1; // indicate that there is new data to be latched
-   }
-
-   void output_dcdata(void)
-   {
    }
 
    // Pulse BLANK  every 4096 GSCLK cycles
