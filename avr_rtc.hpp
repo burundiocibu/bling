@@ -6,8 +6,8 @@ namespace avr_rtc
    // number of ms since start
    extern uint32_t t_ms;
 
-   void step(int dt_ms);
-
+   void step(long dt_ms);
+   void set(uint32_t t);
    void setup(void);
 }
 #endif
