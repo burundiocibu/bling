@@ -16,6 +16,14 @@ RunTime runtime;
 void nrf_tx(uint8_t *buff, size_t len);
 void slider(uint8_t ch, uint16_t &v, int dir);
 
+/*
+HB#    R   G    B     STATUS   j
+123   fff fff  fff      2E     10
+
+Tx       Data
+123.345  01 3B EA 02 00 00 00 00 00 00 00 00
+123.345  02 3B EA 02 00 00 00 00 00 00 00 00
+*/
 
 int main(int argc, char **argv)
 {
@@ -29,7 +37,8 @@ int main(int argc, char **argv)
    nonl();
    intrflush(win, true);
    keypad(win, true);
-   prev_curs = ::curs_set(0);   // we want an invisible cursor. 
+   prev_curs = ::curs_set(0);   // we want an invisible cursor.
+   mvprintw(0,0, "HB#    R   G   B      STATUS   j");
 
    nRF24L01::setup();
 
@@ -51,6 +60,7 @@ int main(int argc, char **argv)
    uint16_t red=0,green=0,blue=0;
    unsigned hb_count=0;
    uint32_t last_hb=0;
+   mvprintw(1, 6, "%03x %03x %03x", red, green, blue);
 
    for (int i=0; ; i++)
    {
@@ -60,13 +70,13 @@ int main(int argc, char **argv)
       else 
          bcm2835_gpio_write(LED, HIGH);
 
-      if (t - last_hb > 1000)
+      if (t - last_hb > 990)
       {
          messages::encode_heartbeat(buff, t);
          nrf_tx(buff, sizeof(buff));
          hb_count++;
          last_hb = t;
-         mvprintw(0, 0, "i:%5d", hb_count);
+         mvprintw(1, 0, "%d", hb_count);
       }
 
       char key = getch();
@@ -89,13 +99,14 @@ int main(int argc, char **argv)
                messages::encode_start_effect(buff, 0, t, 1000);
                nrf_tx(buff, sizeof(buff));
                break;
-            case '0':
+            case 's':
+            case 'S':
                messages::encode_all_stop(buff);
                nrf_tx(buff, sizeof(buff));
                red=0;green=0;blue=0;
                break;
          }
-         mvprintw(1, 0, "RGB: %3x %3x %3x", red, green, blue);
+         mvprintw(1, 6, "%03x %03x %03x", red, green, blue);
       }
       // sleep 10 ms
       bcm2835_delayMicroseconds(10000);
@@ -113,14 +124,21 @@ void nrf_tx(uint8_t *buff, size_t len)
 {
    nRF24L01::write_tx_payload(buff, len);
    nRF24L01::pulse_CE();
-   for(int j=0; ((nRF24L01::read_reg(nRF24L01::STATUS) & nRF24L01::STATUS_TX_DS)== 0x00) && j<100; j++)
-      bcm2835_delayMicroseconds(10);;
+   uint8_t nrf_status;
+   int j;
+   for(j=0; j<100; j++)
+   {
+      nrf_status = nRF24L01::read_reg(nRF24L01::STATUS);
+      if (nrf_status & nRF24L01::STATUS_TX_DS)
+         break;
+      bcm2835_delayMicroseconds(5);
+   }
    nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_TX_DS); //Clear the data sent notice
+   mvprintw(1, 24, "%2X    %2d", nrf_status, j);
 
-   mvprintw(2+buff[0], 0, "Tx:%8.3f  ", 0.001* runtime.msec());
+   mvprintw(4+buff[0], 0, "%8.3f  ", 0.001* runtime.msec());
    for (int i = 0; i <len; i++)
       printw("%.2X ", buff[i]);
-
 }
 
 
