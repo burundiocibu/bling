@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <util/delay.h> // F_CPU should come from the makefile...
 #include <inttypes.h>
@@ -49,8 +50,7 @@ int main (void)
    avr_led::setup();
    avr_rtc::setup();
    lcd_plate::setup(0x40);
-   printf("Bling!");
-   
+
    nRF24L01::setup();
    nRF24L01::configure_base();
    nRF24L01::configure_PRX();
@@ -77,9 +77,13 @@ int main (void)
       if ((ms & 0x10) == 0)
       {
          // Stop throbbing if we loose the heartbeat
-//         if ((avr_rtc::t_ms - t_hb) > 5000)
-//            avr_tlc5940::set_channel(15, 0);            
-         if (sec & 1)
+         if (labs( avr_rtc::t_ms - t_hb) > 4000)
+         {
+            avr_tlc5940::set_channel(15, 0);
+            lcd_plate::set_cursor(0,0);
+            printf("????");
+         }
+         else if (sec & 1)
             avr_tlc5940::set_channel(15, ms);
          else
             avr_tlc5940::set_channel(15, 1000-ms);
@@ -99,11 +103,13 @@ int main (void)
             case messages::heartbeat_id:
             {
                messages::decode_heartbeat(buff, t_hb);
+               long dt = t_hb - nRF24L01::t_rx;
                lcd_plate::set_cursor(0,0);
-               int dt = t_hb - nRF24L01::t_rx;
-               print_time(t_hb);
-               printf(" %5d", dt);
-               if (dt)
+               if (labs(dt) < 1000)
+                  printf("%4ld", dt);
+               if (labs(dt)>10000)
+                  avr_rtc::set(t_hb);
+               else if (labs(dt)>3)
                   avr_rtc::step(dt);
                break;
             }
