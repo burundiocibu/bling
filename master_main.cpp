@@ -66,7 +66,7 @@ int main(int argc, char **argv)
          master_tx(buff, sizeof(buff), slave_num);
          hb_count++;
          last_hb = t;
-         mvprintw(0, 0, "i:%5d", hb_count);
+         mvprintw(0, 0, "hb:%5d", hb_count);
       }
 
       char key = getch();

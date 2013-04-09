@@ -36,7 +36,7 @@ namespace nRF24L01
       {0x31, 0x33, 0x35, 0x36}
    };
 
-   const uint8_t channel = 2;
+   const uint8_t channel = 24;
 
    char iobuff[messages::message_size];
 
@@ -312,10 +312,8 @@ namespace nRF24L01
 
    void pulse_CE(void)
    {
-      nRF24L01_IO_DEBUG3("CE high");
       set_CE();
       delay_us(10);
-      nRF24L01_IO_DEBUG3("CE low");
       clear_CE();
    }
 
