@@ -311,10 +311,8 @@ namespace nRF24L01
 
    void pulse_CE(void)
    {
-      nRF24L01_IO_DEBUG3("CE high");
       set_CE();
       delay_us(10);
-      nRF24L01_IO_DEBUG3("CE low");
       clear_CE();
    }
 
