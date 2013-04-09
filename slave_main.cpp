@@ -55,7 +55,6 @@ int main (void)
    nRF24L01::configure_base();
    nRF24L01::configure_PRX();
    nRF24L01::power_up_PRX();
-   nRF24L01::write_reg(nRF24L01::RX_PW_P0, messages::message_size);
    uint8_t buff[messages::message_size];
 
    avr_tlc5940::setup();
@@ -68,6 +67,7 @@ int main (void)
 
    uint32_t t_hb=0;
    Effect effect;
+   uint8_t pipe;
    for (;;)
    {
       uint32_t ms = avr_rtc::t_ms;
@@ -90,7 +90,7 @@ int main (void)
       // this test is less good: nRF24L01::read_reg(nRF24L01::STATUS) & nRF24L01::STATUS_RX_DR
       if (nRF24L01::rx_flag)
       {
-         nRF24L01::read_rx_payload(buff, sizeof(buff));
+         nRF24L01::read_rx_payload(buff, sizeof(buff), pipe);
          nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_RX_DR); // clear data received bit
          nRF24L01::rx_flag=0;
 
@@ -156,7 +156,7 @@ int main (void)
 void Effect::execute()
 {
    int dt = avr_rtc::t_ms - start_time;
-   if (dt>0 && dt<duration && state==unstarted)
+   if (dt>0 && dt<int(duration) && state==unstarted)
    {
       state=started;
       avr_tlc5940::set_channel(0, 512);
@@ -164,7 +164,7 @@ void Effect::execute()
       avr_tlc5940::set_channel(2, 512);
       avr_tlc5940::output_gsdata();
    }
-   else if (dt>duration && state==started)
+   else if (dt>int(duration) && state==started)
    {
       state=complete;
       avr_tlc5940::set_channel(0, 0);
