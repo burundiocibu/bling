@@ -84,7 +84,8 @@ int main(int argc, char **argv)
 
       uint32_t trx = rt.msec();
       uint8_t buff[messages::message_size];
-      read_rx_payload((char*)buff, messages::message_size);
+      uint8_t pipe;
+      read_rx_payload((char*)buff, messages::message_size, pipe);
       write_reg(STATUS, STATUS_RX_DR); // clear data received bit
       uint32_t t_hb;
       messages::decode_heartbeat(buff, t_hb);
