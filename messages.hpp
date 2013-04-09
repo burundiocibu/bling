@@ -31,6 +31,9 @@ namespace messages
    void encode_start_effect(uint8_t* p, uint8_t  effect_id, uint32_t  start_time, uint16_t  duration);
    void decode_start_effect(uint8_t* p, uint8_t &effect_id, uint32_t &start_time, uint16_t &duration);
 
+   void encode_set_rgb(uint8_t* p, uint8_t  rgb_ch, uint8_t  red, uint8_t  green, uint8_t  blue);
+   void decode_set_rgb(uint8_t* p, uint8_t &rgb_ch, uint8_t &red, uint8_t &green, uint8_t &blue);
+
 }
 
 #endif

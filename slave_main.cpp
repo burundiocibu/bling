@@ -44,7 +44,6 @@ struct Effect
    void execute(void);
 };
 
-
 int main (void)
 {
    avr_led::setup();
@@ -65,7 +64,6 @@ int main (void)
    // nRF IRQ,              random
    // TLC5940 BLANK needed  1.024 kHz
    // rtc:      1 kHz
-
    uint32_t t_hb=0;
    Effect effect;
    for (;;)
@@ -82,7 +80,7 @@ int main (void)
          {
             avr_tlc5940::set_channel(15, 0);
             lcd_plate::set_cursor(0,0);
-            printf("dt: ??");
+            printf("dt:?");
          }
          else if (sec & 1)
             avr_tlc5940::set_channel(15, ms);
@@ -92,13 +90,17 @@ int main (void)
       }
 
       // Do we have data from the radio?
-      // this test is less good: nRF24L01::read_reg(nRF24L01::STATUS) & nRF24L01::STATUS_RX_DR
-      if (nRF24L01::rx_flag)
+      uint8_t nrf_status = nRF24L01::read_reg(nRF24L01::STATUS);
+      uint8_t pipe = (nrf_status & 0x0e) >> 1;
+//      if (nrf_status & nRF24L01::STATUS_RX_DR)
+      if (nRF24L01::rx_flag && pipe != 7)
       {
+         lcd_plate::set_cursor(0, 11);
+         printf("%X %02X", nRF24L01::rx_flag, nrf_status);
          uint8_t pipe;
          nRF24L01::read_rx_payload(buff, sizeof(buff), pipe);
          nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_RX_DR); // clear data received bit
-         nRF24L01::rx_flag=0;
+         nRF24L01::rx_flag--;
          lcd_plate::set_cursor(0, 15);
          printf("%1d", pipe);
 

@@ -36,7 +36,7 @@ namespace nRF24L01
       {0x31, 0x33, 0x35, 0x36}
    };
 
-   const uint8_t channel = 2;
+   const uint8_t channel = 24;
 
    char iobuff[messages::message_size];
 
@@ -111,7 +111,7 @@ namespace nRF24L01
       cli();
       PCICR |= _BV(PCIE0); // enable pin change interrupts
       PCMSK0 |= _BV(PCINT4); // enable PCINT4
-      PCIFR &= ~_BV(PCIF0); // clearn any pending PCINT interrupt
+      PCIFR &= ~_BV(PCIF0); // clear any pending PCINT interrupt
       sei();
 
       return true;
@@ -186,7 +186,6 @@ namespace nRF24L01
    {
       if (read_reg(CONFIG) == 0xff || read_reg(STATUS) == 0xff)
          return false;
-
       write_reg(CONFIG, CONFIG_EN_CRC | CONFIG_MASK_TX_DS | CONFIG_MASK_MAX_RT);
       write_reg(SETUP_RETR, SETUP_RETR_ARC_3); // auto retransmit set to 3, delay=250us
       write_reg(SETUP_AW, SETUP_AW_4BYTES);  // 4 byte addresses
@@ -199,7 +198,7 @@ namespace nRF24L01
 
       // Clear the various interrupt bits
       write_reg(STATUS, STATUS_TX_DS|STATUS_RX_DR|STATUS_MAX_RT);
-      write_reg(EN_AA, 0); // disenable all auto-ack
+      write_reg(EN_AA, 0); // disable all auto-ack
       return true;
    }
 
