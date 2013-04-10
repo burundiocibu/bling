@@ -108,7 +108,7 @@ namespace nRF24L01
       PCMSK0 |= _BV(PCINT4); // enable PCINT4
       PCIFR &= ~_BV(PCIF0);  // clear any pending PCINT interrupt
       sei();
-
+      
       return true;
 #else
       if (!bcm2835_init())

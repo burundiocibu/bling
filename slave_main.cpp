@@ -93,23 +93,29 @@ int main (void)
          avr_tlc5940::output_gsdata();
       }
 
-      // Do we have data from the radio?
-      // this test is less good: nRF24L01::read_reg(nRF24L01::STATUS) & nRF24L01::STATUS_RX_DR
-      if (nRF24L01::rx_flag)
+      // Handle any data from the radio
+      while(true)
       {
+         uint8_t status=nRF24L01::read_reg(nRF24L01::STATUS);
+         if (status == 0x0e)
+            break;
          nRF24L01::read_rx_payload(buff, sizeof(buff), pipe);
          nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_RX_DR); // clear data received bit
-         nRF24L01::rx_flag=0;
 
+         lcd_plate::set_cursor(0,8);
+         printf("%02x", status);
+         nRF24L01::rx_flag=0;
          switch (messages::get_id(buff))
          {
             case messages::heartbeat_id:
             {
                messages::decode_heartbeat(buff, t_hb);
                long dt = t_hb - nRF24L01::t_rx;
-               lcd_plate::set_cursor(0,0);
                if (labs(dt) < 2000)
+               {
+                  lcd_plate::set_cursor(0,0);
                   printf("%4ld %d", dt, late_count);
+               }
                else
                   late_count++;
                if (labs(dt)>10000)
