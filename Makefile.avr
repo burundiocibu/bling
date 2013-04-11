@@ -7,12 +7,14 @@ AVRDUDE_PORT=/dev/tty.usbmodemfa121
 OPTLEVEL=s
 F_CPU = 16000000
 
+SLAVE=1
 
 AVRDUDE=avrdude -p $(PROGRAMMER_MCU) -c $(AVRDUDE_PROGRAMMERID) -P $(AVRDUDE_PORT)
 
 CFLAGS=-I. $(INC) -g -mmcu=$(MCU) -O$(OPTLEVEL) \
 	-fpack-struct -fshort-enums             \
 	-DF_CPU=$(F_CPU)UL -DAVR=1              \
+	-DSLAVE_NUMBER=$(SLAVE)                 \
 	-funsigned-bitfields -funsigned-char    \
 	-Wall -Wstrict-prototypes               \
 	-Wa,-ahlms=$(firstword                  \
@@ -22,6 +24,7 @@ CPPFLAGS=-fno-exceptions -Wall                   \
 	-I. $(INC) -g -mmcu=$(MCU) -O$(OPTLEVEL) \
 	-fpack-struct -fshort-enums              \
 	-DF_CPU=$(F_CPU)UL -DAVR=1               \
+	-DSLAVE_NUMBER=$(SLAVE)                 \
 	-funsigned-bitfields -funsigned-char     \
 	-Wa,-ahlms=$(firstword                   \
 	$(filter %.lst, $(<:.cpp=.lst)))

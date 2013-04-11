@@ -181,25 +181,25 @@ namespace nRF24L01
    {
       if (read_reg(CONFIG) == 0xff || read_reg(STATUS) == 0xff)
          return false;
-
+      
       write_reg(CONFIG, CONFIG_EN_CRC | CONFIG_MASK_TX_DS | CONFIG_MASK_MAX_RT);
       write_reg(SETUP_RETR, SETUP_RETR_ARC_3 | SETUP_RETR_ARD_250); // auto retransmit 3 x 250us
       write_reg(SETUP_AW, SETUP_AW_4BYTES);  // 4 byte addresses
       write_reg(RF_SETUP, 0x07);  // 1Mbps data rate, 0dBm
       write_reg(RF_CH, channel); // use channel 2
-
+      
       write_reg(nRF24L01::RX_PW_P0, messages::message_size);
+      write_reg(nRF24L01::RX_PW_P1, messages::message_size);
 
       // Clear the various interrupt bits
       write_reg(STATUS, STATUS_TX_DS|STATUS_RX_DR|STATUS_MAX_RT);
 
-      //shouldn't have to do this, but it won't TX if you don't
       write_reg(EN_AA, 0x00); //disable auto-ack, RX mode
       return true;
    }
 
 
-// Setup device as primary receiver
+   // Setup device as primary receiver
    void configure_PRX(unsigned slave)
    {
       char config = read_reg(CONFIG);
@@ -216,9 +216,9 @@ namespace nRF24L01
       memcpy(buff, slave_addr[slave], addr_len);
       write_reg(RX_ADDR_P1, buff, addr_len);
 
-      // Enable just pipes 0 & 1
-      write_reg(EN_RXADDR, 3);
-   }
+      write_reg(EN_RXADDR, 3); // Enable just pipes 0 & 1      
+      //write_reg(EN_AA, EN_RXADDR_ERX_P1);  // auto ack on pipe 1 only
+  }
 
 
    void power_up_PRX(void)

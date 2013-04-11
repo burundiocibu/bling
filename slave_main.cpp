@@ -55,7 +55,7 @@ int main (void)
 
    nRF24L01::setup();
    nRF24L01::configure_base();
-   nRF24L01::configure_PRX();
+   nRF24L01::configure_PRX(SLAVE_NUMBER);
    nRF24L01::power_up_PRX();
    uint8_t buff[messages::message_size];
 
@@ -69,7 +69,6 @@ int main (void)
 
    uint32_t t_hb=0;
    Effect effect;
-   uint8_t pipe;
    int late_count=0;
    for (;;)
    {
@@ -96,6 +95,7 @@ int main (void)
       // Handle any data from the radio
       while(true)
       {
+         uint8_t pipe;
          uint8_t status=nRF24L01::read_reg(nRF24L01::STATUS);
          if (status == 0x0e)
             break;
@@ -103,7 +103,7 @@ int main (void)
          nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_RX_DR); // clear data received bit
 
          lcd_plate::set_cursor(0,8);
-         printf("%02x", status);
+         printf("%02x %d", status, pipe);
          nRF24L01::rx_flag=0;
          switch (messages::get_id(buff))
          {
@@ -172,31 +172,25 @@ int main (void)
 
 void Effect::execute()
 {
+   if (state==complete)
+      return;
+
    int dt = avr_rtc::t_ms - start_time;
+   int v = 1024 - dt*2;
+   if (v<0)
+      v=0;
+
    if (dt>0 && dt<int(duration) && state==unstarted)
    {
       state=started;
-      avr_tlc5940::set_channel(0, 1024);
-      avr_tlc5940::set_channel(1, 1024);
-      avr_tlc5940::set_channel(2, 1024);
-      avr_tlc5940::output_gsdata();
-   }
-   else if (dt<int(duration) && state==started)
-   {
-      if (dt>512)
-         dt=512;
-      unsigned v = 1024 - dt*2;
-      avr_tlc5940::set_channel(0, v);
-      avr_tlc5940::set_channel(1, v);
-      avr_tlc5940::set_channel(2, v);
-      avr_tlc5940::output_gsdata();
    }
    else if (dt>int(duration) && state==started)
    {
       state=complete;
-      avr_tlc5940::set_channel(0, 0);
-      avr_tlc5940::set_channel(1, 0);
-      avr_tlc5940::set_channel(2, 0);
-      avr_tlc5940::output_gsdata();
+      v=0;
    }
+
+   for (unsigned ch=0; ch<9; ch++)
+      avr_tlc5940::set_channel(ch, v);
+   avr_tlc5940::output_gsdata();
 }
