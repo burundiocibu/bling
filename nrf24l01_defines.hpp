@@ -12,6 +12,7 @@ namespace nRF24L01
    static const char W_REGISTER = 0x20;
    static const char R_RX_PAYLOAD = 0x61;
    static const char W_TX_PAYLOAD = 0xA0;
+   static const char W_TX_PAYLOAD_NO_ACK = 0xB0;
    static const char FLUSH_TX = 0xE1;
    static const char FLUSH_RX = 0xE2;
    static const char REUSE_TX_PL = 0xE3;

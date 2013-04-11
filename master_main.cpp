@@ -12,7 +12,7 @@ using namespace std;
 
 RunTime runtime;
 
-
+unsigned slave=0;
 void nrf_tx(uint8_t *buff, size_t len);
 void slider(uint8_t ch, uint16_t &v, int dir);
 
@@ -38,7 +38,7 @@ int main(int argc, char **argv)
    intrflush(win, true);
    keypad(win, true);
    prev_curs = ::curs_set(0);   // we want an invisible cursor.
-   mvprintw(0,0, "HB#    R   G   B      STATUS   j");
+   mvprintw(0,0, "HB#   slave  R   G   B      STATUS   j");
 
    nRF24L01::setup();
 
@@ -60,7 +60,7 @@ int main(int argc, char **argv)
    uint16_t red=0,green=0,blue=0;
    unsigned hb_count=0;
    uint32_t last_hb=0;
-   mvprintw(1, 6, "%03x %03x %03x", red, green, blue);
+   mvprintw(1, 6, "%3d   %03x %03x %03x", slave, red, green, blue);
 
    for (int i=0; ; i++)
    {
@@ -87,6 +87,9 @@ int main(int argc, char **argv)
       {
          switch(key)
          {
+            case '0': slave=0; break;
+            case '1': slave=1; break;
+            case '2': slave=2; break;
             case 'R': slider(0, red,  -1);  break;
             case 'r': slider(0, red,   1);  break;
             case 'G': slider(1, green, -1); break;
@@ -106,7 +109,7 @@ int main(int argc, char **argv)
                red=0;green=0;blue=0;
                break;
          }
-         mvprintw(1, 6, "%03x %03x %03x", red, green, blue);
+         mvprintw(1, 6, "%3d   %03x %03x %03x", slave, red, green, blue);
       }
       // sleep 10 ms
       bcm2835_delayMicroseconds(10000);
@@ -122,7 +125,7 @@ int main(int argc, char **argv)
 
 void nrf_tx(uint8_t *buff, size_t len)
 {
-   nRF24L01::write_tx_payload(buff, len);
+   nRF24L01::write_tx_payload(buff, len, slave);
    nRF24L01::pulse_CE();
    uint8_t nrf_status;
    int j;
@@ -134,7 +137,7 @@ void nrf_tx(uint8_t *buff, size_t len)
       bcm2835_delayMicroseconds(5);
    }
    nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_TX_DS); //Clear the data sent notice
-   mvprintw(1, 24, "%2X    %2d", nrf_status, j);
+   mvprintw(1, 28, "%2X    %2d", nrf_status, j);
 
    mvprintw(4+buff[0], 0, "%8.3f  ", 0.001* runtime.msec());
    for (int i = 0; i <len; i++)

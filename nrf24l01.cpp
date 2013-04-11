@@ -183,8 +183,8 @@ namespace nRF24L01
          return false;
 
       write_reg(CONFIG, CONFIG_EN_CRC | CONFIG_MASK_TX_DS | CONFIG_MASK_MAX_RT);
-      write_reg(SETUP_RETR, SETUP_RETR_ARC_0); // auto retransmit off
-      write_reg(SETUP_AW, SETUP_AW_4BYTES);  // 3 byte addresses
+      write_reg(SETUP_RETR, SETUP_RETR_ARC_3 | SETUP_RETR_ARD_250); // auto retransmit 3 x 250us
+      write_reg(SETUP_AW, SETUP_AW_4BYTES);  // 4 byte addresses
       write_reg(RF_SETUP, 0x07);  // 1Mbps data rate, 0dBm
       write_reg(RF_CH, channel); // use channel 2
 
@@ -200,7 +200,7 @@ namespace nRF24L01
 
 
 // Setup device as primary receiver
-   void configure_PRX(void)
+   void configure_PRX(unsigned slave)
    {
       char config = read_reg(CONFIG);
       config |= CONFIG_PRIM_RX;
@@ -212,8 +212,12 @@ namespace nRF24L01
 
       memcpy(buff, slave_addr[0], addr_len);
       write_reg(RX_ADDR_P0, buff, addr_len);
-      // Enable just pipe 0
-      write_reg(EN_RXADDR, 0x01);
+
+      memcpy(buff, slave_addr[slave], addr_len);
+      write_reg(RX_ADDR_P1, buff, addr_len);
+
+      // Enable just pipes 0 & 1
+      write_reg(EN_RXADDR, 3);
    }
 
 
@@ -242,15 +246,7 @@ namespace nRF24L01
 
    // Setup device as the primary transmitter
    void configure_PTX(void)
-   {
-      // Note the TX_ADDR must be equal the RX_ADDR_P0 in the PTX
-      char buff[addr_len];
-      memcpy(buff, slave_addr[0], addr_len);
-      write_reg(TX_ADDR, buff, addr_len);
-
-      memcpy(buff, slave_addr[0], addr_len);
-      write_reg(RX_ADDR_P0, buff, addr_len);
-   }
+   {}
 
 
    void power_up_PTX(void)
@@ -263,9 +259,21 @@ namespace nRF24L01
    }
 
 
-   void write_tx_payload(void* data, const size_t len)
+   void write_tx_payload(void* data, const size_t len, unsigned slave)
    {
-      iobuff[0]=W_TX_PAYLOAD;
+      // Note the TX_ADDR must be equal the RX_ADDR_P0 in the PTX
+      char buff[addr_len];
+      memcpy(buff, slave_addr[slave], addr_len);
+      write_reg(TX_ADDR, buff, addr_len);
+
+      memcpy(buff, slave_addr[slave], addr_len);
+      write_reg(RX_ADDR_P0, buff, addr_len);
+
+      if (slave==0)
+         iobuff[0]=W_TX_PAYLOAD_NO_ACK;
+      else
+         iobuff[0]=W_TX_PAYLOAD;
+
       memcpy(iobuff+1, data, len);
       write_data(iobuff, len+1);
    }
