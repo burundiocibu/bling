@@ -10,18 +10,12 @@
 
 namespace nRF24L01
 {
-
-   //===============================================================================================
-   // This part of the namespace is the hardware-defendant part of the interface
    void write_data(char* data, const size_t len);
    void delay_us(uint32_t us);
    void clear_CE(void);
    void set_CE(void);
    bool setup(void);
    void shutdown(void);
-
-   //===============================================================================================
-   //Code below should be low-level hardware independent
 
    void write_reg(char reg, char data);
    void write_reg(char reg, char* data, const size_t len);
@@ -43,7 +37,6 @@ namespace nRF24L01
    void pulse_CE(void);
 
 #ifdef AVR
-   extern uint8_t rx_flag;
    extern uint32_t t_rx;
 #endif
 }

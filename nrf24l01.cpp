@@ -18,10 +18,6 @@
 #include "avr_rtc.hpp"
 #include "messages.hpp"
 
-//===============================================================================================
-// This part of the namespace is the hardware-dependant part of the interface
-
-
 namespace nRF24L01
 {
    const size_t addr_len=4;
@@ -79,7 +75,6 @@ namespace nRF24L01
 #endif
    }
 
-   bool nrf_rx_flag=false;
 
 #ifdef AVR
    uint8_t rx_flag=0;
@@ -88,7 +83,6 @@ namespace nRF24L01
    ISR(PCINT0_vect)
    {
       t_rx = avr_rtc::t_ms;
-      rx_flag++;
    }
 #endif
 
@@ -140,9 +134,6 @@ namespace nRF24L01
    }
 
 
-
-//===============================================================================================
-//Code below should be low-level hardware independent
    void write_reg(char reg, char* data, const size_t len)
    {
       iobuff[0]=W_REGISTER | reg;
@@ -183,7 +174,7 @@ namespace nRF24L01
          return false;
       
       write_reg(CONFIG, CONFIG_EN_CRC | CONFIG_MASK_TX_DS | CONFIG_MASK_MAX_RT);
-      write_reg(SETUP_RETR, SETUP_RETR_ARC_3 | SETUP_RETR_ARD_250); // auto retransmit 3 x 250us
+      write_reg(SETUP_RETR, SETUP_RETR_ARC_3); // auto retransmit 3 x 250us
       write_reg(SETUP_AW, SETUP_AW_4BYTES);  // 4 byte addresses
       write_reg(RF_SETUP, 0x07);  // 1Mbps data rate, 0dBm
       write_reg(RF_CH, channel); // use channel 2
@@ -217,7 +208,7 @@ namespace nRF24L01
       write_reg(nRF24L01::RX_PW_P1, messages::message_size);
 
       write_reg(EN_RXADDR, EN_RXADDR_ERX_P0 | EN_RXADDR_ERX_P1);
-      write_reg(EN_AA, EN_RXADDR_ERX_P1);  // auto ack on pipe 1 only
+      write_reg(EN_AA, EN_AA_ENAA_P1);  // auto ack on pipe 1 only
   }
 
 
@@ -274,13 +265,9 @@ namespace nRF24L01
       write_reg(RX_ADDR_P0, buff, addr_len);
 
       if (slave==0)
-      {
          iobuff[0]=W_TX_PAYLOAD_NO_ACK;
-      }
       else
-      {
          iobuff[0]=W_TX_PAYLOAD;
-      }
 
       memcpy(iobuff+1, data, len);
       write_data(iobuff, len+1);

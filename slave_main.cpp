@@ -102,9 +102,8 @@ int main (void)
          nRF24L01::read_rx_payload(buff, sizeof(buff), pipe);
          nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_RX_DR); // clear data received bit
 
-         lcd_plate::set_cursor(0,8);
+         lcd_plate::set_cursor(0, 8);
          printf("%02x %d", status, pipe);
-         nRF24L01::rx_flag=0;
          switch (messages::get_id(buff))
          {
             case messages::heartbeat_id:
