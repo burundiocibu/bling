@@ -31,13 +31,13 @@ namespace nRF24L01
    // returns true on success
    bool configure_base(void);
 
-   void configure_PRX(void);
+   void configure_PRX(unsigned slave);
    void power_up_PRX(void);
 
    void configure_PTX(void);
    void power_up_PTX(void);
 
-   void write_tx_payload(void* data, const unsigned int len);
+   void write_tx_payload(void* data, const unsigned int len, unsigned slave);
    void read_rx_payload(void* data, const unsigned int len, uint8_t &pipe);
    void flush_tx(void);
    void pulse_CE(void);

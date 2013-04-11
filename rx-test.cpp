@@ -58,7 +58,7 @@ int main(int argc, char **argv)
       return -1;
    }
 
-   configure_PRX();
+   configure_PRX(0);
    power_up_PRX();
 
    OutState led(RPI_GPIO_P1_07);
