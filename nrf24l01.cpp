@@ -212,6 +212,7 @@ namespace nRF24L01
   }
 
 
+   // Note that while powered up, we can't write to most registers.
    void power_up_PRX(void)
    {
       iobuff[0]=FLUSH_RX;
@@ -240,22 +241,35 @@ namespace nRF24L01
    {
       write_reg(nRF24L01::RX_PW_P0, messages::message_size);
       write_reg(EN_RXADDR, EN_RXADDR_ERX_P0);
+      write_reg(EN_AA, EN_AA_ENAA_P0);     // auto ack on pipe 1 only
       write_reg(FEATURE, FEATURE_EN_DYN_ACK);
+      iobuff[0]=FLUSH_TX;
+      write_data(iobuff, 1);
    }
 
 
+   // Note that while powered up, we can't write to most registers.
    void power_up_PTX(void)
    {
-      iobuff[0]=FLUSH_TX;
-      write_data(iobuff, 1);
       char config = read_reg(CONFIG);
-      config |= CONFIG_PWR_UP;
-      write_reg(CONFIG, config);
+      write_reg(CONFIG, config | CONFIG_PWR_UP);
    }
 
 
    void write_tx_payload(void* data, const size_t len, unsigned slave)
    {
+      char config = read_reg(CONFIG);
+      write_reg(CONFIG, config  & ~CONFIG_PWR_UP); // power down 
+      if (slave==0)
+         write_reg(EN_AA, 0);
+      else
+         write_reg(EN_AA, EN_AA_ENAA_P0);
+      write_reg(CONFIG, config | CONFIG_PWR_UP); // power back up
+
+      iobuff[0] = slave==0 ? W_TX_PAYLOAD_NO_ACK : W_TX_PAYLOAD;;
+      memcpy(iobuff+1, data, len);
+      write_data(iobuff, len+1);
+
       // Note the TX_ADDR must be equal the RX_ADDR_P0 in the PTX
       char buff[addr_len];
       memcpy(buff, slave_addr[slave], addr_len);
@@ -263,14 +277,6 @@ namespace nRF24L01
 
       memcpy(buff, slave_addr[slave], addr_len);
       write_reg(RX_ADDR_P0, buff, addr_len);
-
-      if (slave==0)
-         iobuff[0]=W_TX_PAYLOAD_NO_ACK;
-      else
-         iobuff[0]=W_TX_PAYLOAD;
-
-      memcpy(iobuff+1, data, len);
-      write_data(iobuff, len+1);
    }
 
 

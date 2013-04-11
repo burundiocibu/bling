@@ -13,7 +13,7 @@ using namespace std;
 RunTime runtime;
 
 unsigned slave=0;
-void nrf_tx(uint8_t *buff, size_t len);
+void nrf_tx(uint8_t *buff, size_t len, unsigned slave);
 void slider(uint8_t ch, uint16_t &v, int dir);
 
 /*
@@ -38,7 +38,7 @@ int main(int argc, char **argv)
    intrflush(win, true);
    keypad(win, true);
    prev_curs = ::curs_set(0);   // we want an invisible cursor.
-   mvprintw(0,0, "HB#   slave  R   G   B      STATUS   j");
+   mvprintw(0,0, "HB#   slave  R   G   B      j    tx_err  tx_obs ack_err");
 
    nRF24L01::setup();
 
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
       if (t - last_hb > 990)
       {
          messages::encode_heartbeat(buff, t);
-         nrf_tx(buff, sizeof(buff));
+         nrf_tx(buff, sizeof(buff), slave);
          hb_count++;
          last_hb = t;
          mvprintw(1, 0, "%d", hb_count);
@@ -100,12 +100,12 @@ int main(int argc, char **argv)
             case 'W': slider(0, red, -1); slider(1, green, -1); slider(2, blue, -1); break;
             case ' ':
                messages::encode_start_effect(buff, 0, t, 1000);
-               nrf_tx(buff, sizeof(buff));
+               nrf_tx(buff, sizeof(buff), slave);
                break;
             case 's':
             case 'S':
                messages::encode_all_stop(buff);
-               nrf_tx(buff, sizeof(buff));
+               nrf_tx(buff, sizeof(buff), slave);
                red=0;green=0;blue=0;
                break;
          }
@@ -123,21 +123,38 @@ int main(int argc, char **argv)
 
 
 
-void nrf_tx(uint8_t *buff, size_t len)
+void nrf_tx(uint8_t *buff, size_t len, unsigned slave)
 {
+   static unsigned ack_err=0;
+   static unsigned tx_err=0;
+
    nRF24L01::write_tx_payload(buff, len, slave);
    nRF24L01::pulse_CE();
-   uint8_t nrf_status;
+
+   uint8_t status;
    int j;
    for(j=0; j<100; j++)
    {
-      nrf_status = nRF24L01::read_reg(nRF24L01::STATUS);
-      if (nrf_status & nRF24L01::STATUS_TX_DS)
+      status = nRF24L01::read_reg(nRF24L01::STATUS);
+      if (status & nRF24L01::STATUS_TX_DS)
          break;
       bcm2835_delayMicroseconds(5);
    }
-   nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_TX_DS); //Clear the data sent notice
-   mvprintw(1, 28, "%2X    %2d", nrf_status, j);
+
+   if (status & nRF24L01::STATUS_MAX_RT)
+   {
+      ack_err++;
+      nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_MAX_RT);
+      // data doesn't automatically removed...
+      nRF24L01::flush_tx();
+   }
+   else if (status & nRF24L01::STATUS_TX_DS)
+      nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_TX_DS); //Clear the data sent notice
+   else
+      tx_err++;
+
+   uint8_t obs_tx = nRF24L01::read_reg(nRF24L01::OBSERVE_TX);
+   mvprintw(1, 27, "%3d  %3d       %02x    %3d", j, tx_err, obs_tx, ack_err);
 
    mvprintw(4+buff[0], 0, "%8.3f  ", 0.001* runtime.msec());
    for (int i = 0; i <len; i++)
@@ -165,6 +182,5 @@ void slider(uint8_t ch, uint16_t &v, int dir)
    uint8_t buff[messages::message_size];
    for (int i=0; i<sizeof(buff); i++) buff[i]=0;
    messages::encode_set_tlc_ch(buff, ch, v);
-   nrf_tx(buff, sizeof(buff));
+   nrf_tx(buff, sizeof(buff), slave);
 }
-
