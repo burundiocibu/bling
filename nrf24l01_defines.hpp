@@ -48,6 +48,7 @@ namespace nRF24L01
    static const char RX_PW_P4 = 0x15;
    static const char RX_PW_P5 = 0x16;
    static const char FIFO_STATUS = 0x17;
+   static const char FEATURE = 0x1D;
 
    ////////////////////////////////////////////////////////////////////////////////////
    // Register bitwise definitions (table 28)
@@ -189,5 +190,9 @@ namespace nRF24L01
    static const char FIFO_STATUS_TX_EMPTY = 0x10;
    static const char FIFO_STATUS_RX_FULL = 0x02;
    static const char FIFO_STATUS_RX_EMPTY = 0x01;
+
+   //FEATURE register
+   static const char FEATURE_EN_DYN_ACK = 0x01;
+   static const char FEATURE_EN_ACK_PAY = 0x02;
 }
 #endif

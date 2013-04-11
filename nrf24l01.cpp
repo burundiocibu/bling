@@ -187,9 +187,6 @@ namespace nRF24L01
       write_reg(SETUP_AW, SETUP_AW_4BYTES);  // 4 byte addresses
       write_reg(RF_SETUP, 0x07);  // 1Mbps data rate, 0dBm
       write_reg(RF_CH, channel); // use channel 2
-      
-      write_reg(nRF24L01::RX_PW_P0, messages::message_size);
-      write_reg(nRF24L01::RX_PW_P1, messages::message_size);
 
       // Clear the various interrupt bits
       write_reg(STATUS, STATUS_TX_DS|STATUS_RX_DR|STATUS_MAX_RT);
@@ -216,8 +213,11 @@ namespace nRF24L01
       memcpy(buff, slave_addr[slave], addr_len);
       write_reg(RX_ADDR_P1, buff, addr_len);
 
-      write_reg(EN_RXADDR, 3); // Enable just pipes 0 & 1      
-      //write_reg(EN_AA, EN_RXADDR_ERX_P1);  // auto ack on pipe 1 only
+      write_reg(nRF24L01::RX_PW_P0, messages::message_size);
+      write_reg(nRF24L01::RX_PW_P1, messages::message_size);
+
+      write_reg(EN_RXADDR, EN_RXADDR_ERX_P0 | EN_RXADDR_ERX_P1);
+      write_reg(EN_AA, EN_RXADDR_ERX_P1);  // auto ack on pipe 1 only
   }
 
 
@@ -246,7 +246,11 @@ namespace nRF24L01
 
    // Setup device as the primary transmitter
    void configure_PTX(void)
-   {}
+   {
+      write_reg(nRF24L01::RX_PW_P0, messages::message_size);
+      write_reg(EN_RXADDR, EN_RXADDR_ERX_P0);
+      write_reg(FEATURE, FEATURE_EN_DYN_ACK);
+   }
 
 
    void power_up_PTX(void)
@@ -270,9 +274,13 @@ namespace nRF24L01
       write_reg(RX_ADDR_P0, buff, addr_len);
 
       if (slave==0)
+      {
          iobuff[0]=W_TX_PAYLOAD_NO_ACK;
+      }
       else
+      {
          iobuff[0]=W_TX_PAYLOAD;
+      }
 
       memcpy(iobuff+1, data, len);
       write_data(iobuff, len+1);
