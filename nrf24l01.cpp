@@ -23,7 +23,8 @@ namespace nRF24L01
    const size_t addr_len=4;
    
    // The first address is the 'all-hands' address
-   const char slave_addr[][4]={
+   const char slave_addr[][messages::message_size]=
+   {
       {0xE1, 0xE3, 0xE5, 0xE6},
       {0x61, 0x63, 0x65, 0x66},
       {0x51, 0x53, 0x55, 0x56},
@@ -77,7 +78,6 @@ namespace nRF24L01
 
 
 #ifdef AVR
-   uint8_t rx_flag=0;
    uint32_t t_rx;
 
    ISR(PCINT0_vect)
@@ -95,7 +95,6 @@ namespace nRF24L01
       // use B.6 as the CE to the nrf24l01
       DDRB |= _BV(PB6);
 
-      rx_flag=0;
       // use PCINT4 (PB4) to signal the MCU we has data.
       cli();
       PCICR |= _BV(PCIE0);   // enable pin change interrupts
@@ -209,6 +208,10 @@ namespace nRF24L01
 
       write_reg(EN_RXADDR, EN_RXADDR_ERX_P0 | EN_RXADDR_ERX_P1);
       write_reg(EN_AA, EN_AA_ENAA_P1);  // auto ack on pipe 1 only
+
+      // Used to enable ACK payloads
+      write_reg(DYNPD, DYNPD_DPL_P1); // might also need to enable it for P0
+      write_reg(FEATURE, FEATURE_EN_DPL | FEATURE_EN_ACK_PAY);
   }
 
 
@@ -287,10 +290,23 @@ namespace nRF24L01
       clear_CE();
    }
 
+
    void flush_tx(void)
    {
       char buff=FLUSH_TX;
       write_data(&buff, 1);
+   }
+
+
+   void write_ack_payload(void* data, const unsigned int len, uint8_t pipe)
+   {
+      iobuff[0] = W_ACK_PAYLOAD | pipe;
+      memcpy(iobuff+1, data, len);
+      write_data(iobuff, len+1);
+   }
+
+   void read_ack_payload(void* data, const unsigned int len, uint8_t &pipe)
+   {
    }
 
 }

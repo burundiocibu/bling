@@ -5,21 +5,6 @@
 
 namespace messages
 {
-   template <class T>
-   uint8_t* decode_var(uint8_t *p, T &v )
-   {
-      v = *reinterpret_cast<T*>(p);
-      return p + sizeof(T);
-   }
-   
-   template <class T>
-   uint8_t* encode_var(uint8_t *p, T &v )
-   {
-      *reinterpret_cast<T*>(p) = v;
-      return p + sizeof(T);
-   }
-
-
    // ========================================
    void encode_all_stop(uint8_t* p)
    {
@@ -74,6 +59,16 @@ namespace messages
       p = decode_var<uint8_t>(p, effect_id);
       p = decode_var<uint32_t>(p, start_time);
       p = decode_var<uint16_t>(p, duration);
+   }
+
+   // ========================================
+   void encode_ack(uint8_t* p)
+   {
+   }
+
+   // ========================================
+   void decode_ack(uint8_t* p)
+   {
    }
 
 }

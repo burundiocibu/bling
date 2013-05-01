@@ -100,6 +100,15 @@ int main (void)
          if (status == 0x0e)
             break;
          nRF24L01::read_rx_payload(buff, sizeof(buff), pipe);
+         if (pipe != 0)
+         {
+            uint8_t ack[messages::ack_size];
+            uint8_t* p = ack;
+            *p++ = messages::ack_id;
+            p = messages::encode_var<uint32_t>(p, nRF24L01::t_rx);
+            nRF24L01::write_ack_payload(ack, sizeof(ack), pipe);
+         }
+
          nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_RX_DR); // clear data received bit
 
          lcd_plate::set_cursor(0, 8);
