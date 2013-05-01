@@ -5,7 +5,7 @@ PRJSRC=main.c
 AVRDUDE_PROGRAMMERID=avr109
 AVRDUDE_PORT=/dev/tty.usbmodemfa121
 OPTLEVEL=s
-F_CPU = 16000000
+F_CPU=16000000
 
 SLAVE=1
 
@@ -24,7 +24,7 @@ CPPFLAGS=-fno-exceptions -Wall                   \
 	-I. $(INC) -g -mmcu=$(MCU) -O$(OPTLEVEL) \
 	-fpack-struct -fshort-enums              \
 	-DF_CPU=$(F_CPU)UL -DAVR=1               \
-	-DSLAVE_NUMBER=$(SLAVE)                 \
+	-DSLAVE_NUMBER=$(SLAVE)                  \
 	-funsigned-bitfields -funsigned-char     \
 	-Wa,-ahlms=$(firstword                   \
 	$(filter %.lst, $(<:.cpp=.lst)))
@@ -65,12 +65,24 @@ prog: slave_main.flash
 
 slave_main.elf: slave_main.o avr_rtc.o avr_spi.o avr_i2c.o lcd_plate.o avr_tlc5940.o avr_mike.o nrf24l01.o messages.o
 
+slave_flasher.elf: slave_flasher.o avr_rtc.o avr_tlc5940.o avr_mike.o
+
 tlc-test.elf: tlc-test.o avr_tlc5940.o
+
+mike-test.elf: mike-test.o avr_tlc5940.o avr_rtc.o avr_i2c.o lcd_plate.o avr_mike.o
 
 rtc-test.elf: rtc-test.o lcd_plate.o avr_i2c.o avr_rtc.o
 
 getfuse:
 	$(AVRDUDE) -U lfuse:r:-:i -U hfuse:r:-:i -U efuse:r:-:i
+
+
+# http://forums.reprap.org/read.php?158,97219
+flashboot:
+	echo this needs to be done from the SPI/JTAG interface
+	avrdude -c usbtiny -B 1 -p m32u4 -U lfuse:w:0xde:m -U hfuse:w:0x99:m -U efuse:w:0xf3:m
+	avrdude -c usbtiny -B 1 -p m32u4 -U flash:w:BootloaderCDC.hex
+	avrdude -c usbtiny -B 1 -p m32u4 -U lock:w:0x0f:m
 
 #=================================================================
 %.o: %.c

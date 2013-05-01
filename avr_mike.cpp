@@ -6,14 +6,17 @@
 
 namespace avr_mike
 {
-   uint8_t sum=0;
-   uint8_t avg=0;
+   int sum=0;
+   int avg=0;
+   int min=256;
+   int max=0;
+   uint8_t v;
 
    void setup(void)
    {
-      // Ref voltage is internal 2.56V
+      // Ref voltage is AVcc
       // Input channel is single-ended 0 (PF0)
-      ADMUX |= _BV(REFS1) | _BV(REFS0);
+      ADMUX |= _BV(REFS0);
 
       // put 8 MSB of ADC result into ADCH
       ADMUX |= _BV(ADLAR);
@@ -35,7 +38,13 @@ namespace avr_mike
 
    ISR(ADC_vect)
    {
-      int8_t diff = ADCW - avg;
+      v = ADCW;
+      if (v>max)
+         max=v;
+      if (v<min)
+         min=v;
+      
+      int diff = v - avg;
       avg += diff / 10;
    }
 

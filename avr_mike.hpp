@@ -4,8 +4,9 @@
 namespace avr_mike
 {
    // This is just a volume
-   extern uint8_t avg, sum;
-
+   extern int avg, sum, min, max;
+   extern uint8_t v;
+   
    void setup(void);
 }
 #endif

@@ -106,7 +106,7 @@ namespace avr_tlc5940
          while ( !(UCSR1A & _BV(RXC1))  ) ;
       }
 
-      _delay_us(5); //  This seems to make the flickering not occur
+      _delay_us(10); //  This seems to make the flickering not occur
 
       need_xlat = 1; // indicate that there is new data to be latched
    }
