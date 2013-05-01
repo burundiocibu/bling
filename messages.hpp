@@ -13,10 +13,9 @@ namespace messages
       get_tlc_ch_id = 3,
       start_effect_id = 4,
       set_rgb_id = 5,
-      ack_id = 6
+      status_id = 6
    };
    const size_t message_size=12;
-   const size_t ack_size=12;
 
    inline uint8_t get_id(uint8_t* p)
    {return *p;}
@@ -33,8 +32,8 @@ namespace messages
    void encode_start_effect(uint8_t* p, uint8_t  effect_id, uint32_t  start_time, uint16_t  duration);
    void decode_start_effect(uint8_t* p, uint8_t &effect_id, uint32_t &start_time, uint16_t &duration);
 
-   void encode_ack(uint8_t* p);
-   void decode_ack(uint8_t* p);
+   void encode_status(uint8_t* p);
+   void decode_status(uint8_t* p);
 
    template <class T>
    uint8_t* decode_var(uint8_t *p, T &v )

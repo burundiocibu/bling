@@ -36,9 +36,6 @@ namespace nRF24L01
    void flush_tx(void);
    void pulse_CE(void);
 
-   void write_ack_payload(void* data, const unsigned int len, uint8_t pipe);
-   void read_ack_payload(void* data, const unsigned int len, uint8_t &pipe);
-
 #ifdef AVR
    extern uint32_t t_rx;
 #endif

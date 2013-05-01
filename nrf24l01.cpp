@@ -208,10 +208,6 @@ namespace nRF24L01
 
       write_reg(EN_RXADDR, EN_RXADDR_ERX_P0 | EN_RXADDR_ERX_P1);
       write_reg(EN_AA, EN_AA_ENAA_P1);  // auto ack on pipe 1 only
-
-      // Used to enable ACK payloads
-      write_reg(DYNPD, DYNPD_DPL_P1); // might also need to enable it for P0
-      write_reg(FEATURE, FEATURE_EN_DPL | FEATURE_EN_ACK_PAY);
   }
 
 
@@ -244,8 +240,6 @@ namespace nRF24L01
    {
       write_reg(nRF24L01::RX_PW_P0, messages::message_size);
       write_reg(EN_RXADDR, EN_RXADDR_ERX_P0);
-      write_reg(EN_AA, EN_AA_ENAA_P0);     // auto ack on pipe 1 only
-      write_reg(FEATURE, FEATURE_EN_DYN_ACK);
       iobuff[0]=FLUSH_TX;
       write_data(iobuff, 1);
    }
@@ -269,7 +263,8 @@ namespace nRF24L01
          write_reg(EN_AA, EN_AA_ENAA_P0);
       write_reg(CONFIG, config | CONFIG_PWR_UP); // power back up
 
-      iobuff[0] = slave==0 ? W_TX_PAYLOAD_NO_ACK : W_TX_PAYLOAD;;
+      //iobuff[0] = slave==0 ? W_TX_PAYLOAD_NO_ACK : W_TX_PAYLOAD;;
+      iobuff[0] = W_TX_PAYLOAD;;
       memcpy(iobuff+1, data, len);
       write_data(iobuff, len+1);
 
@@ -295,18 +290,6 @@ namespace nRF24L01
    {
       char buff=FLUSH_TX;
       write_data(&buff, 1);
-   }
-
-
-   void write_ack_payload(void* data, const unsigned int len, uint8_t pipe)
-   {
-      iobuff[0] = W_ACK_PAYLOAD | pipe;
-      memcpy(iobuff+1, data, len);
-      write_data(iobuff, len+1);
-   }
-
-   void read_ack_payload(void* data, const unsigned int len, uint8_t &pipe)
-   {
    }
 
 }

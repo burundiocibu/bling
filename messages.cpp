@@ -62,12 +62,12 @@ namespace messages
    }
 
    // ========================================
-   void encode_ack(uint8_t* p)
+   void encode_status(uint8_t* p)
    {
    }
 
    // ========================================
-   void decode_ack(uint8_t* p)
+   void decode_status(uint8_t* p)
    {
    }
 
