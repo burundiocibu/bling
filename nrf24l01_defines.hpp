@@ -17,6 +17,7 @@ namespace nRF24L01
    static const char FLUSH_TX = 0xE1;
    static const char FLUSH_RX = 0xE2;
    static const char REUSE_TX_PL = 0xE3;
+   static const char R_RX_PL_WID = 0x60;
    static const char NOP = 0xFF;
 
    //SPI command data mask defines
