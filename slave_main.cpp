@@ -60,6 +60,9 @@ int main (void)
    uint8_t buff[messages::message_size];
 
    avr_tlc5940::setup();
+   avr_tlc5940::set_channel(15, 0);
+   avr_tlc5940::output_gsdata();
+
    avr_mike::setup();
 
    // Things to wake us up:
@@ -81,14 +84,17 @@ int main (void)
          // Stop throbbing if we loose the heartbeat
          if (labs( avr_rtc::t_ms - t_hb) > 4000)
          {
-            avr_tlc5940::set_channel(15, 0);
+            avr_tlc5940::set_channel(15, 1);
             lcd_plate::set_cursor(0,0);
             printf("????");
          }
-         else if (sec & 1)
-            avr_tlc5940::set_channel(15, ms);
-         else
-            avr_tlc5940::set_channel(15, 1000-ms);
+         else if (t_hb)
+         {
+            if (sec & 1)
+               avr_tlc5940::set_channel(15, ms);
+            else
+               avr_tlc5940::set_channel(15, 1000-ms);
+         }
          avr_tlc5940::output_gsdata();
       }
 
