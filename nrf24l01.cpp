@@ -22,15 +22,15 @@ namespace nRF24L01
 {
    const size_t addr_len=4;
    
-   // The first address is the 'all-hands' address
-   const char slave_addr[][messages::message_size]=
+   const char master_addr[] = {0xA1, 0xA3, 0xA5, 0xA6};
+   const char slave_addr[][addr_len]=
    {
-      {0xE1, 0xE3, 0xE5, 0xE6},
-      {0x61, 0x63, 0x65, 0x66},
-      {0x51, 0x53, 0x55, 0x56},
+      {0xE1, 0xE3, 0xE5, 0xE6},  // all-hands broadcast address
+      {0x61, 0x63, 0x65, 0x66},  // first slave address
+      {0x51, 0x53, 0x55, 0x56},  // second slave address
       {0x31, 0x33, 0x35, 0x36}
    };
-   char iobuff[messages::message_size];
+   char iobuff[messages::message_size+1];
 
    const uint8_t channel = 2;
 
@@ -178,6 +178,10 @@ namespace nRF24L01
       write_reg(RF_SETUP, 0x07);  // 1Mbps data rate, 0dBm
       write_reg(RF_CH, channel); // use channel 2
 
+      write_reg(nRF24L01::RX_PW_P0, messages::message_size);
+      write_reg(nRF24L01::RX_PW_P1, messages::message_size);
+      write_reg(nRF24L01::RX_PW_P2, messages::message_size);
+
       // Clear the various interrupt bits
       write_reg(STATUS, STATUS_TX_DS|STATUS_RX_DR|STATUS_MAX_RT);
 
@@ -191,37 +195,33 @@ namespace nRF24L01
    {
       char config = read_reg(CONFIG);
       config |= CONFIG_PRIM_RX;
-      write_reg(CONFIG, config);
+      write_reg(CONFIG, config & ~CONFIG_PWR_UP);
 
       char buff[addr_len];
-      memcpy(buff, slave_addr[0], addr_len);
+      memcpy(buff, master_addr, addr_len); // only TX to master
       write_reg(TX_ADDR, buff, addr_len);
 
-      memcpy(buff, slave_addr[0], addr_len);
+      memcpy(buff, slave_addr[0], addr_len); // pipe 0 is broadcast
       write_reg(RX_ADDR_P0, buff, addr_len);
 
       memcpy(buff, slave_addr[slave], addr_len);
       write_reg(RX_ADDR_P1, buff, addr_len);
 
-      write_reg(nRF24L01::RX_PW_P0, messages::message_size);
-      write_reg(nRF24L01::RX_PW_P1, messages::message_size);
+      // In case we want to receiver an ACK from the master
+      memcpy(buff, master_addr, addr_len);
+      write_reg(RX_ADDR_P2, buff, addr_len);
 
       write_reg(EN_RXADDR, EN_RXADDR_ERX_P0 | EN_RXADDR_ERX_P1);
       write_reg(EN_AA, EN_AA_ENAA_P1);  // auto ack on pipe 1 only
-  }
 
-
-   // Note that while powered up, we can't write to most registers.
-   void power_up_PRX(void)
-   {
       iobuff[0]=FLUSH_RX;
       write_data(iobuff, 1);
-      char config = read_reg(CONFIG);
-      config |= CONFIG_PWR_UP;
-      write_reg(CONFIG, config);
+
+      // after power up, can't write to most registers anymore
+      write_reg(CONFIG, config | CONFIG_PWR_UP);
       delay_us(1500);
       set_CE();
-   }
+  }
 
 
    void read_rx_payload(void* data, const size_t len, uint8_t &pipe)
@@ -236,19 +236,14 @@ namespace nRF24L01
 
 
    // Setup device as the primary transmitter
-   void configure_PTX(void)
+   void configure_PTX()
    {
-      write_reg(nRF24L01::RX_PW_P0, messages::message_size);
-      write_reg(EN_RXADDR, EN_RXADDR_ERX_P0);
-      iobuff[0]=FLUSH_TX;
-      write_data(iobuff, 1);
-   }
-
-
-   // Note that while powered up, we can't write to most registers.
-   void power_up_PTX(void)
-   {
+      clear_CE();
       char config = read_reg(CONFIG);
+      config &= ~CONFIG_PRIM_RX;
+      write_reg(CONFIG, config & ~CONFIG_PWR_UP); // power down
+      write_reg(EN_RXADDR, EN_RXADDR_ERX_P0);
+      flush_tx();
       write_reg(CONFIG, config | CONFIG_PWR_UP);
    }
 
@@ -264,7 +259,7 @@ namespace nRF24L01
       write_reg(CONFIG, config | CONFIG_PWR_UP); // power back up
 
       //iobuff[0] = slave==0 ? W_TX_PAYLOAD_NO_ACK : W_TX_PAYLOAD;;
-      iobuff[0] = W_TX_PAYLOAD;;
+      iobuff[0] = W_TX_PAYLOAD;
       memcpy(iobuff+1, data, len);
       write_data(iobuff, len+1);
 
@@ -275,11 +270,8 @@ namespace nRF24L01
 
       memcpy(buff, slave_addr[slave], addr_len);
       write_reg(RX_ADDR_P0, buff, addr_len);
-   }
 
-
-   void pulse_CE(void)
-   {
+      // pulse CE
       set_CE();
       delay_us(10);
       clear_CE();

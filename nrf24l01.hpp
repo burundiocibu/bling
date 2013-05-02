@@ -10,6 +10,8 @@
 
 namespace nRF24L01
 {
+   extern char iobuff[];
+
    void write_data(char* data, const size_t len);
    void delay_us(uint32_t us);
    void clear_CE(void);
@@ -26,15 +28,10 @@ namespace nRF24L01
    bool configure_base(void);
 
    void configure_PRX(unsigned slave);
-   void power_up_PRX(void);
-
    void configure_PTX(void);
-   void power_up_PTX(void);
-
    void write_tx_payload(void* data, const unsigned int len, unsigned slave);
    void read_rx_payload(void* data, const unsigned int len, uint8_t &pipe);
    void flush_tx(void);
-   void pulse_CE(void);
 
 #ifdef AVR
    extern uint32_t t_rx;

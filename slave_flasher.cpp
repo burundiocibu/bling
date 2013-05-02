@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <util/delay.h> // F_CPU should come from the makefile...
+#include <util/delay.h>
 #include <inttypes.h>
 #include <avr/io.h>
 #include <avr/sleep.h>
@@ -10,7 +10,6 @@
 #include "avr_tlc5940.hpp"
 #include "avr_rtc.hpp"
 #include "avr_led.hpp"
-#include "avr_mike.hpp"
 
 
 int main (void)
@@ -18,13 +17,11 @@ int main (void)
    avr_led::setup();
    avr_rtc::setup();
    avr_tlc5940::setup();
-   avr_mike::setup();
 
-
-   for (unsigned ;;)
+   for (;;)
    {
       uint32_t ms = avr_rtc::t_ms;
-      unsigned sec = ms/1000;
+      uint32_t sec = ms/1000;
       ms -= sec*1000;
 
       if ((ms & 0x10) == 0)

@@ -10,7 +10,7 @@ namespace messages
       all_stop_id = 0,
       heartbeat_id = 1,
       set_tlc_ch_id = 2,
-      get_tlc_ch_id = 3,
+      ping_id = 3,
       start_effect_id = 4,
       set_rgb_id = 5,
       status_id = 6
