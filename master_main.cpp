@@ -14,7 +14,9 @@ RunTime runtime;
 
 unsigned slave=0;
 void nrf_tx(uint8_t *buff, size_t len, unsigned slave);
+void nrf_rx();
 void slider(uint8_t ch, uint16_t &v, int dir);
+void hexdump(uint8_t* buff, size_t len);
 
 /*
 HB#    R   G    B     STATUS   j
@@ -24,6 +26,7 @@ Tx       Data
 123.345  01 3B EA 02 00 00 00 00 00 00 00 00
 123.345  02 3B EA 02 00 00 00 00 00 00 00 00
 */
+
 
 int main(int argc, char **argv)
 {
@@ -106,6 +109,11 @@ int main(int argc, char **argv)
                nrf_tx(buff, sizeof(buff), slave);
                red=0;green=0;blue=0;
                break;
+            case 'p':
+               messages::encode_ping(buff);
+               nrf_tx(buff, sizeof(buff), slave);
+               nrf_rx();
+               break;
          }
          mvprintw(1, 6, "%3d   %03x %03x %03x", slave, red, green, blue);
       }
@@ -123,41 +131,86 @@ int main(int argc, char **argv)
 
 void nrf_tx(uint8_t *buff, size_t len, unsigned slave)
 {
+   using namespace nRF24L01;
+
    static unsigned ack_err=0;
    static unsigned tx_err=0;
 
-   nRF24L01::write_tx_payload(buff, len, slave);
+   write_tx_payload(buff, len, slave);
 
    uint8_t status;
    int j;
    for(j=0; j<100; j++)
    {
-      status = nRF24L01::read_reg(nRF24L01::STATUS);
-      if (status & nRF24L01::STATUS_TX_DS)
+      status = read_reg(STATUS);
+      if (status & STATUS_TX_DS)
          break;
-      bcm2835_delayMicroseconds(5);
+      delay_us(5);
    }
 
-   if (status & nRF24L01::STATUS_MAX_RT)
+   if (status & STATUS_MAX_RT)
    {
       ack_err++;
-      nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_MAX_RT);
+      write_reg(STATUS, STATUS_MAX_RT);
       // data doesn't automatically removed...
-      nRF24L01::flush_tx();
+      flush_tx();
    }
-   else if (status & nRF24L01::STATUS_TX_DS)
-      nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_TX_DS); //Clear the data sent notice
+   else if (status & STATUS_TX_DS)
+      write_reg(STATUS, STATUS_TX_DS); //Clear the data sent notice
    else
       tx_err++;
 
-   uint8_t obs_tx = nRF24L01::read_reg(nRF24L01::OBSERVE_TX);
+   uint8_t obs_tx = read_reg(OBSERVE_TX);
    mvprintw(1, 27, "%3d  %3d       %02x    %3d", j, tx_err, obs_tx, ack_err);
 
    mvprintw(4+buff[0], 0, "%8.3f  ", 0.001* runtime.msec());
+   hexdump(buff, len);
+}
+
+
+
+void nrf_rx(void)
+{
+   using namespace nRF24L01;
+   uint8_t buff[messages::message_size];
+   uint8_t pipe;
+   char config = read_reg(CONFIG);
+   config |= CONFIG_PRIM_RX;
+   write_reg(CONFIG, config); // should still be powered on
+   delay_us(1000);
+   set_CE();
+
+   int i;
+   for (i=0; i<100; i++)
+   {
+      if (read_reg(STATUS) & STATUS_RX_DR)
+      {
+         read_rx_payload((char*)buff, messages::message_size, pipe);
+         write_reg(STATUS, STATUS_RX_DR); // clear data received bit
+         break;
+      }
+      delay_us(200);
+   }
+
+   config &= ~CONFIG_PRIM_RX;
+   write_reg(CONFIG, config); // should still be powered on
+   clear_CE();
+
+   mvprintw(12, 0, "%8.3f  ", 0.001* runtime.msec());
+   printw("%d %3d ", pipe, i);
+   hexdump(buff, messages::message_size);
+   uint32_t t_rx;
+   uint8_t* p = buff;
+   p = messages::decode_var<uint32_t>(p, t_rx);
+   mvprintw(13, 9, "%8.3f  ", 0.001* t_rx);
+}
+
+
+void hexdump(uint8_t* buff, size_t len)
+{
    for (int i = 0; i <len; i++)
       printw("%.2X ", buff[i]);
 }
-
 
 void slider(uint8_t ch, uint16_t &v, int dir)
 {

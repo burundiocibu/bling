@@ -20,7 +20,6 @@ int main(int argc, char **argv)
       return -1;
    }
    nRF24L01::configure_PTX();
-   nRF24L01::power_up_PTX();
    nRF24L01::flush_tx();
    nRF24L01::write_reg(nRF24L01::RX_PW_P0, messages::message_size);
 
@@ -35,7 +34,6 @@ int main(int argc, char **argv)
       uint32_t t = rt.msec();
       messages::encode_heartbeat(buff, t);
       nRF24L01::write_tx_payload(buff, sizeof(buff), 0);
-      nRF24L01::pulse_CE();
 
       printf(" #%d %ld\n", i, t);
       for(int j=0; ((nRF24L01::read_reg(nRF24L01::STATUS) & nRF24L01::STATUS_TX_DS)== 0x00) && j<100; j++)

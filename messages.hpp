@@ -35,6 +35,9 @@ namespace messages
    void encode_status(uint8_t* p);
    void decode_status(uint8_t* p);
 
+   void encode_ping(uint8_t* p);
+   void decode_ping(uint8_t* p);
+
    template <class T>
    uint8_t* decode_var(uint8_t *p, T &v )
    {

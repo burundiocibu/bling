@@ -64,11 +64,18 @@ namespace messages
    // ========================================
    void encode_status(uint8_t* p)
    {
+      *p++ = status_id;
    }
+
+   void decode_status(uint8_t* p)
+   {}
 
    // ========================================
-   void decode_status(uint8_t* p)
+   void encode_ping(uint8_t* p)
    {
+      *p++ = ping_id;
    }
 
+   void decode_ping(uint8_t* p)
+   {}
 }
