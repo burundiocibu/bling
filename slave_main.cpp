@@ -54,7 +54,7 @@ void do_heartbeat(uint8_t* buff, uint32_t& t_hb);
 void do_set_tlc_ch(uint8_t* buff);
 void do_start_effect(uint8_t* buff, Effect& effect);
 void do_set_rgb(uint8_t* buff);
-void do_ping(uint8_t* buff);
+void do_ping(uint8_t* buff, uint8_t pipe);
 
 void throbber(uint32_t t_hb);
 
@@ -107,7 +107,7 @@ int main (void)
             case messages::start_effect_id: do_start_effect(buff, effect); break;
             case messages::set_tlc_ch_id:   do_set_tlc_ch(buff); break;
             case messages::set_rgb_id:      do_set_rgb(buff); break;
-            case messages::ping_id:         do_ping(buff); break;
+            case messages::ping_id:         do_ping(buff, pipe); break;
          }
       }
 
@@ -221,15 +221,25 @@ void do_start_effect(uint8_t* buff, Effect& effect)
           effect.duration);
 }
 
+
 void do_set_rgb(uint8_t* buff)
 {}
 
-void do_ping(uint8_t* buff)
+
+void do_ping(uint8_t* buff, uint8_t pipe)
 {
    using namespace nRF24L01;
    lcd_plate::set_cursor(1,0);
    print_time(t_rx);
    printf(":ping");
+   if (pipe==0)
+   {
+      printf(" ignored");
+      return;
+   }
+
+   delay_us(1000);
+
    clear_CE();  // Turn off receiver
    char config = read_reg(CONFIG);
    write_reg(CONFIG, config & ~CONFIG_PWR_UP); // power down
@@ -242,6 +252,7 @@ void do_ping(uint8_t* buff)
    *p++ = W_TX_PAYLOAD;
    *p++ = messages::status_id;
    p = messages::encode_var<uint32_t>(p, t_rx);
+   memcpy(iobuff, buff, messages::message_size+1);
    write_data(iobuff, messages::message_size+1);
    
    set_CE();
@@ -252,7 +263,7 @@ void do_ping(uint8_t* buff)
    uint8_t status;
    for(int j=0; j<100; j++)
    {
-      status = read_reg(nRF24L01::STATUS);
+      status = read_reg(STATUS);
       if (status & STATUS_TX_DS)
          break;
       delay_us(5);
@@ -262,7 +273,7 @@ void do_ping(uint8_t* buff)
    {
       write_reg(nRF24L01::STATUS, nRF24L01::STATUS_MAX_RT);
       flush_tx();
-      printf(" maxrt");
+      printf(" no");
    }
    else if (status & STATUS_TX_DS)
    {
@@ -270,11 +281,13 @@ void do_ping(uint8_t* buff)
       printf(" ok");
    }
    else
-      printf(" no");
+      printf(" xx");
 
    // and switch back to be a PRX
    write_reg(CONFIG, config & ~CONFIG_PWR_UP); // power down
    config |= CONFIG_PRIM_RX;
    write_reg(CONFIG, config | CONFIG_PWR_UP); // power back up
+   delay_us(1500);
+   set_CE();
 }
 
