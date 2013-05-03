@@ -11,26 +11,9 @@
 #include "avr_rtc.hpp"
 #include "avr_led.hpp"
 #include "avr_mike.hpp"
-#include "lcd_plate.hpp"
 
 #include "nrf24l01.hpp"
 #include "messages.hpp"
-
-
-void print_time(uint32_t t)
-{
-   char b1[11],b2[8];
-   sprintf(b1, "%10ld", t);
-   b2[0] = b1[4];
-   b2[1] = b1[5]; 
-   b2[2] = b1[6];
-   b2[3] = '.';
-   b2[4] = b1[7];
-   b2[5] = b1[8];
-   b2[6] = b1[9];
-   b2[7] = 0;
-   printf(b2);
-}
 
 
 struct Effect
@@ -63,7 +46,6 @@ int main (void)
 {
    avr_led::setup();
    avr_rtc::setup();
-   lcd_plate::setup(0x40);
 
    nRF24L01::setup();
    nRF24L01::configure_base();
@@ -96,9 +78,6 @@ int main (void)
             break;
          nRF24L01::read_rx_payload(buff, sizeof(buff), pipe);
          nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_RX_DR); // clear data received bit
-
-         lcd_plate::set_cursor(0, 8);
-         printf("%02x %d", status, pipe);
 
          switch (messages::get_id(buff))
          {
@@ -154,11 +133,7 @@ void throbber(uint32_t t_hb)
    {
       // Stop throbbing if we loose the heartbeat
       if (labs( avr_rtc::t_ms - t_hb) > 4000)
-      {
          avr_tlc5940::set_channel(15, 1);
-         lcd_plate::set_cursor(0,0);
-         printf("????");
-      }
       else if (t_hb)
       {
          if (sec & 1)
@@ -173,9 +148,6 @@ void throbber(uint32_t t_hb)
 
 void do_all_stop(void)
 {
-   lcd_plate::set_cursor(1,0);
-   print_time(nRF24L01::t_rx);
-   printf(":all stop");
    for (int ch=0; ch<14; ch++)
       avr_tlc5940::set_channel(ch, 0);
    avr_tlc5940::output_gsdata();
@@ -185,11 +157,6 @@ void do_heartbeat(uint8_t* buff, uint32_t& t_hb)
 {
    messages::decode_heartbeat(buff, t_hb);
    long dt = t_hb - nRF24L01::t_rx;
-   if (labs(dt) < 2000)
-   {
-      lcd_plate::set_cursor(0,0);
-      printf("%4ld", dt);
-   }
    if (labs(dt)>10000)
       avr_rtc::set(t_hb);
    else if (labs(dt)>3)
@@ -201,9 +168,6 @@ void do_set_tlc_ch(uint8_t* buff)
    uint8_t ch;
    uint16_t value;
    messages::decode_set_tlc_ch(buff, ch, value);
-   lcd_plate::set_cursor(1,0);
-   print_time(nRF24L01::t_rx);
-   printf(":%02X %03X  ", ch, value); 
    avr_tlc5940::set_channel(ch, value);
    avr_tlc5940::output_gsdata();
 }
@@ -213,12 +177,6 @@ void do_start_effect(uint8_t* buff, Effect& effect)
 {
    effect.state = Effect::unstarted;
    messages::decode_start_effect(buff, effect.id, effect.start_time, effect.duration);
-   lcd_plate::set_cursor(1,0);
-   print_time(nRF24L01::t_rx);
-   printf(":%02X %d %u",
-          effect.id,
-          static_cast<int>(effect.start_time - avr_rtc::t_ms),
-          effect.duration);
 }
 
 
@@ -229,16 +187,12 @@ void do_set_rgb(uint8_t* buff)
 void do_ping(uint8_t* buff, uint8_t pipe)
 {
    using namespace nRF24L01;
-   lcd_plate::set_cursor(1,0);
-   print_time(t_rx);
-   printf(":ping");
-   if (pipe==0)
-   {
-      printf(" ignored");
-      return;
-   }
 
-   delay_us(1000);
+   // Only respond to pings on our private address
+   if (pipe==0)
+      return;
+
+   delay_us(1000);  // want to tune this...
 
    clear_CE();  // Turn off receiver
    char config = read_reg(CONFIG);
@@ -273,15 +227,9 @@ void do_ping(uint8_t* buff, uint8_t pipe)
    {
       write_reg(nRF24L01::STATUS, nRF24L01::STATUS_MAX_RT);
       flush_tx();
-      printf(" no");
    }
    else if (status & STATUS_TX_DS)
-   {
       write_reg(STATUS, STATUS_TX_DS); //Clear the data sent notice
-      printf(" ok");
-   }
-   else
-      printf(" xx");
 
    // and switch back to be a PRX
    write_reg(CONFIG, config & ~CONFIG_PWR_UP); // power down
