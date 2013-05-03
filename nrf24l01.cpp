@@ -242,7 +242,13 @@ namespace nRF24L01
       char config = read_reg(CONFIG);
       config &= ~CONFIG_PRIM_RX;
       write_reg(CONFIG, config & ~CONFIG_PWR_UP); // power down
-      write_reg(EN_RXADDR, EN_RXADDR_ERX_P0);
+
+      // Use Pipe 1 for responses to the master
+      char buff[addr_len];
+      memcpy(buff, master_addr, addr_len);
+      write_reg(RX_ADDR_P1, buff, addr_len);
+
+      write_reg(EN_RXADDR, EN_RXADDR_ERX_P0 | EN_RXADDR_ERX_P1);
       flush_tx();
       write_reg(CONFIG, config | CONFIG_PWR_UP);
    }
@@ -264,6 +270,7 @@ namespace nRF24L01
       write_data(iobuff, len+1);
 
       // Note the TX_ADDR must be equal the RX_ADDR_P0 in the PTX
+      // for acks to work
       char buff[addr_len];
       memcpy(buff, slave_addr[slave], addr_len);
       write_reg(TX_ADDR, buff, addr_len);
