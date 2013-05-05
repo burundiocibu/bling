@@ -56,25 +56,32 @@ int main(int argc, char **argv)
          last_hb = t;
       }
 
-      uint8_t b = lcd_plate::read_buttons();
+      uint8_t b = ~lcd_plate::read_buttons();
       if (b!=button)
       {
          button = b;
          printf("%8.3f %02x\n", 1e-3*runtime.msec(), b);
          
-         switch(button)
+         if ( button & lcd_plate::SELECT)
          {
-            case 0xf7: slider(0, red,  1); slider(1, green,  1); slider(2, blue,  1); break;
-            case 0xfb: slider(0, red, -1); slider(1, green, -1); slider(2, blue, -1); break;
-            case 0xfe:
                messages::encode_start_effect(buff, 0, t, 1000);
                nrf_tx(buff, sizeof(buff), slave);
-               break;
+         }
+         else if (button & lcd_plate::UP)
+         {
+            slider(0, red,   1);
+            slider(1, green, 1);
+            slider(2, blue,  1);
+         }
+         else if (button & lcd_plate::DOWN)
+         {
+            slider(0, red,   -1);
+            slider(1, green, -1);
+            slider(2, blue,  -1);
          }
       }
 
-      // sleep 1 ms
-      bcm2835_delayMicroseconds(1000);
+      bcm2835_delayMicroseconds(5000);
    }
 
    nRF24L01::shutdown();

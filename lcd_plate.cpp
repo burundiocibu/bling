@@ -14,13 +14,6 @@ namespace lcd_plate
    const uint8_t MCP23017_IODIRB         = 0x10;
    const uint8_t MCP23017_GPIOB          = 0x19;
 
-   // Port expander input pin definitions
-   const uint8_t SELECT                  = 0;
-   const uint8_t RIGHT                   = 1;
-   const uint8_t DOWN                    = 2;
-   const uint8_t UP                      = 3;
-   const uint8_t LEFT                    = 4;
-
    // LED colors
    const uint8_t OFF                     = 0x00;
    const uint8_t RED                     = 0x01;

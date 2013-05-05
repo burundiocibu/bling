@@ -7,6 +7,13 @@
 
 namespace lcd_plate
 {
+   // Bits for the various buttons
+   const uint8_t SELECT                  = 0x1;
+   const uint8_t RIGHT                   = 0x2;
+   const uint8_t DOWN                    = 0x4;
+   const uint8_t UP                      = 0x8;
+   const uint8_t LEFT                    = 0x10;
+
    int lcd_putchar(char c, FILE *stream);
    void setup(uint8_t addr);
    void puts(const char *s);
