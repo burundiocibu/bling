@@ -7,6 +7,7 @@ spi-time
 tx-test
 rx-test
 master_main
+master_lcd
 .DS_Store
 iom32u4.h
 Makefile
