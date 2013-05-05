@@ -2,6 +2,8 @@
 
 #include "lcd_plate.hpp"
 
+#include "i2c.hpp"
+
 namespace lcd_plate
 {
    const uint8_t MCP23017_IOCON_BANK0    = 0x0A;  // IOCON when Bank 0 active
@@ -63,24 +65,29 @@ namespace lcd_plate
    uint8_t addr;
    uint8_t porta=0, portb=0; // keep around what should be on those ports
 
+#ifdef AVR
+   // this is unique to the avr-libc
    static FILE mystdout;
+#endif
+
 
    void setup(uint8_t _addr)
    {
-      avr_i2c::setup();
+      i2c::setup();
       addr = _addr;
       // Set MCP23017 IOCON register to Bank 0 with sequential operation.
       // If chip is already set for Bank 0, this will just write to OLATB,
       // which won't seriously bother anything on the plate right now
       // (blue backlight LED will come on, but that's done in the next
       // step anyway).
-      avr_i2c::write(addr, MCP23017_IOCON_BANK1, 0);
+      i2c::write(addr, MCP23017_IOCON_BANK1, 0);
          
       // Brute force reload ALL registers to known state.  This also
       // sets up all the input pins, pull-ups, etc. for the Pi Plate.
       const uint8_t buff[] =
          {0b00111111,   // IODIRA - R+G LEDs=outputs, buttons=inputs
           0b00000000,   // IODIRB - Blue LED=output, LCD D7=input, D6..4=output
+          0b00000000,   // IPOLA
           0b00000000,   // IPOLB
           0b00000000,   // GPINTENA - Disable interrupt-on-change
           0b00000000,   // GPINTENB
@@ -100,7 +107,7 @@ namespace lcd_plate
           0b00000000,   // GPIOB
           0b00000000,   // OLATA - 0 on all outputs; side effect of
           0b00000000 }; // OLATB - turning on R+G+B backlight LEDs.
-      avr_i2c::write(addr, 0, buff, sizeof(buff));
+      i2c::write(addr, 0, buff, sizeof(buff));
 
       // Switch to Bank 1 and disable sequential operation.
       // From this point forward, the register addresses do NOT match
@@ -108,13 +115,13 @@ namespace lcd_plate
       // at the start of the class.  Also, the address register will no
       // longer increment automatically after this -- multi-byte
       // operations must be broken down into single-byte calls.
-      avr_i2c::write(addr, MCP23017_IOCON_BANK0, 0b10100000);
+      i2c::write(addr, MCP23017_IOCON_BANK0, 0b10100000);
 
       // turn all the backlight LEDs off
       porta = 0b11000000;
       portb = 0b00000001;
-      avr_i2c::write(addr, MCP23017_GPIOA, porta);
-      avr_i2c::write(addr, MCP23017_GPIOB, portb);
+      i2c::write(addr, MCP23017_GPIOA, porta);
+      i2c::write(addr, MCP23017_GPIOB, portb);
 
       write(0x33, false); // Init
       write(0x32, false); // Init
@@ -125,8 +132,10 @@ namespace lcd_plate
       write(LCD_DISPLAYCONTROL | LCD_DISPLAYON |  LCD_CURSOROFF | LCD_BLINKOFF, false);
       write(LCD_RETURNHOME, false);
 
+#ifdef AVR
       fdev_setup_stream(&mystdout, lcd_putchar, NULL, _FDEV_SETUP_WRITE);
       stdout=&mystdout;
+#endif
    }
 
 
@@ -159,11 +168,11 @@ namespace lcd_plate
       if (char_mode) bitmask |= 0b10000000;
       uint8_t buff[4];
       out4(bitmask, data, buff);
-      avr_i2c::write(addr, MCP23017_GPIOB, buff, sizeof(buff));
+      i2c::write(addr, MCP23017_GPIOB, buff, sizeof(buff));
       if (data==LCD_CLEARDISPLAY || data==LCD_RETURNHOME)
-         _delay_ms(2);
+         i2c::delay_us(2000);
       else
-         _delay_us(37);
+         i2c::delay_us(37);
    }
 
 
@@ -202,7 +211,7 @@ namespace lcd_plate
    uint8_t read_buttons(void)
    {
       uint8_t rv;
-      avr_i2c::read(addr, MCP23017_GPIOA, rv);
+      i2c::read(addr, MCP23017_GPIOA, &rv, 1);
       return rv;
    }
 

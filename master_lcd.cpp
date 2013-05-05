@@ -6,6 +6,8 @@
 
 #include "rt_utils.hpp"
 #include "nrf24l01.hpp"
+#include "lcd_plate.hpp"
+
 #include "messages.hpp"
 
 using namespace std;
@@ -18,31 +20,28 @@ void nrf_rx();
 void slider(uint8_t ch, uint16_t &v, int dir);
 void hexdump(uint8_t* buff, size_t len);
 
-/*
-HB#    R   G    B     STATUS   j
-123   fff fff  fff      2E     10
-
-Tx       Data
-123.345  01 3B EA 02 00 00 00 00 00 00 00 00
-123.345  02 3B EA 02 00 00 00 00 00 00 00 00
-*/
-
 
 int main(int argc, char **argv)
 {
-   WINDOW *win;
-   int prev_curs;
+   lcd_plate::setup(0x20);
+   lcd_plate::clear();
+   lcd_plate::set_cursor(0,0);
+   lcd_plate::puts("master_lcd");
 
-   win = initscr();
-   cbreak();
-   nodelay(win, true);
-   noecho();
-   nonl();
-   intrflush(win, true);
-   keypad(win, true);
-   prev_curs = ::curs_set(0);   // we want an invisible cursor.
-   mvprintw(0,0, "HB#   slave  R   G   B      j    tx_err  tx_obs ack_err");
+   uint8_t key=0;
+   while(true)
+   {
+      uint32_t t = runtime.msec();
+      uint8_t k = lcd_plate::read_buttons();
+      if (k!=key)
+      {
+         key = k;
+         printf("%8.3f %02x\n", 1e-3*runtime.msec(), key);
+      }
+      bcm2835_delayMicroseconds(1000);
+   }
 
+   
    nRF24L01::setup();
 
    if (!nRF24L01::configure_base())
@@ -61,7 +60,6 @@ int main(int argc, char **argv)
    uint16_t red=0,green=0,blue=0;
    unsigned hb_count=0;
    uint32_t last_hb=0;
-   mvprintw(1, 6, "%3d   %03x %03x %03x", slave, red, green, blue);
 
    for (int i=0; ; i++)
    {
@@ -77,46 +75,8 @@ int main(int argc, char **argv)
          nrf_tx(buff, sizeof(buff), slave);
          hb_count++;
          last_hb = t;
-         mvprintw(1, 0, "%d", hb_count);
       }
 
-      char key = getch();
-      if (key=='q')
-         break;
-
-      if (key != 0xff)
-      {
-         switch(key)
-         {
-            case '0': slave=0; break;
-            case '1': slave=1; break;
-            case '2': slave=2; break;
-            case 'R': slider(0, red,  -1);  break;
-            case 'r': slider(0, red,   1);  break;
-            case 'G': slider(1, green, -1); break;
-            case 'g': slider(1, green,  1); break;
-            case 'B': slider(2, blue,  -1); break;
-            case 'b': slider(2, blue,   1); break;
-            case 'w': slider(0, red,  1); slider(1, green,  1); slider(2, blue,  1); break;
-            case 'W': slider(0, red, -1); slider(1, green, -1); slider(2, blue, -1); break;
-            case ' ':
-               messages::encode_start_effect(buff, 0, t, 1000);
-               nrf_tx(buff, sizeof(buff), slave);
-               break;
-            case 's':
-            case 'S':
-               messages::encode_all_stop(buff);
-               nrf_tx(buff, sizeof(buff), slave);
-               red=0;green=0;blue=0;
-               break;
-            case 'p':
-               messages::encode_ping(buff);
-               nrf_tx(buff, sizeof(buff), slave);
-               nrf_rx();
-               break;
-         }
-         mvprintw(1, 6, "%3d   %03x %03x %03x", slave, red, green, blue);
-      }
       // sleep 10 ms
       bcm2835_delayMicroseconds(10000);
    }
@@ -159,12 +119,6 @@ void nrf_tx(uint8_t *buff, size_t len, unsigned slave)
       write_reg(STATUS, STATUS_TX_DS); //Clear the data sent notice
    else
       tx_err++;
-
-   uint8_t obs_tx = read_reg(OBSERVE_TX);
-   mvprintw(1, 27, "%3d  %3d       %02x    %3d", j, tx_err, obs_tx, ack_err);
-
-   mvprintw(4+buff[0], 0, "%8.3f  ", 0.001* runtime.msec());
-   hexdump(buff, len);
 }
 
 
@@ -196,21 +150,13 @@ void nrf_rx(void)
    write_reg(CONFIG, config); // should still be powered on
    clear_CE();
 
-   uint32_t t_rx;
-   uint8_t id;
-   uint8_t* p = buff;
-   p = messages::decode_var<uint8_t>(p, id);
-   p = messages::decode_var<uint32_t>(p, t_rx);
-   mvprintw(14, 0, "%8.3f ", 0.001*t_rx);
-   printw("%2d %3d   ", id, i);
-   hexdump(buff, messages::message_size);
 }
 
 
 void hexdump(uint8_t* buff, size_t len)
 {
    for (int i = 0; i <len; i++)
-      printw("%.2X ", buff[i]);
+      printf("%.2X ", buff[i]);
 }
 
 void slider(uint8_t ch, uint16_t &v, int dir)
