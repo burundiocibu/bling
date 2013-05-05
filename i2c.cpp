@@ -1,14 +1,25 @@
+// An i2c interface for both the raspberry pi and avr-libc
+
+#include <string.h>
+#include <stdio.h>
+
+#ifdef AVR
 #include <avr/io.h>
 #include <util/delay.h>
 #include <util/twi.h>
 #include <avr/interrupt.h>
+#else
+#include <bcm2835.h>
+#endif
 
-#include "avr_i2c.hpp"
-#include "avr_led.hpp"
 
-namespace avr_i2c
+namespace i2c
 {
+
+#ifdef AVR
+// avr-libc interfaced
 #define MAX_ITER 200
+
    uint8_t twst;
 
    void setup(void)
@@ -78,7 +89,7 @@ namespace avr_i2c
    }
 
 
-//=============================================================================
+   //=============================================================================
    int write(const uint8_t slave_addr, const uint8_t cmd, const uint8_t* data, const size_t len)
    {
       uint8_t n = 0;
@@ -102,7 +113,6 @@ namespace avr_i2c
       // doing a read/write of the bit (i.e. PORTC ^= _BV(PC7) ) doesn't work either
       // Oh, its noise on the 5V rail used to pull up SCL & SDA
       //PORTC &= ~_BV(PC7);
-      
 
       switch (send_data(slave_addr | TW_WRITE))
       {
@@ -140,7 +150,7 @@ namespace avr_i2c
    }
 
 
-//=============================================================================
+   //=============================================================================
    int read(const uint8_t slave_addr, const uint8_t reg_addr, uint8_t* data, const size_t len)
    {
       int rv = 0;
@@ -211,4 +221,81 @@ namespace avr_i2c
       return rv;
    }
 
+
+   void delay_us(uint32_t us)
+   {
+      for (uint16_t i=0; i<us; i++)
+         _delay_us(1);
+   }
+
+#else
+// bcm2835 based interface
+
+   void setup(void)
+   {
+      bcm2835_init();
+      bcm2835_i2c_begin();
+      // default should be 100kHz
+   }
+
+   //=============================================================================
+   int write(const uint8_t slave_addr, const uint8_t cmd, const uint8_t* data, const size_t len)
+   {
+      bcm2835_i2c_setSlaveAddress(slave_addr);
+      int rc;
+      char buff[len+1];
+      buff[0]=(char)cmd;
+      memcpy(buff+1, data, len);
+      rc = bcm2835_i2c_write(buff, len+1);
+      if (rc != BCM2835_I2C_REASON_OK)
+         printf("write rc: %d\n", rc);
+      return rc;
+   }
+
+   int write(const uint8_t slave_addr, const uint8_t cmd, const uint8_t data)
+   {
+      return write(slave_addr, cmd, &data, 1);
+   }
+
+
+   //=============================================================================
+   int read(const uint8_t slave_addr, const uint8_t reg_addr, uint8_t* data, const size_t len)
+   {
+      bcm2835_i2c_setSlaveAddress(slave_addr);
+      int rc;
+
+/*
+      rc = bcm2835_i2c_read_register_rs((char*)&reg_addr, (char*)data, len);
+      if (rc != BCM2835_I2C_REASON_OK)
+         printf("read rc: %d\n", rc);
+      return rc;
+*/
+      // don't know if the above works yet.
+      rc = bcm2835_i2c_write((char*)&reg_addr, 1);
+      if (rc != BCM2835_I2C_REASON_OK)
+      {
+         printf("write reg rc: %d\n", rc);
+         return rc;
+      }
+      rc = bcm2835_i2c_read((char*)data, len);
+      if (rc != BCM2835_I2C_REASON_OK)
+         printf("read rc: %d\n", rc);
+
+      return rc;
+   }
+
+
+   int read(const uint8_t slave_addr, const uint8_t reg_addr, uint8_t& data)
+   {
+      return read(slave_addr, reg_addr, &data, 1);
+   }
+
+
+   void delay_us(uint32_t us)
+   {
+      bcm2835_delayMicroseconds(us);
+   }
+
+
+#endif
 }

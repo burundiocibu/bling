@@ -196,13 +196,14 @@ void nrf_rx(void)
    write_reg(CONFIG, config); // should still be powered on
    clear_CE();
 
-   mvprintw(12, 0, "%8.3f  ", 0.001* runtime.msec());
-   printw("%d %3d ", pipe, i);
-   hexdump(buff, messages::message_size);
    uint32_t t_rx;
+   uint8_t id;
    uint8_t* p = buff;
+   p = messages::decode_var<uint8_t>(p, id);
    p = messages::decode_var<uint32_t>(p, t_rx);
-   mvprintw(13, 9, "%8.3f  ", 0.001* t_rx);
+   mvprintw(14, 0, "%8.3f ", 0.001*t_rx);
+   printw("%2d %3d   ", id, i);
+   hexdump(buff, messages::message_size);
 }
 
 
