@@ -28,22 +28,7 @@ int main(int argc, char **argv)
    lcd_plate::set_cursor(0,0);
    lcd_plate::puts("master_lcd");
 
-   uint8_t key=0;
-   while(true)
-   {
-      uint32_t t = runtime.msec();
-      uint8_t k = lcd_plate::read_buttons();
-      if (k!=key)
-      {
-         key = k;
-         printf("%8.3f %02x\n", 1e-3*runtime.msec(), key);
-      }
-      bcm2835_delayMicroseconds(1000);
-   }
-
-   
    nRF24L01::setup();
-
    if (!nRF24L01::configure_base())
    {
       printf("Failed to find nRF24L01. Exiting.\n");
@@ -52,22 +37,16 @@ int main(int argc, char **argv)
    nRF24L01::configure_PTX();
    nRF24L01::flush_tx();
 
-   const int LED=RPI_GPIO_P1_07;
-   bcm2835_gpio_fsel(LED, BCM2835_GPIO_FSEL_OUTP);
-
    uint8_t buff[messages::message_size];
    for (int i=0; i<sizeof(buff); i++) buff[i]=0;
    uint16_t red=0,green=0,blue=0;
    unsigned hb_count=0;
    uint32_t last_hb=0;
 
+   uint8_t button=0;
    for (int i=0; ; i++)
    {
       uint32_t t = runtime.msec();
-      if (t % 1000 <250)
-         bcm2835_gpio_write(LED, LOW);
-      else 
-         bcm2835_gpio_write(LED, HIGH);
 
       if (t - last_hb > 990)
       {
@@ -77,13 +56,28 @@ int main(int argc, char **argv)
          last_hb = t;
       }
 
-      // sleep 10 ms
-      bcm2835_delayMicroseconds(10000);
+      uint8_t b = lcd_plate::read_buttons();
+      if (b!=button)
+      {
+         button = b;
+         printf("%8.3f %02x\n", 1e-3*runtime.msec(), b);
+         
+         switch(button)
+         {
+            case 0xf7: slider(0, red,  1); slider(1, green,  1); slider(2, blue,  1); break;
+            case 0xfb: slider(0, red, -1); slider(1, green, -1); slider(2, blue, -1); break;
+            case 0xfe:
+               messages::encode_start_effect(buff, 0, t, 1000);
+               nrf_tx(buff, sizeof(buff), slave);
+               break;
+         }
+      }
+
+      // sleep 1 ms
+      bcm2835_delayMicroseconds(1000);
    }
 
    nRF24L01::shutdown();
-   endwin();
-   bcm2835_gpio_write(LED, HIGH);
    return 0;
 }
 
@@ -152,12 +146,6 @@ void nrf_rx(void)
 
 }
 
-
-void hexdump(uint8_t* buff, size_t len)
-{
-   for (int i = 0; i <len; i++)
-      printf("%.2X ", buff[i]);
-}
 
 void slider(uint8_t ch, uint16_t &v, int dir)
 {

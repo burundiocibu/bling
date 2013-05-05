@@ -264,13 +264,6 @@ namespace i2c
       bcm2835_i2c_setSlaveAddress(slave_addr);
       int rc;
 
-/*
-      rc = bcm2835_i2c_read_register_rs((char*)&reg_addr, (char*)data, len);
-      if (rc != BCM2835_I2C_REASON_OK)
-         printf("read rc: %d\n", rc);
-      return rc;
-*/
-      // don't know if the above works yet.
       rc = bcm2835_i2c_write((char*)&reg_addr, 1);
       if (rc != BCM2835_I2C_REASON_OK)
       {
