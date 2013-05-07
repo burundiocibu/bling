@@ -28,6 +28,9 @@ namespace i2c
       TWBR = 12; // Set SCL frequency to 400 kHz
    }
 
+   void shutdown(void)
+   {
+   }
 
    // Waits for the current tx to complete
    // at SCL frequency of 400 kHz, this should be
@@ -236,6 +239,11 @@ namespace i2c
       bcm2835_init();
       bcm2835_i2c_begin();
       // default should be 100kHz
+   }
+
+   void shutdown(void)
+   {
+      bcm2835_i2c_end();
    }
 
    //=============================================================================

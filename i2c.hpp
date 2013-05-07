@@ -8,6 +8,7 @@
 namespace i2c
 {
    void setup(void);
+   void shutdown(void);
    void delay_us(uint32_t ms);
 
    int write(const uint8_t slave_addr, const uint8_t cmd, const uint8_t* data, const size_t len);

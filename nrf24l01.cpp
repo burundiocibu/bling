@@ -128,7 +128,6 @@ namespace nRF24L01
 #ifdef AVR
 #else
       bcm2835_spi_end();
-      bcm2835_close();
 #endif
    }
 

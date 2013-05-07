@@ -14,16 +14,6 @@ namespace lcd_plate
    const uint8_t MCP23017_IODIRB         = 0x10;
    const uint8_t MCP23017_GPIOB          = 0x19;
 
-   // LED colors
-   const uint8_t OFF                     = 0x00;
-   const uint8_t RED                     = 0x01;
-   const uint8_t GREEN                   = 0x02;
-   const uint8_t BLUE                    = 0x04;
-   const uint8_t YELLOW                  = RED + GREEN;
-   const uint8_t TEAL                    = GREEN + BLUE;
-   const uint8_t VIOLET                  = RED + BLUE;
-   const uint8_t WHITE                   = RED + GREEN + BLUE;
-   const uint8_t ON                      = RED + GREEN + BLUE;
 
    // LCD Commands
    const uint8_t LCD_CLEARDISPLAY        = 0x01;
@@ -131,6 +121,11 @@ namespace lcd_plate
 #endif
    }
 
+   void shutdown()
+   {
+      i2c::shutdown();
+   }
+
 
    // The LCD data pins (D4-D7) connect to MCP pins 12-9 (PORTB4-1), in
    // that order.  Because this sequence is 'reversed,' a direct shift
@@ -207,5 +202,27 @@ namespace lcd_plate
       i2c::read(addr, MCP23017_GPIOA, &rv, 1);
       return rv;
    }
+
+   void set_backlight(int color)
+   {
+      if (color & RED)
+         porta &= ~0x40;
+      else
+         porta |= 0x40;
+
+      if (color & GREEN)
+         porta &= ~0x80;
+      else
+         porta |= 0x80;
+
+      if (color & BLUE)
+         portb &= ~0x01;
+      else
+         portb |= 0x01;
+
+      i2c::write(addr, MCP23017_GPIOA, porta);
+      i2c::write(addr, MCP23017_GPIOB, portb);
+   }
+
 
 }
