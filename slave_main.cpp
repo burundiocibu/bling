@@ -192,7 +192,7 @@ void do_ping(uint8_t* buff, uint8_t pipe)
    if (pipe==0)
       return;
 
-   delay_us(1000);  // want to tune this...
+   delay_us(1000);
 
    clear_CE();  // Turn off receiver
    char config = read_reg(CONFIG);
@@ -202,11 +202,10 @@ void do_ping(uint8_t* buff, uint8_t pipe)
    flush_tx();
    write_reg(CONFIG, config | CONFIG_PWR_UP); // power back up
 
-   uint8_t* p = buff;
+   uint8_t* p = (uint8_t*)(&iobuff[0]);
    *p++ = W_TX_PAYLOAD;
    *p++ = messages::status_id;
    p = messages::encode_var<uint32_t>(p, t_rx);
-   memcpy(iobuff, buff, messages::message_size+1);
    write_data(iobuff, messages::message_size+1);
    
    set_CE();

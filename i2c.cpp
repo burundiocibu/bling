@@ -80,17 +80,6 @@ namespace i2c
    }
 
 
-   int read(const uint8_t slave_addr, const uint8_t reg_addr, uint8_t& data)
-   {
-      return read(slave_addr, reg_addr, &data, 1);
-   }
-
-
-   int write(const uint8_t slave_addr, const uint8_t cmd, const uint8_t data)
-   {
-      return write(slave_addr, cmd, &data, 1);
-   }
-
 
    //=============================================================================
    int write(const uint8_t slave_addr, const uint8_t cmd, const uint8_t* data, const size_t len)
@@ -151,6 +140,14 @@ namespace i2c
       send_stop();
       return rv;
    }
+
+
+
+   int write(const uint8_t slave_addr, const uint8_t cmd, const uint8_t data)
+   {
+      return write(slave_addr, cmd, &data, 1);
+   }
+
 
 
    //=============================================================================
@@ -222,6 +219,12 @@ namespace i2c
      quit:
       send_stop();
       return rv;
+   }
+
+
+   int read(const uint8_t slave_addr, const uint8_t reg_addr, uint8_t& data)
+   {
+      return read(slave_addr, reg_addr, &data, 1);
    }
 
 
