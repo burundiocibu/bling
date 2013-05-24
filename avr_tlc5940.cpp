@@ -63,6 +63,7 @@ namespace avr_tlc5940
       output_gsdata();
       PORTD |= _BV(PD5);
       PORTD &= ~_BV(PD5); // additional SCLK pulse
+
       sei();
    }
 
@@ -126,5 +127,4 @@ namespace avr_tlc5940
       }  
       PORTD &= ~_BV(PD7); // clear BLANK
    }
-
 }

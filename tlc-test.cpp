@@ -14,6 +14,10 @@ int main (void)
    avr_led::setup();
    avr_tlc5940::setup();
 
+   DDRB |= _BV(PB5);
+   PORTB &= ~_BV(PB5);
+   PORTB |= _BV(PB5);
+
    for (int ch=0; ch<24; ch++)
       avr_tlc5940::set_channel(ch, 1);
 
@@ -26,7 +30,7 @@ int main (void)
    for (;;)
    {
       // Yep, upper two bits seem to be worthless
-      if (throb == 10 || throb == 0)
+      if (throb == 12 || throb == 0)
          dir = -dir;
       throb += dir;
       int v = (1<<throb) - 1;
