@@ -34,16 +34,11 @@ int main (void)
 {
    avr_tlc5940::setup();
 
-   avr_tlc5940::set_channel(15, 1024);
-   avr_tlc5940::output_gsdata();
-   while(true)
-      sleep_mode();
-
    // turn off 12v supply
    //DDRB |= _BV(PB5);
    //PORTB &= ~_BV(PB5);
 
-   blink(1, 100);
+   blink(1, 20);
 
    avr_rtc::setup();
    while(avr_rtc::t_ms < 2000)
