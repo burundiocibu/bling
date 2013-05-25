@@ -9,8 +9,6 @@
 #include "messages.hpp"
 #include "nrf24l01.hpp"
 
-
-
 void blink(int n, unsigned v=128)
 {
    for (int i=0; i<n; i++)
@@ -36,11 +34,16 @@ int main (void)
 {
    avr_tlc5940::setup();
 
-   // turn off 12v supply
-   DDRB |= _BV(PB5);
-   PORTB &= ~_BV(PB5);
+   avr_tlc5940::set_channel(15, 1024);
+   avr_tlc5940::output_gsdata();
+   while(true)
+      sleep_mode();
 
-   blink(1, 10);
+   // turn off 12v supply
+   //DDRB |= _BV(PB5);
+   //PORTB &= ~_BV(PB5);
+
+   blink(1, 100);
 
    avr_rtc::setup();
    while(avr_rtc::t_ms < 2000)

@@ -23,7 +23,7 @@ namespace avr_mike
 
       // disable the digital input buffer on PF0
       DIDR0 |= _BV(ADC0D);
-      DDRF |= _BV(PF0);
+      DDRC |= _BV(PC0);
 
       // use a prescaler of 128 for the clock
       // 16e6/128 = 125 kHz conversion clock

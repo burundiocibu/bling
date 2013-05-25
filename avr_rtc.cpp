@@ -8,22 +8,21 @@ namespace avr_rtc
 {
    uint32_t t_ms=0;
 
-   ISR(TIMER3_COMPA_vect)
+   ISR(TIMER2_COMPA_vect)
    {
       t_ms++;
    }
    
-   // Sets up timer 3 to generate an interrupt every ms
+   // Sets up timer 2 to generate an interrupt every ms
    void setup(void)
    {
       t_ms = 0;
 
-      // Wanted to use CTC mode but could not get that to work
-      TCCR3A = _BV(WGM30); // Set timer to CTC mode
-      // 16 MHz / 64 = 250 kHz
-      TCCR3B = _BV(CS31) | _BV(CS30) | _BV(WGM33); // prescaler = 64
-      TIMSK3 |= _BV(OCIE3A); // Interrupt on output compare on A  
-      OCR3A = 125;
+      TCCR2A = 0;
+      // 8 MHz / 32 = 250 kHz
+      TCCR2B = _BV(CS21) | _BV(CS20) ; // prescaler = 32
+      TIMSK2 |= _BV(OCIE2A); // Interrupt on output compare on A  
+      OCR2A = 125;
 
       sei();
    }

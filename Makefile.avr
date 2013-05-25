@@ -1,5 +1,5 @@
-MCU=atmega32u4
-PROGRAMMER_MCU=m32u4
+MCU=atmega328
+PROGRAMMER_MCU=m328p
 PROJECTNAME=main
 PRJSRC=main.c
 AVRDUDE_PROGRAMMERID=-c avr109
@@ -95,6 +95,9 @@ flashboot:
 	avrdude -c usbtiny -B 1 -p m32u4 -U flash:w:BootloaderCDC.hex
 	avrdude -c usbtiny -B 1 -p m32u4 -U lock:w:0x0f:m
 
+fuse328:
+	$(AVRDUDE) -v -U lfuse:w:0xe2:m -U hfuse:w:0xd9:m -U efuse:w:0x07:m
+
 #=================================================================
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -109,5 +112,4 @@ flashboot:
 	avr-objcopy -j .text -j .data -O ihex $^ $@
 
 %.flash : %.hex
-	while [ ! -e $(AVRDUDE_PORT) ]; do sleep 1; done
 	$(AVRDUDE) -U flash:w:$<

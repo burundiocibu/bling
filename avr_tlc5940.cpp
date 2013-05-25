@@ -30,39 +30,40 @@ namespace avr_tlc5940
    {
       //==============================================================
       // tlc5940 interface
-      // use Timer0 to generate a 4 MHz GSCLK on PB7
+      // use Timer0 to generate a 4 MHz GSCLK on OC0A
       TCCR0A = _BV(COM0A0) | _BV(WGM01); // Clear Timer on Compare match mode, toggle OC0A on match
       TCCR0B = _BV(CS00); // prescaler div = 1
       TIMSK0 = 0; // make sure it generates no interrupts
-      OCR0A = 1;  // f=16e6/(2*1*(1+1)) = 4 MHz
-      DDRB |= _BV(PB7); // enable the OC0A output
-
+      OCR0A = 0;  // f=8e6/(2*(0+1)) = 4 MHz
+      DDRD |= _BV(PD6); // enable the OC0A output
+      
       // use Timer1 to count up 4096 clocks to restart the gsdata cycle
       TCCR1A = _BV(WGM11) | _BV(WGM01); // CTC mode, reset on OCR1A
-      TCCR1B = _BV(CS12) | _BV(CS11) | _BV(CS10); // ext clock source on T1 (PD6), falling edge
+      TCCR1B = _BV(CS12) | _BV(CS11) | _BV(CS10); // ext clock source on T1, rising edge
       OCR1A = 4096;
       TIMSK1 |= _BV(OCIE1A); // Interrupt on output compare on A  
       
-      //        XLAT       SCLK       BLANK   
-      DDRD  |= _BV(PD4) | _BV(PD5) | _BV(PD7);
-      PORTD |= _BV(PD7);
-      PORTD &= ~_BV(PD4);
+      //         BLANK      XLAT
+      DDRC  |= _BV(PC2) | _BV(PC3);
+      PORTC |= _BV(PC2); // start with blank high to keep lights off
+      PORTC &= ~_BV(PC3);
+      //       VPRG
+      DDRD  |= _BV(PD7);
       PORTD &= ~_BV(PD5);
-      // PD3 is TxD and configured with the USART 
-      // PD7 is XERR, input, not used at the moment
 
-      // Set up USART1/MSPI
-      UBRR1 = 0; //16e6/(2*(0+1) = 8 MHz baud rate
-      UCSR1C = _BV(UMSEL11) | _BV(UMSEL10); // operate USART 1 in MSPIM mode, MSB first
-      UCSR1B = _BV(RXEN1) | _BV(TXEN1); // give the pins the correct dir..
-      UBRR1 = 0; // set the baud /again/. cause they say to
+      // Set up USART0/MSPI
+      DDRD  |= _BV(PD4); // use XCK for the SCLK
+      UBRR0 = 0; // baud=8e6/(2*(0+1)) = 4 MHz baud rate
+      UCSR0C = _BV(UMSEL01) | _BV(UMSEL00); // operate USART 0 in MSPIM mode, MSB first
+      UCSR0B = _BV(RXEN0) | _BV(TXEN0); // give the pins the correct dir..
+      UBRR0 = 0; // set the baud /again/. cause they say to
 
       for (unsigned i=0; i<sizeof(gsdata); i++)
          gsdata[i]=0;
 
       output_gsdata();
-      PORTD |= _BV(PD5);
-      PORTD &= ~_BV(PD5); // additional SCLK pulse
+      PORTD |= _BV(PD4);
+      PORTD &= ~_BV(PD4); // additional SCLK pulse
 
       sei();
    }
@@ -99,12 +100,12 @@ namespace avr_tlc5940
       need_xlat=0;// ignore any previous data
 
       // Now to send out the grayscale data
-      // 24 bytes at 8 MHz takes 24 us + setup time
+      // 24 bytes at 4 MHz takes 24 us + setup time
       for (unsigned i=0; i<sizeof(gsdata); i++)
       {
-         while ( !(UCSR1A & _BV(UDRE1)) ) ; // wait for tx buffer to be clear
-         UDR1 = gsdata[i];
-         while ( !(UCSR1A & _BV(RXC1))  ) ;
+         while ( !(UCSR0A & _BV(UDRE0)) ) ; // wait for tx buffer to be clear
+         UDR0 = gsdata[i];
+         while ( !(UCSR0A & _BV(RXC0))  ) ;
       }
 
       _delay_us(10); //  This seems to make the flickering not occur
@@ -117,14 +118,14 @@ namespace avr_tlc5940
    // While BLANK is active, pulse XLAT if needed
    ISR (TIMER1_COMPA_vect)
    {
-      PORTD |= _BV(PD7);  // set BLANK
+      PORTC |= _BV(PC2);  // set BLANK
       if (need_xlat)      // xfer data only while blank is high
       {
          // pulse XLAT
-         PORTD |= _BV(PD4);
-         PORTD &= ~_BV(PD4);
+         PORTD |= _BV(PC3);
+         PORTD &= ~_BV(PC3);
          need_xlat=0;
       }  
-      PORTD &= ~_BV(PD7); // clear BLANK
+      PORTC &= ~_BV(PC2); // clear BLANK
    }
 }
