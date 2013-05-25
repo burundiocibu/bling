@@ -60,7 +60,7 @@ namespace nRF24L01
    void clear_CE(void)
    {
 #ifdef AVR
-      PORTB &= ~_BV(PB6);
+      PORTD &= ~_BV(PD3);
 #else
       bcm2835_gpio_write(RPI_GPIO_P1_15, LOW);
 #endif
@@ -70,7 +70,7 @@ namespace nRF24L01
    void set_CE(void)
    {
 #ifdef AVR
-      PORTB |= _BV(PB6);
+      PORTD |= _BV(PD3);
 #else
       bcm2835_gpio_write(RPI_GPIO_P1_15, HIGH);
 #endif
@@ -80,7 +80,7 @@ namespace nRF24L01
 #ifdef AVR
    uint32_t t_rx;
 
-   ISR(PCINT0_vect)
+   ISR(INT0_vect)
    {
       t_rx = avr_rtc::t_ms;
    }
@@ -92,14 +92,14 @@ namespace nRF24L01
 #ifdef AVR
       avr_spi::setup();
 
-      // use B.6 as the CE to the nrf24l01
-      DDRB |= _BV(PB6);
+      // use D3 as the CE to the nrf24l01
+      DDRD |= _BV(PD3);
 
-      // use PCINT4 (PB4) to signal the MCU we has data.
+      // use INT0 (PD2) to signal the MCU we has data.
       cli();
-      PCICR |= _BV(PCIE0);   // enable pin change interrupts
-      PCMSK0 |= _BV(PCINT4); // enable PCINT4
-      PCIFR &= ~_BV(PCIF0);  // clear any pending PCINT interrupt
+      EICRA = 0; // Active low interrupts
+      EIMSK |= _BV(INT0); // enable INT0
+      EIFR &= ~_BV(INTF0);  // clear any pending INT0 interrupt
       sei();
       
       return true;
@@ -171,8 +171,15 @@ namespace nRF24L01
       if (read_reg(CONFIG) == 0xff || read_reg(STATUS) == 0xff)
          return false;
       
-      write_reg(CONFIG, CONFIG_EN_CRC | CONFIG_MASK_TX_DS | CONFIG_MASK_MAX_RT);
+      const uint8_t cfg=CONFIG_EN_CRC | CONFIG_MASK_TX_DS | CONFIG_MASK_MAX_RT;
+      write_reg(CONFIG, cfg);
+      if (read_reg(CONFIG) != cfg)
+         return false;
+      
       write_reg(SETUP_RETR, SETUP_RETR_ARC_3); // auto retransmit 3 x 250us
+      if (read_reg(SETUP_RETR) != SETUP_RETR_ARC_3)
+         return false;
+
       write_reg(SETUP_AW, SETUP_AW_4BYTES);  // 4 byte addresses
       write_reg(RF_SETUP, 0x07);  // 1Mbps data rate, 0dBm
       write_reg(RF_CH, channel); // use channel 2
@@ -183,6 +190,8 @@ namespace nRF24L01
 
       // Clear the various interrupt bits
       write_reg(STATUS, STATUS_TX_DS|STATUS_RX_DR|STATUS_MAX_RT);
+      if (read_reg(STATUS) != 0x0e)
+         return false;
 
       write_reg(EN_AA, 0x00); //disable auto-ack, RX mode
       return true;

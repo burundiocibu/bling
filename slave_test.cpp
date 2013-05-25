@@ -15,10 +15,10 @@ void blink(int n, unsigned v=128)
    {
       avr_tlc5940::set_channel(15, v);
       avr_tlc5940::output_gsdata();
-      _delay_ms(100);
+      _delay_ms(111);
       avr_tlc5940::set_channel(15, 0);
       avr_tlc5940::output_gsdata();
-      _delay_ms(200);
+      _delay_ms(222);
    }
 }   
 
@@ -45,27 +45,13 @@ int main (void)
       sleep_mode();
 
    blink(2, 20);
-   _delay_ms(2000);
+   _delay_ms(1000);
 
-   {
-      using namespace nRF24L01;
-      setup();
-
-      if (read_reg(CONFIG) != 0x08)
-         die();
-      blink(3, 20);
-
-      if (read_reg(EN_AA) != 0x3f)
-         die();
-      blink(3, 20);
-
-      if (read_reg(EN_RXADDR) != 0x03) 
-         die();
-      blink(3, 20);
-
-      if (read_reg(STATUS) != 0x0e)
-         die();
-   }
+   nRF24L01::setup();
+   if (!nRF24L01::configure_base())
+      die();
+   blink(3, 20);
+   _delay_ms(1000);
 
    uint8_t buff[messages::message_size];
    while(true)
