@@ -20,11 +20,11 @@ int main (void)
    //DDRB |= _BV(PB5);
    //PORTB &= ~_BV(PB5);
 
-
+/*
    avr_rtc::setup();
    _delay_ms(2000);
    int dt = avr_rtc::t_ms - 2000;
-   const int err=40; //40 ms works on the sparkfun breakout board
+   const int err=70; //40 ms works on the sparkfun breakout board
    if (dt > err)
       avr_dbg::die(2, 30);
    else if (-dt > err)
@@ -34,6 +34,20 @@ int main (void)
    nRF24L01::setup();
    if (!nRF24L01::configure_base())
       avr_dbg::die(4, 20);
+*/
+
+   int dir=1;
+   for (uint32_t v=0; ; v+=dir)
+   {
+      if (v == 0)
+         dir=1;
+      if (v == 1024 * 16)
+         dir=-1;
+      for (int i=0; i<=15; i++)
+         avr_tlc5940::set_channel(i, v>>6);
+      avr_tlc5940::output_gsdata();
+      //_delay_ms(10);
+   }
 
    for (int i=0; i<15; i++)
       avr_tlc5940::set_channel(i, 1);

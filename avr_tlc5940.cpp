@@ -8,13 +8,13 @@
 // This is an AVR interface to a TLC5940
 // Uses:
 //  TIMER0 to generate the GSCLOCK on PB7
-//  TIMER1 to generate the BLANK strobe (clocked by GSCLOCK)
-//  USART1 to clock the 'greyscale' data out to the chip (in MSPI mode)
-//  PD4 for TLC5940 XLAT signal (to write the data into the PWM registers)
-//  PD5 for the greyscale data clock (SCLK)
-//  PD6 clock input to TIMER1, from GSCLOCK
-//  PD7 for the BLANK signal (to shut off output and to start the next PWM cycle)
-//  PC6 for the VPRG
+//  TIMER1 to generate the BLANK strobe (clocked by GSCLOCK on the T1 pin)
+//  USART0 to clock the 'greyscale' data out to the chip (in MSPI mode)
+//  PC3 for TLC5940 XLAT signal (to write the data into the PWM registers)
+//  PD4 for the greyscale data clock (SCLK)
+//  PD5 clock input to TIMER1, from GSCLOCK
+//  PC2 for the BLANK signal (to shut off output and to start the next PWM cycle)
+//  PD7 for the VPRG
 //
 // Note that it appears that the unit goes to 100% on at 1023, not 4095.
 // This is probably a bug in the way I am communicating to the. Everything
@@ -24,7 +24,8 @@
 namespace avr_tlc5940
 {
    uint8_t gsdata[24];
-   uint8_t need_xlat;
+   bool new_gsdata;
+   bool need_xlat;
 
    void setup(void)
    {
@@ -38,8 +39,9 @@ namespace avr_tlc5940
       DDRD |= _BV(PD6); // enable the OC0A output
       
       // use Timer1 to count up 4096 clocks to restart the gsdata cycle
-      TCCR1A = _BV(WGM11) | _BV(WGM01); // CTC mode, reset on OCR1A
-      TCCR1B = _BV(CS12) | _BV(CS11) | _BV(CS10); // ext clock source on T1, rising edge
+      // ext clock source on T1, rising edge, CTC mode; reset on OCR1A match
+      TCCR1A = 0;
+      TCCR1B = _BV(WGM12) | _BV(CS12) | _BV(CS11) | _BV(CS10);
       OCR1A = 4096;
       TIMSK1 |= _BV(OCIE1A); // Interrupt on output compare on A  
       
@@ -49,7 +51,7 @@ namespace avr_tlc5940
       PORTC &= ~_BV(PC3);
       //       VPRG
       DDRD  |= _BV(PD7);
-      PORTD &= ~_BV(PD5);
+      PORTD &= ~_BV(PD7);
 
       // Set up USART0/MSPI
       DDRD  |= _BV(PD4); // use XCK for the SCLK
@@ -60,7 +62,6 @@ namespace avr_tlc5940
 
       for (unsigned i=0; i<sizeof(gsdata); i++)
          gsdata[i]=0;
-
       output_gsdata();
       PORTD |= _BV(PD4);
       PORTD &= ~_BV(PD4); // additional SCLK pulse
@@ -82,6 +83,7 @@ namespace avr_tlc5940
       gsdata[lb-1] &= mask_h;
       gsdata[lb] |= pwm_l;
       gsdata[lb-1] |= pwm_h;
+      new_gsdata=true;
    }
 
    unsigned get_channel(int chan)
@@ -97,8 +99,10 @@ namespace avr_tlc5940
 
    void output_gsdata(void)
    {
-      need_xlat=0;// ignore any previous data
+      if (!new_gsdata)
+         return;
 
+      need_xlat=false;
       // Now to send out the grayscale data
       // 24 bytes at 4 MHz takes 24 us + setup time
       for (unsigned i=0; i<sizeof(gsdata); i++)
@@ -108,9 +112,9 @@ namespace avr_tlc5940
          while ( !(UCSR0A & _BV(RXC0))  ) ;
       }
 
-      _delay_us(10); //  This seems to make the flickering not occur
+      //_delay_us(10); //  This seems to make the flickering not occur
 
-      need_xlat = 1; // indicate that there is new data to be latched
+      need_xlat=true; // indicate that there is new data to be latched
    }
 
    // Pulse BLANK  every 4096 GSCLK cycles
@@ -119,13 +123,14 @@ namespace avr_tlc5940
    ISR (TIMER1_COMPA_vect)
    {
       PORTC |= _BV(PC2);  // set BLANK
-      if (need_xlat)      // xfer data only while blank is high
+
+      if (need_xlat)
       {
-         // pulse XLAT
-         PORTC |= _BV(PC3);
+         PORTC |= _BV(PC3); // pulse XLAT
          PORTC &= ~_BV(PC3);
-         need_xlat=0;
-      }  
+         need_xlat = false;
+      }
+
       PORTC &= ~_BV(PC2); // clear BLANK
    }
 }

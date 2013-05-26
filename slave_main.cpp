@@ -56,6 +56,24 @@ int main (void)
 
    uint32_t t_hb=0;
    Effect effect;
+
+   while (false)
+   {
+      uint32_t ms = avr_rtc::t_ms;
+      unsigned sec = ms/1000;
+      ms -= sec*1000;
+
+      if ((ms & 0x10) == 0)
+      {
+         if (sec & 1)
+            avr_tlc5940::set_channel(15, ms);
+         else
+            avr_tlc5940::set_channel(15, 1000-ms);
+      }
+      avr_tlc5940::output_gsdata();
+      sleep_mode();
+   }
+
    for (;;)
    {
       avr_dbg::throbber(t_hb);
