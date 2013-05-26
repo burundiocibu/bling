@@ -94,6 +94,7 @@ namespace nRF24L01
 
       // use D3 as the CE to the nrf24l01
       DDRD |= _BV(PD3);
+      clear_CE();
 
       // use INT0 (PD2) to signal the MCU we has data.
       cli();
@@ -177,8 +178,6 @@ namespace nRF24L01
          return false;
       
       write_reg(SETUP_RETR, SETUP_RETR_ARC_3); // auto retransmit 3 x 250us
-      if (read_reg(SETUP_RETR) != SETUP_RETR_ARC_3)
-         return false;
 
       write_reg(SETUP_AW, SETUP_AW_4BYTES);  // 4 byte addresses
       write_reg(RF_SETUP, 0x07);  // 1Mbps data rate, 0dBm
@@ -190,8 +189,6 @@ namespace nRF24L01
 
       // Clear the various interrupt bits
       write_reg(STATUS, STATUS_TX_DS|STATUS_RX_DR|STATUS_MAX_RT);
-      if (read_reg(STATUS) != 0x0e)
-         return false;
 
       write_reg(EN_AA, 0x00); //disable auto-ack, RX mode
       return true;

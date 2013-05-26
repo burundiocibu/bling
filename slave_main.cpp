@@ -9,8 +9,6 @@
 
 #include "avr_tlc5940.hpp"
 #include "avr_rtc.hpp"
-#include "avr_led.hpp"
-#include "avr_mike.hpp"
 
 #include "nrf24l01.hpp"
 #include "messages.hpp"
@@ -39,24 +37,23 @@ void do_start_effect(uint8_t* buff, Effect& effect);
 void do_set_rgb(uint8_t* buff);
 void do_ping(uint8_t* buff, uint8_t pipe);
 
+// These are really just used to help with debugging
 void throbber(uint32_t t_hb);
-
+void blink(int n, unsigned v=128);
+void die(int n, unsigned v=128);
 
 int main (void)
 {
-   avr_led::setup();
+   avr_tlc5940::setup();
+
    avr_rtc::setup();
 
    nRF24L01::setup();
-   nRF24L01::configure_base();
+   if (!nRF24L01::configure_base())
+      die(3, 20);
    nRF24L01::configure_PRX(SLAVE_NUMBER);
    uint8_t buff[messages::message_size];
 
-   avr_tlc5940::setup();
-   avr_tlc5940::set_channel(15, 0);
-   avr_tlc5940::output_gsdata();
-
-   avr_mike::setup();
 
    // Things to wake us up:
    // nRF IRQ,              random
@@ -238,3 +235,24 @@ void do_ping(uint8_t* buff, uint8_t pipe)
    set_CE();
 }
 
+void blink(int n, unsigned v=128)
+{
+   for (int i=0; i<n; i++)
+   {
+      avr_tlc5940::set_channel(15, v);
+      avr_tlc5940::output_gsdata();
+      _delay_ms(111);
+      avr_tlc5940::set_channel(15, 0);
+      avr_tlc5940::output_gsdata();
+      _delay_ms(222);
+   }
+}   
+
+void die(int n, unsigned v=128)
+{
+   while(true)
+   {
+      blink(n, 128);
+      _delay_ms(1000);
+   }
+}

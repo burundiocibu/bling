@@ -53,17 +53,11 @@ int main (void)
    blink(3, 20);
    _delay_ms(1000);
 
-   uint8_t buff[messages::message_size];
-   while(true)
-   {
-      uint8_t pipe;
-      uint8_t status=nRF24L01::read_reg(nRF24L01::STATUS);
-      if (status == 0x0e)
-         break;
-      nRF24L01::read_rx_payload(buff, sizeof(buff), pipe);
-      nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_RX_DR); // clear data received bit
-      blink(4, 10);
-   }
+   nRF24L01::configure_PRX(SLAVE_NUMBER);
+
+   uint8_t status=nRF24L01::read_reg(nRF24L01::STATUS);
+   if (status != 0x0e)
+      blink(~status);
 
    int dir = 1;
    for (unsigned i=32;;i+=dir)
