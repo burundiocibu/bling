@@ -9,7 +9,7 @@
 
 #include "avr_tlc5940.hpp"
 #include "avr_rtc.hpp"
-
+#include "avr_dbg.hpp"
 #include "nrf24l01.hpp"
 #include "messages.hpp"
 
@@ -29,18 +29,12 @@ struct Effect
    void execute(void);
 };
 
-
 void do_all_stop(void);
 void do_heartbeat(uint8_t* buff, uint32_t& t_hb);
 void do_set_tlc_ch(uint8_t* buff);
 void do_start_effect(uint8_t* buff, Effect& effect);
 void do_set_rgb(uint8_t* buff);
 void do_ping(uint8_t* buff, uint8_t pipe);
-
-// These are really just used to help with debugging
-void throbber(uint32_t t_hb);
-void blink(int n, unsigned v=128);
-void die(int n, unsigned v=128);
 
 int main (void)
 {
@@ -50,7 +44,7 @@ int main (void)
 
    nRF24L01::setup();
    if (!nRF24L01::configure_base())
-      die(3, 20);
+      avr_dbg::die(3, 20);
    nRF24L01::configure_PRX(SLAVE_NUMBER);
    uint8_t buff[messages::message_size];
 
@@ -64,7 +58,7 @@ int main (void)
    Effect effect;
    for (;;)
    {
-      throbber(t_hb);
+      avr_dbg::throbber(t_hb);
 
       // Handle any data from the radio
       while(true)
@@ -117,29 +111,6 @@ void Effect::execute()
    for (unsigned ch=0; ch<9; ch++)
       avr_tlc5940::set_channel(ch, v);
    avr_tlc5940::output_gsdata();
-}
-
-
-void throbber(uint32_t t_hb)
-{
-   uint32_t ms = avr_rtc::t_ms;
-   unsigned sec = ms/1000;
-   ms -= sec*1000;
-
-   if ((ms & 0x10) == 0)
-   {
-      // Stop throbbing if we loose the heartbeat
-      if (labs( avr_rtc::t_ms - t_hb) > 4000)
-         avr_tlc5940::set_channel(15, 1);
-      else if (t_hb)
-      {
-         if (sec & 1)
-            avr_tlc5940::set_channel(15, ms);
-         else
-            avr_tlc5940::set_channel(15, 1000-ms);
-      }
-      avr_tlc5940::output_gsdata();
-   }
 }
 
 
@@ -235,24 +206,3 @@ void do_ping(uint8_t* buff, uint8_t pipe)
    set_CE();
 }
 
-void blink(int n, unsigned v)
-{
-   for (int i=0; i<n; i++)
-   {
-      avr_tlc5940::set_channel(15, v);
-      avr_tlc5940::output_gsdata();
-      _delay_ms(111);
-      avr_tlc5940::set_channel(15, 0);
-      avr_tlc5940::output_gsdata();
-      _delay_ms(222);
-   }
-}   
-
-void die(int n, unsigned v)
-{
-   while(true)
-   {
-      blink(n, 128);
-      _delay_ms(1000);
-   }
-}

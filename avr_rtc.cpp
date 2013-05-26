@@ -18,9 +18,8 @@ namespace avr_rtc
    {
       t_ms = 0;
 
-      TCCR2A = 0;
-      // 8 MHz / 32 = 250 kHz
-      TCCR2B = _BV(CS21) | _BV(CS20) ; // prescaler = 32
+      TCCR2A = _BV(WGM21); // CTC mode, resets on OCR2A match
+      TCCR2B = _BV(CS22) ; // prescaler = 64, f=8e6/64=125kHz
       TIMSK2 |= _BV(OCIE2A); // Interrupt on output compare on A  
       OCR2A = 125;
 

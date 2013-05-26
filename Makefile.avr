@@ -56,6 +56,7 @@ avr_spi.o: avr_spi.cpp
 avr_i2c.o: avr_i2c.cpp
 avr_tlc5940.o: avr_tlc5940.cpp
 avr_rtc.o: avr_rtc.cpp
+avr_dbg.o: avr_dbg.cpp
 avr_mike.o: avr_mike.cpp
 nrf24l01.o: nrf24l01.cpp
 messages.o: messages.cpp
@@ -68,11 +69,11 @@ rtc-test.o: rtc-test.cpp
 
 prog: slave_main.flash
 
-slave_main.elf: slave_main.o avr_rtc.o avr_spi.o i2c.o lcd_plate.o avr_tlc5940.o avr_mike.o nrf24l01.o messages.o
+slave_main.elf: slave_main.o avr_rtc.o avr_spi.o i2c.o lcd_plate.o avr_tlc5940.o avr_mike.o nrf24l01.o messages.o avr_dbg.o
 
 slave_flasher.elf: slave_flasher.o avr_rtc.o avr_tlc5940.o avr_mike.o
 
-slave_test.elf: slave_test.o avr_rtc.o avr_tlc5940.o avr_mike.o nrf24l01.o avr_spi.o i2c.o messages.o 
+slave_test.elf: slave_test.o avr_rtc.o avr_tlc5940.o avr_mike.o nrf24l01.o avr_spi.o i2c.o messages.o avr_dbg.o
 
 tlc-test.elf: tlc-test.o avr_tlc5940.o
 
