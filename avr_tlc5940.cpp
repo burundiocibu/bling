@@ -24,7 +24,7 @@
 namespace avr_tlc5940
 {
    uint8_t gsdata[24];
-   bool new_gsdata;
+   bool pending_gsdata;
    bool need_xlat;
 
    void setup(void)
@@ -83,7 +83,7 @@ namespace avr_tlc5940
       gsdata[lb-1] &= mask_h;
       gsdata[lb] |= pwm_l;
       gsdata[lb-1] |= pwm_h;
-      new_gsdata=true;
+      pending_gsdata=true;
    }
 
    unsigned get_channel(int chan)
@@ -99,7 +99,7 @@ namespace avr_tlc5940
 
    void output_gsdata(void)
    {
-      if (!new_gsdata)
+      if (!pending_gsdata)
          return;
 
       need_xlat=false;
@@ -112,8 +112,7 @@ namespace avr_tlc5940
          while ( !(UCSR0A & _BV(RXC0))  ) ;
       }
 
-      //_delay_us(10); //  This seems to make the flickering not occur
-
+      pending_gsdata=false;
       need_xlat=true; // indicate that there is new data to be latched
    }
 

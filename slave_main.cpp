@@ -39,7 +39,8 @@ void do_ping(uint8_t* buff, uint8_t pipe);
 int main (void)
 {
    avr_tlc5940::setup();
-
+   avr_dbg::blink(1, 20);
+   
    avr_rtc::setup();
 
    nRF24L01::setup();
@@ -47,7 +48,6 @@ int main (void)
       avr_dbg::die(3, 20);
    nRF24L01::configure_PRX(SLAVE_NUMBER);
    uint8_t buff[messages::message_size];
-
 
    // Things to wake us up:
    // nRF IRQ,              random
@@ -57,27 +57,10 @@ int main (void)
    uint32_t t_hb=0;
    Effect effect;
 
-   while (false)
-   {
-      uint32_t ms = avr_rtc::t_ms;
-      unsigned sec = ms/1000;
-      ms -= sec*1000;
-
-      if ((ms & 0x10) == 0)
-      {
-         if (sec & 1)
-            avr_tlc5940::set_channel(15, ms);
-         else
-            avr_tlc5940::set_channel(15, 1000-ms);
-      }
-      avr_tlc5940::output_gsdata();
-      sleep_mode();
-   }
-
    for (;;)
    {
       avr_dbg::throbber(t_hb);
-
+      
       // Handle any data from the radio
       while(true)
       {
@@ -87,7 +70,7 @@ int main (void)
             break;
          nRF24L01::read_rx_payload(buff, sizeof(buff), pipe);
          nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_RX_DR); // clear data received bit
-
+         
          switch (messages::get_id(buff))
          {
             case messages::heartbeat_id:    do_heartbeat(buff, t_hb); break;
@@ -99,9 +82,9 @@ int main (void)
          }
       }
 
-      effect.execute();
+      //effect.execute();
       
-      sleep_mode();
+      //sleep_mode();
    }
 }
 

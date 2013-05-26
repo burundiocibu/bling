@@ -17,10 +17,9 @@ int main (void)
    avr_dbg::blink(1, 10);
 
    // turn off 12v supply
-   //DDRB |= _BV(PB5);
-   //PORTB &= ~_BV(PB5);
+   //DDRB |= _BV(PB1);
+   //PORTB &= ~_BV(PB1);
 
-/*
    avr_rtc::setup();
    _delay_ms(2000);
    int dt = avr_rtc::t_ms - 2000;
@@ -29,25 +28,10 @@ int main (void)
       avr_dbg::die(2, 30);
    else if (-dt > err)
       avr_dbg::die(3, 30);
-      
 
    nRF24L01::setup();
    if (!nRF24L01::configure_base())
       avr_dbg::die(4, 20);
-*/
-
-   int dir=1;
-   for (uint32_t v=0; ; v+=dir)
-   {
-      if (v == 0)
-         dir=1;
-      if (v == 1024 * 16)
-         dir=-1;
-      for (int i=0; i<=15; i++)
-         avr_tlc5940::set_channel(i, v>>6);
-      avr_tlc5940::output_gsdata();
-      //_delay_ms(10);
-   }
 
    for (int i=0; i<15; i++)
       avr_tlc5940::set_channel(i, 1);
@@ -57,4 +41,17 @@ int main (void)
       avr_dbg::throbber(avr_rtc::t_ms);
       sleep_mode();
    }
+
+   int dir=1;
+   for (uint32_t v=0; ; v+=dir)
+   {
+      if (v == 0)
+         dir=1;
+      if (v == 1024 * 16)
+         dir=-1;
+      for (int i=0; i<=15; i++)
+         avr_tlc5940::set_channel(i, v>>5);
+      avr_tlc5940::output_gsdata();
+   }
+
 }

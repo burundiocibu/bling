@@ -13,7 +13,7 @@ namespace avr_spi
    {
       // MOSI, SCK, and SS are outputs
       DDRB |= _BV(PB2) | _BV(PB3) | _BV(PB5);
-      // Turn on SPI as master @ Fosc/16 
+      // Turn on SPI as master @ Fosc/4
       SPCR = _BV(SPE) | _BV(MSTR);
       PORTB |= _BV(PB2); // Make sure SS is high
    }
