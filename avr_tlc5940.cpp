@@ -53,7 +53,7 @@ namespace avr_tlc5940
 
       // Set up USART0/MSPI
       DDRD  |= _BV(PD4); // use XCK for the SCLK
-      UBRR0 = 3; // baud=8e6/(2*(0+1)) = 4 MHz baud rate
+      UBRR0 = 0; // baud=8e6/(2*(0+1)) = 4 MHz baud rate
       UCSR0C = _BV(UMSEL01) | _BV(UMSEL00); // operate USART 0 in MSPIM mode, MSB first
       UCSR0B = _BV(RXEN0) | _BV(TXEN0); // give the pins the correct dir..
       UBRR0 = 0; // set the baud /again/. cause they say to
@@ -62,8 +62,8 @@ namespace avr_tlc5940
          gsdata[i]=0;
 
       output_gsdata();
-      //PORTD |= _BV(PD4);
-      //PORTD &= ~_BV(PD4); // additional SCLK pulse
+      PORTD |= _BV(PD4);
+      PORTD &= ~_BV(PD4); // additional SCLK pulse
 
       sei();
    }

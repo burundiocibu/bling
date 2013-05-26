@@ -235,7 +235,7 @@ void do_ping(uint8_t* buff, uint8_t pipe)
    set_CE();
 }
 
-void blink(int n, unsigned v=128)
+void blink(int n, unsigned v)
 {
    for (int i=0; i<n; i++)
    {
@@ -248,7 +248,7 @@ void blink(int n, unsigned v=128)
    }
 }   
 
-void die(int n, unsigned v=128)
+void die(int n, unsigned v)
 {
    while(true)
    {
