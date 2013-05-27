@@ -39,13 +39,12 @@ void do_ping(uint8_t* buff, uint8_t pipe);
 int main (void)
 {
    avr_tlc5940::setup();
-   avr_dbg::blink(1, 20);
    
    avr_rtc::setup();
 
    nRF24L01::setup();
    if (!nRF24L01::configure_base())
-      avr_dbg::die(3, 20);
+      avr_dbg::die(1, 20);
    nRF24L01::configure_PRX(SLAVE_NUMBER);
    uint8_t buff[messages::message_size];
 
@@ -62,14 +61,16 @@ int main (void)
       avr_dbg::throbber(t_hb);
       
       // Handle any data from the radio
-      while(true)
+      for(int cnt=0; ; cnt++)
       {
+         if (cnt>10)
+            avr_dbg::blink(3, 10);
          uint8_t pipe;
          uint8_t status=nRF24L01::read_reg(nRF24L01::STATUS);
          if (status == 0x0e)
             break;
          nRF24L01::read_rx_payload(buff, sizeof(buff), pipe);
-         nRF24L01::write_reg(nRF24L01::STATUS, nRF24L01::STATUS_RX_DR); // clear data received bit
+         nRF24L01::clear_IRQ();
          
          switch (messages::get_id(buff))
          {
@@ -82,9 +83,9 @@ int main (void)
          }
       }
 
-      //effect.execute();
-      
-      //sleep_mode();
+      effect.execute();
+      avr_tlc5940::output_gsdata();
+      sleep_mode();
    }
 }
 
@@ -111,7 +112,6 @@ void Effect::execute()
 
    for (unsigned ch=0; ch<9; ch++)
       avr_tlc5940::set_channel(ch, v);
-   avr_tlc5940::output_gsdata();
 }
 
 
@@ -119,7 +119,6 @@ void do_all_stop(void)
 {
    for (int ch=0; ch<14; ch++)
       avr_tlc5940::set_channel(ch, 0);
-   avr_tlc5940::output_gsdata();
 }
 
 void do_heartbeat(uint8_t* buff, uint32_t& t_hb)
@@ -138,7 +137,6 @@ void do_set_tlc_ch(uint8_t* buff)
    uint16_t value;
    messages::decode_set_tlc_ch(buff, ch, value);
    avr_tlc5940::set_channel(ch, value);
-   avr_tlc5940::output_gsdata();
 }
 
 

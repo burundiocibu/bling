@@ -26,7 +26,6 @@ namespace avr_dbg
             else
                avr_tlc5940::set_channel(15, 1000-ms);
          }
-         avr_tlc5940::output_gsdata();
       }
    }
 

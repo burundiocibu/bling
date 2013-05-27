@@ -122,6 +122,7 @@ namespace avr_tlc5940
    ISR (TIMER1_COMPA_vect)
    {
       PORTC |= _BV(PC2);  // set BLANK
+      TCCR0B = 0; // turns off the GSCLK
 
       if (need_xlat)
       {
@@ -130,6 +131,8 @@ namespace avr_tlc5940
          need_xlat = false;
       }
 
+      TCNT1 = 0;  // reset the GSCLK counter in case any extra pulses game
+      TCCR0B = _BV(CS00); // turns GSCLK back on
       PORTC &= ~_BV(PC2); // clear BLANK
    }
 }

@@ -84,6 +84,12 @@ namespace nRF24L01
    {
       t_rx = avr_rtc::t_ms;
    }
+   
+   void clear_IRQ(void)
+   {
+      write_reg(STATUS, STATUS_RX_DR | STATUS_TX_DS | STATUS_MAX_RT); // clear all the IRQ bits!
+   }
+
 #endif
 
 
@@ -98,7 +104,7 @@ namespace nRF24L01
 
       // use INT0 (PD2) to signal the MCU we has data.
       cli();
-      EICRA = 0; // Active low interrupts
+      EICRA = _BV(ISC01); // falling edge interrupts
       EIMSK |= _BV(INT0); // enable INT0
       EIFR &= ~_BV(INTF0);  // clear any pending INT0 interrupt
       sei();
@@ -191,6 +197,12 @@ namespace nRF24L01
       write_reg(STATUS, STATUS_TX_DS|STATUS_RX_DR|STATUS_MAX_RT);
 
       write_reg(EN_AA, 0x00); //disable auto-ack, RX mode
+
+      char buff=FLUSH_RX;
+      write_data(&buff, 1);
+      buff=FLUSH_TX;
+      write_data(&buff, 1);
+
       return true;
    }
 
@@ -218,9 +230,6 @@ namespace nRF24L01
 
       write_reg(EN_RXADDR, EN_RXADDR_ERX_P0 | EN_RXADDR_ERX_P1);
       write_reg(EN_AA, EN_AA_ENAA_P1);  // auto ack on pipe 1 only
-
-      iobuff[0]=FLUSH_RX;
-      write_data(iobuff, 1);
 
       // after power up, can't write to most registers anymore
       write_reg(CONFIG, config | CONFIG_PWR_UP);

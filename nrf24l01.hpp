@@ -35,6 +35,7 @@ namespace nRF24L01
 
 #ifdef AVR
    extern uint32_t t_rx;
+   void clear_IRQ(void);
 #endif
 }
 #endif
