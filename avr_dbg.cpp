@@ -21,10 +21,11 @@ namespace avr_dbg
             avr_tlc5940::set_channel(15, 1);
          else if (t_hb)
          {
+            unsigned v = ms;
             if (sec & 1)
-               avr_tlc5940::set_channel(15, ms);
-            else
-               avr_tlc5940::set_channel(15, 1000-ms);
+               v = 1000 - ms;
+            ms <<=2;
+            avr_tlc5940::set_channel(15, v);
          }
       }
    }
@@ -46,7 +47,7 @@ namespace avr_dbg
    {
       while(true)
       {
-         blink(n, 128);
+         blink(n, 512);
          _delay_ms(1000);
       }
    }

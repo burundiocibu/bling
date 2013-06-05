@@ -14,7 +14,7 @@ OPTLEVEL=s
 F_CPU=8000000
 SLAVE=1
 
-AVRDUDE=avrdude -p $(PROGRAMMER_MCU) $(AVRDUDE_PROGRAMMERID) $(AVRDUDE_PORT)
+AVRDUDE=avrdude -F -p $(PROGRAMMER_MCU) $(AVRDUDE_PROGRAMMERID) $(AVRDUDE_PORT)
 
 CFLAGS=-I. $(INC) -g -mmcu=$(MCU) -O$(OPTLEVEL) \
 	-fpack-struct -fshort-enums             \
