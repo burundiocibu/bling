@@ -35,8 +35,9 @@ int main (void)
       avr_dbg::die(4, 100);
 
    for (int i=0; i<15; i++)
-      avr_tlc5940::set_channel(i, 1);
+      avr_tlc5940::set_channel(i, 4095);
    avr_tlc5940::output_gsdata();
+   while(true);
 
    _delay_ms(1000);
    avr_dbg::blink(2, 1000);

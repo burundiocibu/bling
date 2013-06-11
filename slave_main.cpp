@@ -44,9 +44,13 @@ int main (void)
 
    nRF24L01::setup();
    if (!nRF24L01::configure_base())
-      avr_dbg::die(1, 20);
+      avr_dbg::die(1, 1000);
    nRF24L01::configure_PRX(SLAVE_NUMBER);
    uint8_t buff[messages::message_size];
+
+   // Turn off 12V supply
+   DDRB |= _BV(PB1);
+   PORTB |= _BV(PB1);
 
    // Things to wake us up:
    // nRF IRQ,              random
@@ -64,7 +68,7 @@ int main (void)
       for(int cnt=0; ; cnt++)
       {
          if (cnt>10)
-            avr_dbg::blink(3, 10);
+            avr_dbg::blink(3, 4095);
          uint8_t pipe;
          uint8_t status=nRF24L01::read_reg(nRF24L01::STATUS);
          if (status == 0x0e)
