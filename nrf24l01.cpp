@@ -25,10 +25,7 @@ namespace nRF24L01
    const char master_addr[] = {0xA1, 0xA3, 0xA5, 0xA6};
    const char slave_addr[][addr_len]=
    {
-      {0xE1, 0xE3, 0xE5, 0xE6},  // all-hands broadcast address
-      {0x61, 0x63, 0x65, 0x66},  // first slave address
-      {0x51, 0x53, 0x55, 0x56},  // second slave address
-      {0x31, 0x33, 0x35, 0x36}
+#include "bling_addr.h"
    };
    char iobuff[messages::message_size+1];
 
