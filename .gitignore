@@ -4,6 +4,7 @@
 *.hex
 *.map
 *.log
+*.pyc
 spi-time
 tx-test
 rx-test
