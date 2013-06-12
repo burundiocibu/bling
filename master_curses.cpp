@@ -91,10 +91,10 @@ int main(int argc, char **argv)
             case '0': slave=0; break;
             case '1': slave=1; break;
             case '2': slave=2; break;
-            case 'R': slider(0, red,  -1);  break;
-            case 'r': slider(0, red,   1);  break;
-            case 'G': slider(1, green, -1); break;
-            case 'g': slider(1, green,  1); break;
+            case 'G': slider(0, red,  -1);  break;
+            case 'g': slider(0, red,   1);  break;
+            case 'R': slider(1, green, -1); break;
+            case 'r': slider(1, green,  1); break;
             case 'B': slider(2, blue,  -1); break;
             case 'b': slider(2, blue,   1); break;
             case 'w': slider(0, red,  1); slider(1, green,  1); slider(2, blue,  1); break;

@@ -29,8 +29,8 @@ namespace nRF24L01
    };
    char iobuff[messages::message_size+1];
 
+   unsigned num_chan = sizeof(slave_addr)/addr_len;
    const uint8_t channel = 2;
-
 
 
    void write_data(char* data, size_t len)
