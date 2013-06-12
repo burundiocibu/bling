@@ -25,11 +25,10 @@ namespace nRF24L01
    const char master_addr[] = {0xA1, 0xA3, 0xA5, 0xA6};
    const char slave_addr[][addr_len]=
    {
-#include "bling_addr.h"
+      #include "bling_addr.h"
    };
    char iobuff[messages::message_size+1];
 
-   unsigned num_chan = sizeof(slave_addr)/addr_len;
    const uint8_t channel = 2;
 
 
@@ -92,6 +91,9 @@ namespace nRF24L01
 
    bool setup(void)
    {
+      if (num_chan != sizeof(slave_addr)/addr_len)
+         return false;
+
 #ifdef AVR
       avr_spi::setup();
 

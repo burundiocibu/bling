@@ -11,6 +11,7 @@
 namespace nRF24L01
 {
    extern char iobuff[];
+   const unsigned num_chan = 300;
 
    void write_data(char* data, const size_t len);
    void delay_us(uint32_t us);

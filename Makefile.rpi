@@ -1,5 +1,5 @@
 CPPFLAGS+=-std=c++0x
-ALL_BIN=master_curses master_lcd spi-time tx-test rx-test
+ALL_BIN=master_curses master_lcd spi-time tx-test rx-test master_probe
 
 
 all: $(ALL_BIN)
@@ -17,9 +17,13 @@ rx-test: rx-test.o rt_utils.o nrf24l01.o messages.o
 tx-test: LDLIBS+=-lbcm2835 -lstdc++
 tx-test: tx-test.o rt_utils.o nrf24l01.o messages.o
 
-
 master_curses: LDLIBS+=-lbcm2835 -lstdc++ -lncurses
 master_curses: master_curses.o rt_utils.o nrf24l01.o messages.o i2c.o lcd_plate.o
 
+master_probe: LDLIBS+=-lbcm2835 -lstdc++ -lncurses
+master_probe: master_probe.o rt_utils.o nrf24l01.o messages.o i2c.o lcd_plate.o
+
 master_lcd:  LDLIBS+=-lbcm2835 -lstdc++
 master_lcd: master_lcd.o rt_utils.o nrf24l01.o messages.o i2c.o lcd_plate.o
+
+

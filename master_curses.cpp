@@ -18,15 +18,6 @@ void nrf_rx();
 void slider(uint8_t ch, uint16_t &v, int dir);
 void hexdump(uint8_t* buff, size_t len);
 
-/*
-HB#    R   G    B     STATUS   j
-123   fff fff  fff      2E     10
-
-Tx       Data
-123.345  01 3B EA 02 00 00 00 00 00 00 00 00
-123.345  02 3B EA 02 00 00 00 00 00 00 00 00
-*/
-
 
 int main(int argc, char **argv)
 {
