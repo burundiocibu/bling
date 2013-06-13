@@ -177,7 +177,7 @@ namespace nRF24L01
       if (read_reg(CONFIG) == 0xff || read_reg(STATUS) == 0xff)
          return false;
       
-      const uint8_t cfg=CONFIG_EN_CRC | CONFIG_MASK_TX_DS | CONFIG_MASK_MAX_RT;
+      const uint8_t cfg=CONFIG_EN_CRC | CONFIG_CRCO | CONFIG_MASK_TX_DS | CONFIG_MASK_MAX_RT;
       write_reg(CONFIG, cfg);
       if (read_reg(CONFIG) != cfg)
          return false;
@@ -185,7 +185,7 @@ namespace nRF24L01
       write_reg(SETUP_RETR, SETUP_RETR_ARC_3); // auto retransmit 3 x 250us
 
       write_reg(SETUP_AW, SETUP_AW_4BYTES);  // 4 byte addresses
-      write_reg(RF_SETUP, 0x07);  // 1Mbps data rate, 0dBm
+      write_reg(RF_SETUP, 0x03);  // 1Mbps data rate, 0dBm
       write_reg(RF_CH, channel); // use channel 2
 
       write_reg(nRF24L01::RX_PW_P0, messages::message_size);
