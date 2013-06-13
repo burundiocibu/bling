@@ -13,3 +13,4 @@ master_lcd
 .DS_Store
 iom32u4.h
 Makefile
+master_probe
