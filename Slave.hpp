@@ -21,7 +21,10 @@ public:
    uint8_t id;
    int32_t batt_cap;
 
-   void tx(uint8_t *buff, size_t len);
+   // used for the tx & rx functions
+   uint8_t buff[messages::message_size];
+
+   bool tx(); // Returns true if it was successfull
    void rx();
    std::string status() const;
 };

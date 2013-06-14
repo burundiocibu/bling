@@ -39,9 +39,6 @@ int main(int argc, char **argv)
    nRF24L01::configure_PTX();
    nRF24L01::flush_tx();
 
-   uint8_t buff[messages::message_size];
-   for (int i=0; i<sizeof(buff); i++)
-      buff[i]=0;
    uint32_t last_hb=0;
    Slave ship[nRF24L01::num_chan];
    for (int i=0; i < nRF24L01::num_chan; i++)
@@ -66,20 +63,19 @@ int main(int argc, char **argv)
 
       if (t - last_hb > 990)
       {
-         messages::encode_heartbeat(buff, t);
-         ship[0].tx(buff, sizeof(buff));
+         messages::encode_heartbeat(ship[0].buff, t);
+         ship[0].tx();
          last_hb = t;
       }
 
       for (int j=1; j <4; j++)
       {
          Slave& slave = ship[j];
-         messages::encode_ping(buff);
-         slave.tx(buff, sizeof(buff));
-         slave.rx();
+         messages::encode_ping(slave.buff);
+         if (slave.tx())
+            slave.rx();
          mvprintw(1+slave.slave_no, 0, slave.status().c_str());
       }
-      bcm2835_delayMicroseconds(1000);
    }
 
    nRF24L01::shutdown();

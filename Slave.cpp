@@ -15,15 +15,16 @@
 extern RunTime runtime;
 
 
-void Slave::tx(uint8_t *buff, size_t len)
+bool Slave::tx()
 {
+   bool success=false;
    using namespace nRF24L01;
    if (slave_no >= num_chan)
-      exit(-1);
+      return success;
 
    t_tx = runtime.msec();
    tx_cnt++;
-   write_tx_payload(buff, len, slave_no);
+   write_tx_payload(buff, messages::message_size, slave_no);
 
    uint64_t t0=runtime.usec();
    for (int i=0; i < 200; i++)
@@ -41,6 +42,7 @@ void Slave::tx(uint8_t *buff, size_t len)
       {
          tx_dt = runtime.usec() - t0;
          write_reg(STATUS, STATUS_TX_DS); //Clear the data sent notice
+         success=true;
          break;
       }
       delay_us(10);
@@ -48,24 +50,23 @@ void Slave::tx(uint8_t *buff, size_t len)
 
    uint8_t obs_tx = read_reg(OBSERVE_TX);
    retry_cnt += obs_tx & 0x0f;
+   return success;
 }
 
 
 void Slave::rx()
 {
    using namespace nRF24L01;
-   uint8_t buff[messages::message_size];
-   memset(buff, 0, sizeof(buff));
 
    uint8_t pipe;
    char config = read_reg(CONFIG);
    config |= CONFIG_PRIM_RX;
    write_reg(CONFIG, config); // should still be powered on
-   delay_us(1200);
+   delay_us(120);  // Really should be 1.5 ms at least
    set_CE();
 
    uint64_t t0=runtime.usec();
-   for (int i=0; i<200; i++)
+   for (int i=0; i<1000; i++)
    {
       uint8_t status = read_reg(STATUS);
       if (status & STATUS_RX_DR)
@@ -80,13 +81,13 @@ void Slave::rx()
          break;
       }
 
-      if (runtime.usec() - t0 > 2000)
+      if (runtime.usec() - t0 > 10000 && i>5)
       {
          no_resp++;
          rx_dt = runtime.usec() - t0;
          break;
       }
-      delay_us(200);
+      delay_us(50);
    }
 
    config &= ~CONFIG_PRIM_RX;

@@ -182,10 +182,10 @@ namespace nRF24L01
       if (read_reg(CONFIG) != cfg)
          return false;
       
-      write_reg(SETUP_RETR, SETUP_RETR_ARC_3); // auto retransmit 3 x 250us
+      write_reg(SETUP_RETR, SETUP_RETR_ARC_4); // auto retransmit 3 x 250us
 
       write_reg(SETUP_AW, SETUP_AW_4BYTES);  // 4 byte addresses
-      write_reg(RF_SETUP, 0x03);  // 1Mbps data rate, 0dBm
+      write_reg(RF_SETUP, 0b00001110);  // 2Mbps data rate, 0dBm
       write_reg(RF_CH, channel); // use channel 2
 
       write_reg(nRF24L01::RX_PW_P0, messages::message_size);
@@ -276,6 +276,7 @@ namespace nRF24L01
       else
          write_reg(EN_AA, EN_AA_ENAA_P0);
       write_reg(CONFIG, config | CONFIG_PWR_UP); // power back up
+      // Really should have at least a 1.5 ms delay here but we don't seem to need it.
 
       //iobuff[0] = slave==0 ? W_TX_PAYLOAD_NO_ACK : W_TX_PAYLOAD;;
       iobuff[0] = W_TX_PAYLOAD;
