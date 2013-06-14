@@ -163,8 +163,6 @@ void do_ping(uint8_t* buff, uint8_t pipe)
    if (pipe==0)
       return;
 
-   delay_us(1000);
-
    clear_CE();  // Turn off receiver
    char config = read_reg(CONFIG);
    write_reg(CONFIG, config & ~CONFIG_PWR_UP); // power down
@@ -172,6 +170,8 @@ void do_ping(uint8_t* buff, uint8_t pipe)
    write_reg(CONFIG, config); // become PTX
    flush_tx();
    write_reg(CONFIG, config | CONFIG_PWR_UP); // power back up
+
+   delay_us(150);
 
    uint8_t* p = (uint8_t*)(&iobuff[0]);
    *p++ = W_TX_PAYLOAD;
@@ -205,7 +205,7 @@ void do_ping(uint8_t* buff, uint8_t pipe)
    write_reg(CONFIG, config & ~CONFIG_PWR_UP); // power down
    config |= CONFIG_PRIM_RX;
    write_reg(CONFIG, config | CONFIG_PWR_UP); // power back up
-   delay_us(1500);
+   delay_us(150);
    set_CE();
 }
 
