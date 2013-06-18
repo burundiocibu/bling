@@ -58,6 +58,7 @@ avr_tlc5940.o: avr_tlc5940.cpp
 avr_rtc.o: avr_rtc.cpp
 avr_dbg.o: avr_dbg.cpp
 avr_mike.o: avr_mike.cpp
+avr_max1704x.o: avr_max1704x.cpp
 nrf24l01.o: nrf24l01.cpp
 messages.o: messages.cpp
 lcd_plate.o: lcd_plate.cpp
@@ -73,7 +74,8 @@ slave_main.elf: slave_main.o avr_rtc.o avr_spi.o i2c.o lcd_plate.o avr_tlc5940.o
 
 slave_flasher.elf: slave_flasher.o avr_rtc.o avr_tlc5940.o avr_mike.o
 
-slave_test.elf: slave_test.o avr_rtc.o avr_tlc5940.o avr_mike.o nrf24l01.o avr_spi.o i2c.o messages.o avr_dbg.o
+slave_test.elf: slave_test.o avr_rtc.o avr_tlc5940.o avr_mike.o nrf24l01.o avr_spi.o i2c.o messages.o avr_dbg.o \
+	lcd_plate.o avr_max1704x.o
 
 tlc-test.elf: tlc-test.o avr_tlc5940.o
 

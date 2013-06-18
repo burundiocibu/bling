@@ -10,13 +10,23 @@
 #include "messages.hpp"
 #include "nrf24l01.hpp"
 #include "avr_dbg.hpp"
+#include "i2c.hpp"
+#include "avr_max1704x.hpp"
+#include "lcd_plate.hpp"
+
+void hex_dump(const void* buff, size_t len)
+{
+   const uint8_t *p = static_cast<const uint8_t*>(buff);
+   for (unsigned i=0; i<len; i++)
+      printf("%02x", *p++);
+}
 
 int main (void)
 {
    // 12V supply control
    DDRB |= _BV(PB1);
    PORTB &= ~_BV(PB1);
-   PORTB |= _BV(PB1);
+   //PORTB |= _BV(PB1);
 
    avr_tlc5940::setup();
    avr_dbg::blink(1, 1000);
@@ -37,10 +47,19 @@ int main (void)
    for (int i=0; i<15; i++)
       avr_tlc5940::set_channel(i, 4095);
    avr_tlc5940::output_gsdata();
-   while(true);
 
    _delay_ms(1000);
    avr_dbg::blink(2, 1000);
+
+   lcd_plate::setup(0x40);
+   lcd_plate::set_cursor(0, 0);
+   printf("slave_test");
+
+   lcd_plate::set_cursor(1,0);
+   printf("%04d mv", avr_max1704x::read_vcell());
+   lcd_plate::set_cursor(1,9);
+   printf("%03d ", avr_max1704x::read_soc());
+
 
    while(true)
    {

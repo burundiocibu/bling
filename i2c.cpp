@@ -36,7 +36,7 @@ namespace i2c
    // at SCL frequency of 400 kHz, this should be
    // at most 9 x 1/4e5 = 22.5 us
    // Returns the status with the prescaler masked out
-   inline uint8_t wait_for_tx(void)
+   uint8_t wait_for_tx(void)
    {
       while ((TWCR & _BV(TWINT)) == 0) ;
       twst = (TW_STATUS & 0xf8);
@@ -45,21 +45,21 @@ namespace i2c
 
    // Send the start condition and wait for 
    /// the operation to compelte
-   inline  uint8_t send_start(void)
+   uint8_t send_start(void)
    {
       TWCR = _BV(TWINT) | _BV(TWSTA) | _BV(TWEN);
       return wait_for_tx();
    }
 
    // Send the stop condition
-   inline void send_stop(void)
+   void send_stop(void)
    {
       TWCR = _BV(TWINT) | _BV(TWSTO) | _BV(TWEN);
    }
 
    // Start tx/rx of byte and wait for 
    // the operation to complete
-   inline uint8_t send_data(const uint8_t data)
+   uint8_t send_data(const uint8_t data)
    {
       TWDR = data;
       TWCR = _BV(TWINT) | _BV(TWEN);
@@ -68,7 +68,7 @@ namespace i2c
 
    // Start tx/rx of byte and wait for 
    // the operation to complete
-   inline uint8_t receive_data(uint8_t& data, bool ack=false)
+   uint8_t receive_data(uint8_t& data, bool ack=false)
    {
       if (ack)
          TWCR = _BV(TWINT) | _BV(TWEN) | _BV(TWEA);
@@ -133,7 +133,6 @@ namespace i2c
       }
 
      error:
-      PORTB ^= _BV(PB7);
       rv = -1;
 
      quit:
