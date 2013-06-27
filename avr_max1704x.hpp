@@ -1,8 +1,6 @@
 #ifndef _AVR_MAX1704x_HPP
 #define _AVR_MAX1704x_HPP
 
-#include "i2c.cpp"
-
 namespace avr_max1704x
 {
    // Register/address definitions
@@ -13,8 +11,8 @@ namespace avr_max1704x
    const uint8_t VCELL = 0x02;
 
    void setup(void);
-   int read_soc();
-   int read_vcell();
-   int read_version();
+   uint16_t read_soc();
+   uint16_t read_vcell();
+   uint16_t read_version();
 }
 #endif

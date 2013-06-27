@@ -70,7 +70,8 @@ rtc-test.o: rtc-test.cpp
 
 prog: slave_main.flash
 
-slave_main.elf: slave_main.o avr_rtc.o avr_spi.o i2c.o lcd_plate.o avr_tlc5940.o avr_mike.o nrf24l01.o messages.o avr_dbg.o
+slave_main.elf: slave_main.o avr_rtc.o avr_spi.o i2c.o lcd_plate.o avr_tlc5940.o avr_mike.o nrf24l01.o messages.o avr_dbg.o \
+	avr_max1704x.o
 
 slave_flasher.elf: slave_flasher.o avr_rtc.o avr_tlc5940.o avr_mike.o
 

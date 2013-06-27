@@ -1,6 +1,7 @@
 #include <avr/io.h>
 
 #include "avr_max1704x.hpp"
+#include "i2c.hpp"
 
 namespace avr_max1704x
 {
@@ -11,41 +12,43 @@ namespace avr_max1704x
    }
 
    
-   int read_soc()
+   uint16_t read_soc()
+   {
+      i2c::send_start();
+      i2c::send_data(WRITE_ADDR);
+      i2c::send_data(SOC);
+      i2c::send_stop();
+      
+      uint8_t msb, lsb;
+      i2c::send_start();
+      i2c::send_data(READ_ADDR);
+      i2c::receive_data(msb, true);
+      i2c::receive_data(lsb, false);
+      i2c::send_stop();
+      return lsb | (msb << 8) ;
+   }
+
+
+   uint16_t read_vcell()
    {
       i2c::send_start();
       i2c::send_data(WRITE_ADDR);
       i2c::send_data(VCELL);
       i2c::send_stop();
       
-      uint8_t xm, xl;
+      uint8_t msb, lsb;
       i2c::send_start();
       i2c::send_data(READ_ADDR);
-      i2c::receive_data(xm);
-      i2c::receive_data(xl);
+      i2c::receive_data(msb, true);
+      i2c::receive_data(lsb, false);
       i2c::send_stop();
-      return xm;
+      int vcell = 0xfff & ((lsb|(msb << 8)) >> 4);
+      return (vcell << 1) + (vcell >> 1); // return 2.5 * vcell;
    }
 
 
-   int read_vcell()
+   uint16_t read_version()
    {
-      i2c::send_start();
-      i2c::send_data(WRITE_ADDR);
-      i2c::send_data(VCELL);
-      i2c::send_stop();
-      
-      uint8_t xm, xl;
-      i2c::send_start();
-      i2c::send_data(READ_ADDR);
-      i2c::receive_data(xm);
-      i2c::receive_data(xl);
-      i2c::send_stop();
-      return 2.50 * ((xl|(xm << 8)) >> 4);
-   }
-
-
-   int read_version()
-   {
+      return 0;
    }
 }

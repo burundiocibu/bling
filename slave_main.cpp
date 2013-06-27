@@ -11,6 +11,7 @@
 #include "avr_rtc.hpp"
 #include "avr_dbg.hpp"
 #include "nrf24l01.hpp"
+#include "avr_max1704x.hpp"
 #include "messages.hpp"
 
 
@@ -39,8 +40,8 @@ void do_ping(uint8_t* buff, uint8_t pipe);
 int main (void)
 {
    avr_tlc5940::setup();
-   
    avr_rtc::setup();
+   avr_max1704x::setup();
 
    nRF24L01::setup();
    if (!nRF24L01::configure_base())
@@ -48,7 +49,7 @@ int main (void)
    nRF24L01::configure_PRX(SLAVE_NUMBER);
    uint8_t buff[messages::message_size];
 
-   // Turn off 12V supply
+   // Turn on 12V supply
    DDRB |= _BV(PB1);
    PORTB |= _BV(PB1);
 
@@ -125,6 +126,7 @@ void do_all_stop(void)
       avr_tlc5940::set_channel(ch, 0);
 }
 
+
 void do_heartbeat(uint8_t* buff, uint32_t& t_hb)
 {
    messages::decode_heartbeat(buff, t_hb);
@@ -163,6 +165,7 @@ void do_ping(uint8_t* buff, uint8_t pipe)
    if (pipe==0)
       return;
 
+
    clear_CE();  // Turn off receiver
    char config = read_reg(CONFIG);
    write_reg(CONFIG, config & ~CONFIG_PWR_UP); // power down
@@ -171,12 +174,16 @@ void do_ping(uint8_t* buff, uint8_t pipe)
    flush_tx();
    write_reg(CONFIG, config | CONFIG_PWR_UP); // power back up
 
-   delay_us(150);
-
+   // delay_us(150);
+   // above delay not required because the I2C reads will take much longer than that.
    uint8_t* p = (uint8_t*)(&iobuff[0]);
    *p++ = W_TX_PAYLOAD;
    *p++ = messages::status_id;
    p = messages::encode_var<uint32_t>(p, t_rx);
+   uint16_t vcell = avr_max1704x::read_vcell();
+   p = messages::encode_var<uint16_t>(p, vcell);
+   uint16_t soc = avr_max1704x::read_soc();
+   p = messages::encode_var<uint16_t>(p, soc);
    write_data(iobuff, messages::message_size+1);
    
    set_CE();
