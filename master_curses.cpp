@@ -188,12 +188,16 @@ void nrf_rx(void)
    clear_CE();
 
    uint32_t t_rx;
+   uint16_t soc,vcell;
    uint8_t id;
    uint8_t* p = buff;
    p = messages::decode_var<uint8_t>(p, id);
    p = messages::decode_var<uint32_t>(p, t_rx);
+   p = messages::decode_var<uint16_t>(p, vcell);
+   p = messages::decode_var<uint16_t>(p, soc);
    mvprintw(14, 0, "%8.3f ", 0.001*t_rx);
-   printw("%2d %3d   ", id, i);
+   soc = 0xff & (soc >> 8);
+   printw("%2d %3d %1.3f mv %d%%  ", id, i, 1e-3*vcell, soc);
    hexdump(buff, messages::message_size);
 }
 
