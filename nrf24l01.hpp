@@ -10,8 +10,13 @@
 
 namespace nRF24L01
 {
+   const size_t addr_len=4;
+
+   extern uint8_t channel;
    extern char iobuff[];
-   const unsigned num_chan = 300;
+   extern char master_addr[];
+   extern char broadcast_addr[];
+   extern char slave_addr[];
 
    void write_data(char* data, const size_t len);
    void delay_us(uint32_t us);
@@ -28,9 +33,9 @@ namespace nRF24L01
    // returns true on success
    bool configure_base(void);
 
-   void configure_PRX(unsigned slave);
+   void configure_PRX(void);
    void configure_PTX(void);
-   void write_tx_payload(void* data, const unsigned int len, unsigned slave);
+   void write_tx_payload(void* data, const unsigned int len, char slave_addr[], bool ack);
    void read_rx_payload(void* data, const unsigned int len, uint8_t &pipe);
    void flush_tx(void);
 

@@ -88,6 +88,9 @@ getfuse:
 	$(AVRDUDE) -v -U lfuse:r:-:i
 #	$(AVRDUDE) -U lfuse:r:-:i -U hfuse:r:-:i -U efuse:r:-:i
 
+geteeprom:
+	$(AVRDUDE) -U eeprom:r:-:r | hexdump 
+
 getfusetiny:
 	avrdude -c usbtiny -B 5 -p m32u4 -U lfuse:r:-:i -U hfuse:r:-:i -U efuse:r:-:i
 
@@ -101,6 +104,25 @@ flashboot:
 
 fuse328:
 	$(AVRDUDE) -v -U lfuse:w:0xe2:m -U hfuse:w:0xd9:m -U efuse:w:0x07:m
+
+#===============================================
+# This is a special target to build the nRF24L01 bootloader
+BOOTADDR = 0x3800 # Use the full 2k boot flash area
+nrf_boot%: LFLAGS=-Wl,-Ttext,$(BOOTADDR),--relax -mmcu=$(MCU) -nodefaultlibs -nostartfiles
+nrf_boot%: CFLAGS=-g -Os -fno-inline-small-functions -Wall -mmcu=$(MCU) -I. -DF_CPU=$(F_CPU) -DBOOTADDR=$(BOOTADDR)
+
+nrf_boot: nrf_boot.o nrf24l01.o avr_spi.o avr_rtc.o
+	echo this must be done from the SPI/JTAG I/F
+	avr-gcc $(LFLAGS) -Wl,-Map,$@.map -o $@.elf $^
+	avr-objdump --source -d $@.elf > $@.lst
+	avr-size --common -d $@.elf
+	avr-objcopy -j .text -O ihex $@.elf $@.hex
+
+# Note this programs the fuses to have the device boot to the boot flash as opposed to the app
+# and preserve the EEPROM through chip erases
+flash_nrf_boot: nrf_boot.hex
+	$(AVRDUDE) -v -U  lfuse:w:0xe2:m -U hfuse:w:0xd0:m -U efuse:w:0x07:m
+	$(AVRDUDE) -U flash:w:$^:i
 
 #=================================================================
 %.o: %.c

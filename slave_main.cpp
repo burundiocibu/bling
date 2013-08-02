@@ -13,6 +13,7 @@
 #include "nrf24l01.hpp"
 #include "avr_max1704x.hpp"
 #include "messages.hpp"
+#include "slave_eeprom.hpp"
 
 
 struct Effect
@@ -37,16 +38,24 @@ void do_start_effect(uint8_t* buff, Effect& effect);
 void do_set_rgb(uint8_t* buff);
 void do_ping(uint8_t* buff, uint8_t pipe);
 
+uint16_t slave_id;
+
 int main (void)
 {
    avr_tlc5940::setup();
    avr_rtc::setup();
    avr_max1704x::setup();
 
+   slave_id = eeprom_read_word(&eeprom::slave_id);
+   nRF24L01::channel  = eeprom_read_byte(&eeprom::channel);
+   eeprom_read_block((void*)nRF24L01::master_addr,    (const void*)eeprom::master_addr,    nRF24L01::addr_len);
+   eeprom_read_block((void*)nRF24L01::broadcast_addr, (const void*)eeprom::broadcast_addr, nRF24L01::addr_len);
+   eeprom_read_block((void*)nRF24L01::slave_addr,     (const void*)eeprom::slave_addr,     nRF24L01::addr_len);
+
    nRF24L01::setup();
    if (!nRF24L01::configure_base())
       avr_dbg::die(1, 1000);
-   nRF24L01::configure_PRX(SLAVE_NUMBER);
+   nRF24L01::configure_PRX();
    uint8_t buff[messages::message_size];
 
    // Turn on 12V supply
@@ -184,11 +193,13 @@ void do_ping(uint8_t* buff, uint8_t pipe)
    p = messages::encode_var<uint16_t>(p, vcell);
    uint16_t soc = avr_max1704x::read_soc();
    p = messages::encode_var<uint16_t>(p, soc);
+   p = messages::encode_var<uint16_t>(p, slave_id);
    write_data(iobuff, messages::message_size+1);
    
    set_CE();
    delay_us(10);
    clear_CE();
+
 
    // wait for tx to complete
    uint8_t status;

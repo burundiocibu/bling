@@ -20,17 +20,11 @@
 
 namespace nRF24L01
 {
-   const size_t addr_len=4;
-   
-   const char master_addr[] = {0xA1, 0xA3, 0xA5, 0xA6};
-   const char slave_addr[][addr_len]=
-   {
-      #include "bling_addr.h"
-   };
+   uint8_t channel;
+   char master_addr[addr_len];
+   char broadcast_addr[addr_len];
+   char slave_addr[addr_len];
    char iobuff[messages::message_size+1];
-
-   const uint8_t channel = 2;
-
 
    void write_data(char* data, size_t len)
    {
@@ -91,8 +85,8 @@ namespace nRF24L01
 
    bool setup(void)
    {
-      if (num_chan != sizeof(slave_addr)/addr_len)
-         return false;
+      //if (num_chan != sizeof(slave_addr)/addr_len)
+      //   return false;
 
 #ifdef AVR
       avr_spi::setup();
@@ -207,7 +201,7 @@ namespace nRF24L01
 
 
    // Setup device as primary receiver
-   void configure_PRX(unsigned slave)
+   void configure_PRX(void)
    {
       char config = read_reg(CONFIG);
       config |= CONFIG_PRIM_RX;
@@ -217,10 +211,12 @@ namespace nRF24L01
       memcpy(buff, master_addr, addr_len); // only TX to master
       write_reg(TX_ADDR, buff, addr_len);
 
-      memcpy(buff, slave_addr[0], addr_len); // pipe 0 is broadcast
+      // pipe 0 is for receiving broadcast 
+      memcpy(buff, broadcast_addr, addr_len);
       write_reg(RX_ADDR_P0, buff, addr_len);
 
-      memcpy(buff, slave_addr[slave], addr_len);
+      // pipe 1 is this each slave's private address
+      memcpy(buff, slave_addr, addr_len);
       write_reg(RX_ADDR_P1, buff, addr_len);
 
       // In case we want to receiver an ACK from the master
@@ -267,11 +263,11 @@ namespace nRF24L01
    }
 
 
-   void write_tx_payload(void* data, const size_t len, unsigned slave)
+   void write_tx_payload(void* data, const size_t len, char slave_addr[], bool ack)
    {
       char config = read_reg(CONFIG);
       write_reg(CONFIG, config  & ~CONFIG_PWR_UP); // power down 
-      if (slave==0)
+      if (ack)
          write_reg(EN_AA, 0);
       else
          write_reg(EN_AA, EN_AA_ENAA_P0);
@@ -286,10 +282,10 @@ namespace nRF24L01
       // Note the TX_ADDR must be equal the RX_ADDR_P0 in the PTX
       // for acks to work
       char buff[addr_len];
-      memcpy(buff, slave_addr[slave], addr_len);
+      memcpy(buff, slave_addr, addr_len);
       write_reg(TX_ADDR, buff, addr_len);
 
-      memcpy(buff, slave_addr[slave], addr_len);
+      memcpy(buff, slave_addr, addr_len);
       write_reg(RX_ADDR_P0, buff, addr_len);
 
       // pulse CE
