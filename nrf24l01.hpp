@@ -35,7 +35,7 @@ namespace nRF24L01
 
    void configure_PRX(void);
    void configure_PTX(void);
-   void write_tx_payload(void* data, const unsigned int len, char slave_addr[], bool ack);
+   void write_tx_payload(void* data, const unsigned int len, const char slave_addr[], bool ack);
    void read_rx_payload(void* data, const unsigned int len, uint8_t &pipe);
    void flush_tx(void);
 

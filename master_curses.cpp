@@ -18,6 +18,12 @@ void nrf_rx();
 void slider(uint8_t ch, uint16_t &v, int dir);
 void hexdump(uint8_t* buff, size_t len);
 
+const char master_addr[] = {0xA1, 0xA3, 0xA5, 0xA6};
+const char slave_addr[][nRF24L01::addr_len]=
+{
+#include "bling_addr.h"
+};
+
 
 int main(int argc, char **argv)
 {
@@ -33,6 +39,11 @@ int main(int argc, char **argv)
    keypad(win, true);
    prev_curs = ::curs_set(0);   // we want an invisible cursor.
    mvprintw(0,0, "HB#   slave  R   G   B      j    tx_err  tx_obs ack_err");
+
+   nRF24L01::channel = 2;
+   memcpy(nRF24L01::master_addr,    master_addr,   nRF24L01::addr_len);
+   memcpy(nRF24L01::broadcast_addr, slave_addr[0], nRF24L01::addr_len);
+   memcpy(nRF24L01::slave_addr,     slave_addr[2], nRF24L01::addr_len);
 
    nRF24L01::setup();
 
@@ -126,8 +137,9 @@ void nrf_tx(uint8_t *buff, size_t len, unsigned slave)
 
    static unsigned ack_err=0;
    static unsigned tx_err=0;
+   bool ack = slave != 0;
 
-   write_tx_payload(buff, len, slave);
+   write_tx_payload(buff, len, ::slave_addr[slave], ack);
 
    uint8_t status;
    int j;

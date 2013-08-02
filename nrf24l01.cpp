@@ -263,14 +263,14 @@ namespace nRF24L01
    }
 
 
-   void write_tx_payload(void* data, const size_t len, char slave_addr[], bool ack)
+   void write_tx_payload(void* data, const size_t len, const char slave_addr[], bool ack)
    {
       char config = read_reg(CONFIG);
       write_reg(CONFIG, config  & ~CONFIG_PWR_UP); // power down 
       if (ack)
-         write_reg(EN_AA, 0);
-      else
          write_reg(EN_AA, EN_AA_ENAA_P0);
+      else
+         write_reg(EN_AA, 0);
       write_reg(CONFIG, config | CONFIG_PWR_UP); // power back up
       // Really should have at least a 1.5 ms delay here but we don't seem to need it.
 
