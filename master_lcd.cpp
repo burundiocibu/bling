@@ -17,6 +17,7 @@
 #include "lcd_plate.hpp"
 
 #include "messages.hpp"
+#include "ensemble.hpp"
 
 void nrf_tx(unsigned slave, uint8_t *buff, size_t len);
 void nrf_rx(unsigned slave);
@@ -67,6 +68,11 @@ int main(int argc, char **argv)
 
    logfile << fixed << setprecision(3) << 1e-3*runtime.msec() << hex << endl;
 
+   nRF24L01::channel = 2;
+   memcpy(nRF24L01::master_addr,    ensemble::master_addr,   nRF24L01::addr_len);
+   memcpy(nRF24L01::broadcast_addr, ensemble::slave_addr[0], nRF24L01::addr_len);
+   memcpy(nRF24L01::slave_addr,     ensemble::slave_addr[2], nRF24L01::addr_len);
+
    nRF24L01::setup();
    if (!nRF24L01::configure_base())
    {
@@ -105,8 +111,9 @@ void nrf_tx(unsigned slave, uint8_t *buff, size_t len)
 
    static unsigned ack_err=0;
    static unsigned tx_err=0;
+   bool ack = slave != 0;
 
-   write_tx_payload(buff, len, slave);
+   write_tx_payload(buff, len, ensemble::slave_addr[slave], ack);
 
    uint8_t status;
    int j;

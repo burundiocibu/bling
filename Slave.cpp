@@ -10,7 +10,7 @@
 #include "messages.hpp"
 
 #include "Slave.hpp"
-
+#include "ensemble.hpp"
 
 extern RunTime runtime;
 
@@ -19,12 +19,13 @@ bool Slave::tx()
 {
    bool success=false;
    using namespace nRF24L01;
-   if (slave_no >= num_chan)
+   if (slave_no >= ensemble::num_slaves)
       return success;
 
    t_tx = runtime.msec();
    tx_cnt++;
-   write_tx_payload(buff, messages::message_size, slave_no);
+   bool ack = true;
+   write_tx_payload(buff, messages::message_size, ensemble::slave_addr[slave_no], ack);
 
    uint64_t t0=runtime.usec();
    for (int i=0; i < 200; i++)

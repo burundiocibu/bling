@@ -6,6 +6,7 @@
 #include "rt_utils.hpp"
 #include "nrf24l01.hpp"
 #include "messages.hpp"
+#include "ensemble.hpp"
 
 class OutState
 {
@@ -45,11 +46,19 @@ private:
 using namespace std;
 using namespace nRF24L01;
 
+
+
 int main(int argc, char **argv)
 {
    int debug=1;
 
    RunTime rt;
+
+   nRF24L01::channel = ensemble::channel;
+   memcpy(nRF24L01::master_addr,    ensemble::master_addr,   nRF24L01::addr_len);
+   memcpy(nRF24L01::broadcast_addr, ensemble::slave_addr[0], nRF24L01::addr_len);
+   memcpy(nRF24L01::slave_addr,     ensemble::slave_addr[2], nRF24L01::addr_len);
+
    setup();
 
    if (!configure_base())
@@ -58,7 +67,7 @@ int main(int argc, char **argv)
       return -1;
    }
 
-   configure_PRX(0);
+   configure_PRX();
 
    OutState led(RPI_GPIO_P1_07);
 
