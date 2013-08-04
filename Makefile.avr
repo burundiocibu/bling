@@ -1,25 +1,19 @@
 MCU=atmega328
 PROGRAMMER_MCU=m328p
-PROJECTNAME=main
-PRJSRC=main.c
-AVRDUDE_PROGRAMMERID=-c avr109
-AVRDUDE_PORT=-P /dev/tty.usbmodemfa121
 
 # for a from-the-factory 32u4 that has the div8 on the clock, need to use -B 5 in avrdude
+# until the clock is sped up.
 AVRDUDE_PROGRAMMERID=-c usbtiny
 AVRDUDE_PORT=
 
 OPTLEVEL=s
-#F_CPU=16000000
 F_CPU=8000000
-SLAVE=1
 
 AVRDUDE=avrdude -F -p $(PROGRAMMER_MCU) $(AVRDUDE_PROGRAMMERID) $(AVRDUDE_PORT)
 
 CFLAGS=-I. $(INC) -g -mmcu=$(MCU) -O$(OPTLEVEL) \
 	-fpack-struct -fshort-enums             \
 	-DF_CPU=$(F_CPU)UL -DAVR=1              \
-	-DSLAVE_NUMBER=$(SLAVE)                 \
 	-funsigned-bitfields -funsigned-char    \
 	-Wall -Wstrict-prototypes               \
 	-Wa,-ahlms=$(firstword                  \
@@ -29,7 +23,6 @@ CPPFLAGS=-fno-exceptions -Wall                   \
 	-I. $(INC) -g -mmcu=$(MCU) -O$(OPTLEVEL) \
 	-fpack-struct -fshort-enums              \
 	-DF_CPU=$(F_CPU)UL -DAVR=1               \
-	-DSLAVE_NUMBER=$(SLAVE)                  \
 	-funsigned-bitfields -funsigned-char     \
 	-Wa,-ahlms=$(firstword                   \
 	$(filter %.lst, $(<:.cpp=.lst)))
