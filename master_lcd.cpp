@@ -168,7 +168,7 @@ void slider(unsigned slave, uint8_t ch, uint16_t &v, int dir)
 
 void print_slave(int slave)
 {
-   lcd_plate::set_cursor(0,0);
+   lcd_plate::set_cursor(0,13);
    lcd_plate::puts(to_string(slave).c_str());
 }
 
