@@ -6,6 +6,7 @@
 #include <inttypes.h>
 #include <avr/io.h>
 #include <avr/sleep.h>
+#include <avr/eeprom.h>
 
 #include "avr_tlc5940.hpp"
 #include "avr_rtc.hpp"
@@ -13,7 +14,7 @@
 #include "nrf24l01.hpp"
 #include "avr_max1704x.hpp"
 #include "messages.hpp"
-#include "slave_eeprom.hpp"
+#include "slave_eeprom.h"
 
 
 struct Effect
@@ -46,11 +47,11 @@ int main (void)
    avr_rtc::setup();
    avr_max1704x::setup();
 
-   slave_id = eeprom_read_word(&eeprom::slave_id);
-   nRF24L01::channel  = eeprom_read_byte(&eeprom::channel);
-   eeprom_read_block((void*)nRF24L01::master_addr,    (const void*)eeprom::master_addr,    nRF24L01::addr_len);
-   eeprom_read_block((void*)nRF24L01::broadcast_addr, (const void*)eeprom::broadcast_addr, nRF24L01::addr_len);
-   eeprom_read_block((void*)nRF24L01::slave_addr,     (const void*)eeprom::slave_addr,     nRF24L01::addr_len);
+   slave_id = eeprom_read_word(EE_SLAVE_ID);
+   nRF24L01::channel  = eeprom_read_byte((const uint8_t*)EE_CHANNEL);
+   eeprom_read_block((void*)nRF24L01::master_addr,    (const void*)EE_MASTER_ADDR,    nRF24L01::addr_len);
+   eeprom_read_block((void*)nRF24L01::broadcast_addr, (const void*)EE_BROADCAST_ADDR, nRF24L01::addr_len);
+   eeprom_read_block((void*)nRF24L01::slave_addr,     (const void*)EE_SLAVE_ADDR,     nRF24L01::addr_len);
 
    nRF24L01::setup();
    if (!nRF24L01::configure_base())
@@ -173,7 +174,6 @@ void do_ping(uint8_t* buff, uint8_t pipe)
    // Only respond to pings on our private address
    if (pipe==0)
       return;
-
 
    clear_CE();  // Turn off receiver
    char config = read_reg(CONFIG);

@@ -20,7 +20,6 @@
 #include "ensemble.hpp"
 
 void nrf_tx(unsigned slave, uint8_t *buff, size_t len);
-void nrf_rx(unsigned slave);
 void slider(unsigned slave, uint8_t ch, uint16_t &v, int dir);
 void hexdump(uint8_t* buff, size_t len);
 void heartbeat(int slave);
@@ -142,42 +141,8 @@ void nrf_tx(unsigned slave, uint8_t *buff, size_t len)
 }
 
 
-
-void nrf_rx(unsigned slave)
-{
-   using namespace nRF24L01;
-   uint8_t buff[::messages::message_size];
-   uint8_t pipe;
-   char config = read_reg(CONFIG);
-   config |= CONFIG_PRIM_RX;
-   write_reg(CONFIG, config); // should still be powered on
-   delay_us(1000);
-   set_CE();
-
-   int i;
-   for (i=0; i<100; i++)
-   {
-      if (read_reg(STATUS) & STATUS_RX_DR)
-      {
-         read_rx_payload((char*)buff, ::messages::message_size, pipe);
-         write_reg(STATUS, STATUS_RX_DR); // clear data received bit
-         break;
-      }
-      delay_us(200);
-   }
-
-   config &= ~CONFIG_PRIM_RX;
-   write_reg(CONFIG, config); // should still be powered on
-   clear_CE();
-
-   logfile << 1e-3*runtime.msec() << " rx: ";
-   for(auto i:buff)
-      logfile << i << " ";
-   logfile << endl;
-}
-
-
-
+// This is intended to mimic a slider control that can ramp up/down
+// the intensity of an LED
 void slider(unsigned slave, uint8_t ch, uint16_t &v, int dir)
 {
    if (dir>0)
@@ -218,6 +183,7 @@ void heartbeat(int slave)
    nrf_tx(slave, buff, sizeof(buff));
    last_hb = runtime.msec();
 }
+
 
 class Effect
 {

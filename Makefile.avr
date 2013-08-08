@@ -27,9 +27,7 @@ CPPFLAGS=-fno-exceptions -Wall                   \
 	-Wa,-ahlms=$(firstword                   \
 	$(filter %.lst, $(<:.cpp=.lst)))
 
-
-LDFLAGS=-Wl,-Map,$(TRG).map -mmcu=$(MCU) \
-	-lm $(LIBS)
+LDFLAGS=-lm
 
 CC=avr-gcc
 CPP=avr-gcc
@@ -88,7 +86,7 @@ getfusetiny:
 	avrdude -c usbtiny -B 5 -p m32u4 -U lfuse:r:-:i -U hfuse:r:-:i -U efuse:r:-:i
 
 
-# http://forums.reprap.org/read.php?158,97219
+# http://forums.reprap.org/read.php?158,97219x
 flashboot:
 	echo this needs to be done from the SPI/JTAG interface
 	avrdude -c usbtiny -B 1 -p m32u4 -U lfuse:w:0xde:m -U hfuse:w:0x99:m -U efuse:w:0xf3:m
@@ -100,16 +98,12 @@ fuse328:
 
 #===============================================
 # This is a special target to build the nRF24L01 bootloader
-BOOTADDR = 0x3800 # Use the full 2k boot flash area
-nrf_boot%: LFLAGS=-Wl,-Ttext,$(BOOTADDR),--relax -mmcu=$(MCU) -nodefaultlibs -nostartfiles
-nrf_boot%: CFLAGS=-g -Os -fno-inline-small-functions -Wall -mmcu=$(MCU) -I. -DF_CPU=$(F_CPU) -DBOOTADDR=$(BOOTADDR)
+BOOTADDR=0x3800
+nrf_boot%: LDFLAGS=-Wl,-Ttext,$(BOOTADDR),--relax -mmcu=$(MCU) -nodefaultlibs -nostartfiles -lm
+nrf_boot%: LDFLAGS=-Wl,-Ttext,$(BOOTADDR),--relax -mmcu=$(MCU) -nostartfiles
+nrf_boot%: CPPFLAGS=-g -Os -fno-inline-small-functions -Wall -mmcu=$(MCU) -I. -DF_CPU=$(F_CPU) -DBOOTADDR=$(BOOTADDR)
 
-nrf_boot: nrf_boot.o nrf24l01.o avr_spi.o avr_rtc.o
-	echo this must be done from the SPI/JTAG I/F
-	avr-gcc $(LFLAGS) -Wl,-Map,$@.map -o $@.elf $^
-	avr-objdump --source -d $@.elf > $@.lst
-	avr-size --common -d $@.elf
-	avr-objcopy -j .text -O ihex $@.elf $@.hex
+nrf_boot.o: nrf_boot.cpp
 
 # Note this programs the fuses to have the device boot to the boot flash as opposed to the app
 # and preserve the EEPROM through chip erases
@@ -125,10 +119,14 @@ flash_nrf_boot: nrf_boot.hex
 	$(CC) $(CPPFLAGS) -c $< -o $@
 
 %.elf: %.o
-	$(CC) -g -mmcu=$(MCU) -Wl,-Map,$(@:.elf=.map) -o $@ $^
+	$(CC) $(LDFLAGS) -g -mmcu=$(MCU) -Wl,-Map,$(@:.elf=.map) -o $@ $^
 
-%.hex : %.elf
+%.hex: %.elf
+	avr-size --common -d $^
 	avr-objcopy -j .text -j .data -O ihex $^ $@
+
+%.lst: %.elf
+	avr-objdump --source -d $^ > $@
 
 %.flash : %.hex
 	$(AVRDUDE) -U flash:w:$<

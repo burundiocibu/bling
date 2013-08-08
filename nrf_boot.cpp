@@ -54,9 +54,14 @@
 #include <avr/boot.h>
 #include <avr/common.h>
 #include <avr/io.h>
+#include <util/delay.h>
 #include <avr/pgmspace.h>
 #include <avr/wdt.h>
+#include <string.h>
+#include <avr/eeprom.h>
 
+#include "slave_eeprom.h"
+#include "nrf24l01_defines.hpp"
 
 // macros
 #define PACKED          __attribute__((__packed__))
@@ -64,11 +69,6 @@
 #define NAKED           __attribute__((naked))
 #define SECTION(a)      __attribute__((section(a)))
 
-
-// definitions
-#define XON             0x11
-#define XOFF            0x13
-#define TIMEOUT_LOOPS   (((F_CPU/1000)*TIMEOUT)/33)
 
 // data
 struct HEX_RECORD
@@ -93,15 +93,20 @@ extern void* __bss_end;
 static void flash_wait_poll_uart(void);
 static void flash_write(uint16_t page);
 
-namespace spi
-{
-   void setup(void);
-   void tx(const char* p_tx, char* p_rx, const short len);
-}
 
 namespace nrf
 {
+   // This is just at SPI transaction
+   void write_data(const char* p_tx, char* p_rx, const short len);   
+   void clear_CE(void);
+   void set_CE(void);
+   void setup(void);
+   void write_reg(char reg, char* data, const size_t len);
+   void write_reg(char reg, char data);
+   char read_reg(char reg);
+   void read_reg(char reg, char* data, const size_t len);
 }
+
 
 // implementation
 void kavr(void) NAKED SECTION(".vectors");
@@ -126,10 +131,6 @@ void kavr(void)
    asm volatile ("ldi r28, lo8(%0)" :: "i" (&__bss_end));
    asm volatile ("ldi r29, hi8(%0)" :: "i" (&__bss_end));
 
-   // For now, simply jump right into the user app.
-   typedef void APP(void);
-   ((APP*)0)();
-
    // Turn off the 12V supply
    DDRB |= _BV(PB1);
    PORTB &= ~_BV(PB1);
@@ -138,9 +139,12 @@ void kavr(void)
    DDRC  |= _BV(PC2);
    PORTC |= _BV(PC2);
 
-   // Initialize the nRF interface
-   PORTD |= _BV(PD3); PORTD &= ~_BV(PD3);  // clear CE
+   // For now, simply jump right into the user app.
+   typedef void APP(void);
+   ((APP*)0)();
    
+   // Initialize the nRF interface
+   nrf::setup();
 
    // And listen for page write command directed at me.
 
@@ -292,20 +296,24 @@ static void flash_wait_poll_uart(void)
    while (boot_spm_busy());
 }
 
-namespace avr_spi
+
+
+namespace nrf
 {
-   void setup(void)
-   {
-      // MOSI, SCK, and SS are outputs
-      DDRB |= _BV(PB2) | _BV(PB3) | _BV(PB5);
-      // Turn on SPI as master @ Fosc/4
-      SPCR = _BV(SPE) | _BV(MSTR);
-      PORTB |= _BV(PB2); // Make sure SS is high
-   }
-   
-   
-   // Performs a complete SPI transfer
-   void tx(const char* p_tx, char* p_rx, const short len)
+
+   // need to do this to pull in the defines
+   using namespace nRF24L01;
+
+   uint8_t channel;
+   const size_t addr_len = 4;
+   const size_t message_size = 32;
+   char master_addr[addr_len];
+   char broadcast_addr[addr_len];
+   char slave_addr[addr_len];
+   char iobuff[message_size+1];
+
+   // This is just at SPI transaction
+   void write_data(const char* p_tx, char* p_rx, const short len)
    {
       PORTB &= ~_BV(PB2); //Drive SS low
       int i;
@@ -317,60 +325,95 @@ namespace avr_spi
       }
       PORTB |= _BV(PB2); // Drive SS back high
    }
-}
-
-namespace nrf
-{
-   void write_data(char* data, size_t len)
-   {
-      avr_spi::tx(data, data, len);
-   }
-
-
-   void delay_us(uint32_t us)
-   {
-      for (uint16_t i=0; i<us; i++)
-         _delay_us(1);
-   }
-
-
-   void clear_CE(void)
+   
+   inline void clear_CE(void)
    {
       PORTD &= ~_BV(PD3);
    }
 
 
-   void set_CE(void)
+   inline void set_CE(void)
    {
       PORTD |= _BV(PD3);
    }
 
 
-   bool setup(void)
+   void setup(void)
    {
-      if (num_chan != sizeof(slave_addr)/addr_len)
-         return false;
-   
-      avr_spi::setup();
+      channel  = eeprom_read_byte((const uint8_t*)EE_CHANNEL);
+      eeprom_read_block((void*)master_addr,    (const void*)EE_MASTER_ADDR,    4);
+      eeprom_read_block((void*)broadcast_addr, (const void*)EE_BROADCAST_ADDR, 4);
+      eeprom_read_block((void*)slave_addr,     (const void*)EE_SLAVE_ADDR,     4);
+
+      // Setup up the SPI inerface
+      // MOSI, SCK, and SS are outputs
+      DDRB |= _BV(PB2) | _BV(PB3) | _BV(PB5);
+      // Turn on SPI as master @ Fosc/4
+      SPCR = _BV(SPE) | _BV(MSTR);
+      PORTB |= _BV(PB2); // Make sure SS is high
 
       // use D3 as the CE to the nrf24l01
       DDRD |= _BV(PD3);
       clear_CE();
+
+      // Note this leaves the nRF powered down
+      const uint8_t config=CONFIG_PRIM_RX | CONFIG_EN_CRC | CONFIG_CRCO | CONFIG_MASK_TX_DS | CONFIG_MASK_MAX_RT;
+      write_reg(CONFIG, config);
+   
+      write_reg(SETUP_RETR, SETUP_RETR_ARC_4); // auto retransmit 3 x 250us
+   
+      write_reg(SETUP_AW, SETUP_AW_4BYTES);  // 4 byte addresses
+      write_reg(RF_SETUP, 0b00001110);  // 2Mbps data rate, 0dBm
+      write_reg(RF_CH, channel);
+   
+      write_reg(RX_PW_P0, message_size);
+      write_reg(RX_PW_P1, message_size);
+      write_reg(RX_PW_P2, message_size);
+   
+      // Clear the various interrupt bits
+      write_reg(STATUS, STATUS_TX_DS|STATUS_RX_DR|STATUS_MAX_RT);
+   
+      // Flush the RX/TX FIFOs
+      char buff=FLUSH_RX;
+      write_data(&buff, &buff, 1);
+      buff=FLUSH_TX;
+      write_data(&buff, &buff, 1);
+
+      memcpy(iobuff, master_addr, addr_len); // only TX to master
+      write_reg(TX_ADDR, iobuff, addr_len);
+
+      // pipe 0 is for receiving broadcast 
+      memcpy(iobuff, broadcast_addr, addr_len);
+      write_reg(RX_ADDR_P0, iobuff, addr_len);
+
+      // pipe 1 is this each slave's private address
+      memcpy(iobuff, slave_addr, addr_len);
+      write_reg(RX_ADDR_P1, iobuff, addr_len);
+
+      write_reg(EN_RXADDR, EN_RXADDR_ERX_P0 | EN_RXADDR_ERX_P1);
+      write_reg(EN_AA, EN_AA_ENAA_P1);  // auto ack on pipe 1 only
+
+      // after power up, can't write to most registers anymore
+      write_reg(CONFIG, config | CONFIG_PWR_UP);
+      _delay_us(1500);
+      set_CE();
+
    }
 
+   
    void write_reg(char reg, char* data, const size_t len)
    {
       iobuff[0]=W_REGISTER | reg;
       memcpy(iobuff+1, data, len);
-      write_data(iobuff, len+1);
+      write_data(iobuff, iobuff, len+1);
    }
 
-
+   
    void write_reg(char reg, char data)
    {
       iobuff[0]=W_REGISTER | reg;
       iobuff[1]=data;
-      write_data(iobuff, 2);
+      write_data(iobuff, iobuff, 2);
    }
 
 
@@ -378,7 +421,7 @@ namespace nrf
    {
       iobuff[0]=R_REGISTER | reg;
       iobuff[1] = 0;
-      write_data(iobuff, 2);
+      write_data(iobuff, iobuff, 2);
       return iobuff[1];
    }
 
@@ -388,40 +431,7 @@ namespace nrf
       iobuff[0]=R_REGISTER | reg;
       iobuff[1]=0;
       memcpy(iobuff+1, data, len);
-      write_data(iobuff, len+1);
+      write_data(iobuff, iobuff, len+1);
    }
 
-
-   bool configure_base(void)
-   {
-      if (read_reg(CONFIG) == 0xff || read_reg(STATUS) == 0xff)
-         return false;
-   
-      const uint8_t cfg=CONFIG_EN_CRC | CONFIG_CRCO | CONFIG_MASK_TX_DS | CONFIG_MASK_MAX_RT;
-      write_reg(CONFIG, cfg);
-      if (read_reg(CONFIG) != cfg)
-         return false;
-   
-      write_reg(SETUP_RETR, SETUP_RETR_ARC_4); // auto retransmit 3 x 250us
-   
-      write_reg(SETUP_AW, SETUP_AW_4BYTES);  // 4 byte addresses
-      write_reg(RF_SETUP, 0b00001110);  // 2Mbps data rate, 0dBm
-      write_reg(RF_CH, channel); // use channel 2
-   
-      write_reg(nRF24L01::RX_PW_P0, messages::message_size);
-      write_reg(nRF24L01::RX_PW_P1, messages::message_size);
-      write_reg(nRF24L01::RX_PW_P2, messages::message_size);
-   
-      // Clear the various interrupt bits
-      write_reg(STATUS, STATUS_TX_DS|STATUS_RX_DR|STATUS_MAX_RT);
-   
-      write_reg(EN_AA, 0x00); //disable auto-ack, RX mode
-   
-      char buff=FLUSH_RX;
-      write_data(&buff, 1);
-      buff=FLUSH_TX;
-      write_data(&buff, 1);
-   
-      return true;
-   }
 }
