@@ -99,7 +99,7 @@ fuse328:
 #===============================================
 # This is a special target to build the nRF24L01 bootloader
 BOOTADDR=0x3800
-nrf_boot%: LDFLAGS=-Wl,-Ttext,$(BOOTADDR),--relax -mmcu=$(MCU) -nodefaultlibs -nostartfiles -lm
+# kavr also had -nodefaultlibs
 nrf_boot%: LDFLAGS=-Wl,-Ttext,$(BOOTADDR),--relax -mmcu=$(MCU) -nostartfiles
 nrf_boot%: CPPFLAGS=-g -Os -fno-inline-small-functions -Wall -mmcu=$(MCU) -I. -DF_CPU=$(F_CPU) -DBOOTADDR=$(BOOTADDR)
 
