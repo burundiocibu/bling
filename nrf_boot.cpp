@@ -137,10 +137,16 @@ enum bootloader_msg_ids
 
 
 // Some local buffers
+// It appears when building a bootloader, arrays need to be statically declaired
 uint8_t channel;
-char master_addr[addr_len];
-char broadcast_addr[addr_len];
-char slave_addr[addr_len];
+uint8_t master_addr[addr_len];
+uint8_t broadcast_addr[addr_len];
+uint8_t slave_addr[addr_len];
+
+uint8_t io_buff[message_size];
+uint8_t rx_buff[message_size];
+
+uint8_t page_buff[SPM_PAGESIZE]; // where we build up this page
 
 
 void flash_page_write(uint16_t addr, uint8_t* buff);
@@ -152,7 +158,7 @@ void write_reg(uint8_t reg, uint8_t* data, const size_t len);
 void write_reg(uint8_t reg, uint8_t data);
 char read_reg(uint8_t reg);
 void read_reg(uint8_t reg, uint8_t* data, const size_t len);
-uint8_t read_payload(uint8_t* buff, const size_t len);
+static uint8_t read_payload(uint8_t* buff, const size_t len);
 
 
 
@@ -181,23 +187,25 @@ void kavr(void)
    DDRC  |= _BV(PC2);
    PORTC |= _BV(PC2);
 
+   // Read the radio config from EEPROM
+   channel  = eeprom_read_byte((const uint8_t*)EE_CHANNEL);
+   eeprom_read_block((void*)master_addr,    (const void*)EE_MASTER_ADDR,    4);
+   eeprom_read_block((void*)broadcast_addr, (const void*)EE_BROADCAST_ADDR, 4);
+   eeprom_read_block((void*)slave_addr,     (const void*)EE_SLAVE_ADDR,     4);
+
    // For now, simply jump right into the user app.
    typedef void APP(void);
    ((APP*)0)();
    
    // Initialize the nRF interface
    nrf_setup();
-   uint8_t rx_buff[message_size];
-
-   // Initialize flash programming state
-   uint32_t curr_page = 0xffff; // Address of page we are working on
-   uint8_t page_buff[SPM_PAGESIZE]; // where we build up this page
-   uint8_t last_chunk=0; // last chunk that was wrtten into the page_buff
 
    // Countdown till giving up and jumping to the user app
-   const unsigned timeout_lim = 1000;
+   const unsigned timeout_lim = 2000;
    unsigned timeout_cnt=0;
-   
+   uint32_t curr_page = 0xffff; // Address of page we are working on
+   uint8_t last_chunk=0; // last chunk that was wrtten into the page_buff
+
    while (timeout_cnt < timeout_lim)
    {
       // check to see if we received any data
@@ -205,11 +213,11 @@ void kavr(void)
       if (status == 0x0e)
       {
          timeout_cnt++;
-         _delay_us(1000);
+         _delay_us(5000);
          continue;
       }
 
-      //read_payload(rx_buff, message_size);
+      read_payload(rx_buff, message_size);
 
       const uint16_t rx_frame_word = rx_buff[0] << 8 | rx_buff[1];
       if (rx_frame_word != frame_word)
@@ -286,7 +294,6 @@ void flash_page_write(uint16_t addr, uint8_t* buff)
     
     boot_page_write(addr);
     boot_spm_busy_wait();
-    
 }
 
 
@@ -318,11 +325,6 @@ inline void set_CE(void)
 void nrf_setup(void)
 {
    using namespace nRF24L01;
-   channel  = eeprom_read_byte((const uint8_t*)EE_CHANNEL);
-   eeprom_read_block((void*)master_addr,    (const void*)EE_MASTER_ADDR,    4);
-   eeprom_read_block((void*)broadcast_addr, (const void*)EE_BROADCAST_ADDR, 4);
-   eeprom_read_block((void*)slave_addr,     (const void*)EE_SLAVE_ADDR,     4);
-
    // Setup up the SPI inerface
    // MOSI, SCK, and SS are outputs
    DDRB |= _BV(PB2) | _BV(PB3) | _BV(PB5);
@@ -351,8 +353,6 @@ void nrf_setup(void)
    // Clear the various interrupt bits
    write_reg(STATUS, STATUS_TX_DS|STATUS_RX_DR|STATUS_MAX_RT);
    
-   uint8_t io_buff[addr_len+1];
-
    // Flush the RX/TX FIFOs
    io_buff[0] = FLUSH_RX;
    spi_transact(io_buff, 1);
@@ -382,25 +382,22 @@ void nrf_setup(void)
    
 void write_reg(uint8_t reg, uint8_t* data, const size_t len)
 {
-   uint8_t io_buff[len+1];
    io_buff[0]=nRF24L01::W_REGISTER | reg;
    memcpy(io_buff+1, data, len);
    spi_transact(io_buff, len+1);
 }
 
    
-void write_reg(char reg, char data)
+void write_reg(uint8_t reg, uint8_t data)
 {
-   uint8_t io_buff[2];
    io_buff[0]=nRF24L01::W_REGISTER | reg;
    io_buff[1]=data;
    spi_transact(io_buff, 2);
 }
 
 
-char read_reg(char reg)
+char read_reg(uint8_t reg)
 {
-   uint8_t io_buff[2];
    io_buff[0]=nRF24L01::R_REGISTER | reg;
    io_buff[1] = 0;
    spi_transact(io_buff, 2);
@@ -408,9 +405,8 @@ char read_reg(char reg)
 }
 
 
-void read_reg(char reg, uint8_t* data, const size_t len)
+void read_reg(uint8_t reg, uint8_t* data, const size_t len)
 {
-   uint8_t io_buff[len+1];
    io_buff[0]=nRF24L01::R_REGISTER | reg;
    io_buff[1]=0;
    memcpy(io_buff+1, data, len);
@@ -421,7 +417,6 @@ void read_reg(char reg, uint8_t* data, const size_t len)
 uint8_t read_payload(uint8_t* buff, const size_t len)
 {
    uint8_t pipe = (read_reg(nRF24L01::STATUS) & 0x0e) >> 1;
-   uint8_t io_buff[len+1];
 
    // read the packet out of the nRF's FIFO
    clear_CE();
@@ -436,3 +431,4 @@ uint8_t read_payload(uint8_t* buff, const size_t len)
    memcpy(buff, &io_buff[1], len);
    return pipe;
 }
+

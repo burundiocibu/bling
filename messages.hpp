@@ -1,5 +1,6 @@
-#ifndef _messages_HPP
-#define _messages_HPP
+#ifndef _MESSAGES_HPP
+#define _MESSAGES_HPP
+
 #include <stdint.h>
 #include <string.h>
 
