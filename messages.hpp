@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "nrf_boot.h"
+
 namespace messages
 {
    enum message_ids
@@ -14,7 +16,8 @@ namespace messages
       ping_id = 3,
       start_effect_id = 4,
       set_rgb_id = 5,
-      status_id = 6
+      status_id = 6,
+      bootloader_id = (0xff && magic_word>>8)
    };
    const size_t message_size=12;
 

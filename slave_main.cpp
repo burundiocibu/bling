@@ -70,6 +70,7 @@ int main (void)
 
    uint32_t t_hb=0;
    Effect effect;
+   typedef void APP(void);  // used to jump to the bootloader
 
    for (;;)
    {
@@ -95,6 +96,7 @@ int main (void)
             case messages::set_tlc_ch_id:   do_set_tlc_ch(buff); break;
             case messages::set_rgb_id:      do_set_rgb(buff); break;
             case messages::ping_id:         do_ping(buff, pipe); break;
+            case messages::bootloader_id:   ((APP*)BOOTADDR)(); break;
          }
       }
 

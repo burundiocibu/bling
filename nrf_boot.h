@@ -2,7 +2,7 @@
 // programmer.
 
 // These two probabaly should be used form ensemble.hpp
-const unsigned channel = 2;
+const unsigned default_channel = 2;
 const size_t addr_len = 4;
 
 

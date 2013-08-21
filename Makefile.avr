@@ -14,6 +14,7 @@ AVRDUDE=avrdude -F -p $(PROGRAMMER_MCU) $(AVRDUDE_PROGRAMMERID) $(AVRDUDE_PORT)
 CFLAGS=-I. $(INC) -g -mmcu=$(MCU) -O$(OPTLEVEL) \
 	-fpack-struct -fshort-enums             \
 	-DF_CPU=$(F_CPU)UL -DAVR=1              \
+	-DBOOTADDR=$(BOOTADDR)                  \
 	-funsigned-bitfields -funsigned-char    \
 	-Wall -Wstrict-prototypes               \
 	-Wa,-ahlms=$(firstword                  \
@@ -23,6 +24,7 @@ CPPFLAGS=-fno-exceptions -Wall                   \
 	-I. $(INC) -g -mmcu=$(MCU) -O$(OPTLEVEL) \
 	-fpack-struct -fshort-enums              \
 	-DF_CPU=$(F_CPU)UL -DAVR=1               \
+	-DBOOTADDR=$(BOOTADDR)                   \
 	-funsigned-bitfields -funsigned-char     \
 	-Wa,-ahlms=$(firstword                   \
 	$(filter %.lst, $(<:.cpp=.lst)))

@@ -43,7 +43,7 @@ chunk number:  offset into page chunk / 16
 nRF message size: 22 bytes
 
 common:
-  buff[0,2] = frame word: 0xbabe
+  buff[0,2] = magic: 0xbabe
   buff[2,1] = id
 
 id=0: no-op
@@ -107,33 +107,13 @@ id=11:
 
 #include "slave_eeprom.h"
 #include "nrf24l01_defines.hpp"
+#include "nrf_boot.h"
 
 // macros
 #define PACKED          __attribute__((__packed__))
 #define NOINLINE        __attribute__((noinline))
 #define NAKED           __attribute__((naked))
 #define SECTION(a)      __attribute__((section(a)))
-
-
-
-// here are some defines and such that need to be shared with the
-// master
-const size_t addr_len = 4;
-const size_t message_size = 22;
-const size_t chunk_size = 16;
-const uint16_t frame_word = 0xbabe;
-enum bootloader_msg_ids
-{
-   no_op = 0,
-   load_flash_chunk = 1,
-   write_flash_page = 2,
-   check_write_complete = 3,
-   write_eeprom = 4,
-   start_app = 5,
-   read_flash_request = 12,
-   read_flash_chunk = 13,
-   read_eeprom = 14
-};   
 
 
 // Some local buffers
@@ -148,6 +128,7 @@ uint8_t rx_buff[message_size];
 
 uint8_t page_buff[SPM_PAGESIZE]; // where we build up this page
 
+typedef void APP(void);
 
 void flash_page_write(uint16_t addr, uint8_t* buff);
 void spi_transact(uint8_t* p_rtx, const short len);   
@@ -193,10 +174,6 @@ void kavr(void)
    eeprom_read_block((void*)broadcast_addr, (const void*)EE_BROADCAST_ADDR, 4);
    eeprom_read_block((void*)slave_addr,     (const void*)EE_SLAVE_ADDR,     4);
 
-   // For now, simply jump right into the user app.
-   typedef void APP(void);
-   ((APP*)0)();
-   
    // Initialize the nRF interface
    nrf_setup();
 
@@ -219,8 +196,8 @@ void kavr(void)
 
       read_payload(rx_buff, message_size);
 
-      const uint16_t rx_frame_word = rx_buff[0] << 8 | rx_buff[1];
-      if (rx_frame_word != frame_word)
+      const uint16_t rx_magic_word = rx_buff[0] << 8 | rx_buff[1];
+      if (rx_magic_word != magic_word)
          continue;
 
       // Since we received a valid boot loader packet, reset the timeout
@@ -343,7 +320,7 @@ void nrf_setup(void)
    write_reg(SETUP_RETR, SETUP_RETR_ARC_4); // auto retransmit 3 x 250us
    
    write_reg(SETUP_AW, SETUP_AW_4BYTES);  // 4 byte addresses
-   write_reg(RF_SETUP, 0b00001110);  // 2Mbps data rate, 0dBm
+   write_reg(RF_SETUP, 0b00001110);  // 1Mbps data rate, 0dBm
    write_reg(RF_CH, channel);
    
    write_reg(RX_PW_P0, message_size);
