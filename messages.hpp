@@ -17,7 +17,7 @@ namespace messages
       start_effect_id = 4,
       set_rgb_id = 5,
       status_id = 6,
-      bootloader_id = (0xff && magic_word>>8)
+      bootloader_id = (0xff & boot_magic_word>>8)
    };
    const size_t message_size=12;
 

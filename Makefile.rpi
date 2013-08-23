@@ -27,7 +27,7 @@ master_lcd:  LDLIBS+=-lbcm2835 -lstdc++
 master_lcd: master_lcd.o rt_utils.o nrf24l01.o messages.o i2c.o lcd_plate.o
 
 master_loader: LDLIBS+=-lbcm2835 -lstdc++ -lboost_program_options
-master_loader: master_loader.o rt_utils.o nrf24l01.o messages.o Slave.o
+master_loader: master_loader.o
 
 show:  LDLIBS+=-lbcm2835 -lstdc++
 show: show.o showLists.o rt_utils.o nrf24l01.o messages.o i2c.o lcd_plate.o

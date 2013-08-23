@@ -4,11 +4,11 @@
 // Details about the entire ensemble of slaves
 namespace ensemble
 {
-   const unsigned channel = 2;
+   const unsigned default_channel = 2;
    const size_t addr_len = 4;
    const size_t num_slaves = 300;
-   const char master_addr[addr_len] = {0xA1, 0xA3, 0xA5, 0xA6};
-   const char slave_addr[num_slaves][addr_len]=
+   const uint8_t master_addr[addr_len] = {0xA1, 0xA3, 0xA5, 0xA6};
+   const uint8_t slave_addr[num_slaves][addr_len]=
    {
       { 0x3f ,  0x5b ,  0x74 ,  0x38 }, // slave 0 (broadcast)
       { 0xcd ,  0x80 ,  0x27 ,  0x40 }, // slave 1

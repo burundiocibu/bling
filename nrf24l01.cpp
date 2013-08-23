@@ -20,11 +20,12 @@
 
 namespace nRF24L01
 {
+   const size_t max_message_size = 32;
    uint8_t channel;
    char master_addr[addr_len];
    char broadcast_addr[addr_len];
    char slave_addr[addr_len];
-   char iobuff[messages::message_size+1];
+   char iobuff[max_message_size+1];
 
    void write_data(char* data, size_t len)
    {
