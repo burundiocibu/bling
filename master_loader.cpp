@@ -27,7 +27,7 @@
 #include "nrf_boot.h"
 
 
-bool nrf_tx(uint8_t* buff, size_t len);
+void nrf_tx(uint8_t* buff, size_t len);
 void nrf_rx(void);
 void write_reg(uint8_t reg, const uint8_t* data, const size_t len);
 void write_reg(uint8_t reg, uint8_t data);
@@ -37,6 +37,8 @@ void clear_CE(void);
 void set_CE(void);
 std::string timestamp(void);  // A string timestam for logs
 void nrf_setup(int slave);
+
+unsigned debug=1;
 
 void hex_dump(const void* buff, size_t len)
 {
@@ -51,7 +53,6 @@ using namespace nRF24L01;
 
 int main(int argc, char **argv)
 {
-   int verbose=1,debug=1;
    char input_fn[] = "slave_main.hex";
    unsigned slave_no=2;
 
@@ -91,25 +92,40 @@ int main(int argc, char **argv)
    uint8_t file_buff[file_size];
    for (int i=0; i < file_size; i++)
       file_buff[i] = i & 0xff;
-   const unsigned num_pages = file_size/page_size;
+   const boot_page_size=128; //bytes
+   const unsigned num_pages = file_size/boot_page_size;
+   const unsigned chunks_per_page = page_size/boot_chunk_size;
 
-   for (int page=0; page < 
-   for (int chunk=0; chunk < sizeof(file_buff)/boot_chunk_size; chunk++)
+   for (int page=0; page < num_pages; page++)
+   {
+      for (int chunk=0; chunk < chunks_per_page; chunk++)
       {
-         buff[0] = 0xff & (boot_magic_word >> 8);
-         buff[1] = 0xff & (boot_magic_word);
+         uint16_t page_addr=page*page_size;
+         uint16_t chuck_start=page*page_size + chunk*boot_chunk_size;
          buff[2] = bl_load_flash_chunk;
-         uint16_t addr=chunk*boot_chunk_size;
-         memcpy(buff
-         bool ack = false;
-         if (debug) printf("%s ", timestamp().c_str());
-         ack = nrf_tx(buff, boot_message_size);
-         if (!ack) printf("x");
-         if (debug) printf("\n");
-         t_hb = t;
+         buff[3] = chunk;
+         buff[4] = 0xff & (page_addr>>8);
+         buff[5] = 0xff & page_addr;
+         memcpy(buff+6, file_buff + chunk_start, boot_chunk_size);
+         if (debug) printf("%s load chunk ", timestamp().c_str());
+         nrf_tx(buff, boot_message_size);
+         if (debug) printf("!\n");
       }
-      bcm2835_delayMicroseconds(10000);
+      buff[2] = bl_write_flash_page;
+      if (debug) printf("%s write page at %04x ", timestamp().c_str(), page_addr);
+      nrf_tx(buff, boot_message_size);
+      if (debug) printf("!\n");
+
+      buff[2] = bl_check_write_complete;
+      if (debug) printf("%s write complete ", timestamp().c_str());
+      nrf_tx(buff, boot_message_size);
+      if (debug) printf("!\n");
    }
+
+   buff[2] = bl_start_app;
+   if (debug) printf("%s start app ", timestamp().c_str());
+   nrf_tx(buff, boot_message_size);
+   if (debug) printf("!\n");
 
    bcm2835_spi_end();
    fclose(fp);
@@ -172,45 +188,49 @@ void nrf_setup(int slave_no)
 }
 
 
-bool nrf_tx(uint8_t* data, size_t len)
+void nrf_tx(uint8_t* data, size_t len)
 {
    bool success=false;
    static unsigned nack_cnt=0, retry_cnt=0;
    uint8_t iobuff[len+1];
 
-   iobuff[0] = W_TX_PAYLOAD;
-   memcpy(iobuff+1, data, len);
-   bcm2835_spi_transfern((char*)iobuff, len+1);
+   data[0] = 0xff & (boot_magic_word >> 8);
+   data[1] = 0xff & (boot_magic_word);
 
-   set_CE();
-   bcm2835_delayMicroseconds(15);
-   clear_CE();
-
-   uint8_t status;
-   int i;
-   for (i=0; i < 1000; i++)
+   for (int j=0; j<50; j++)
    {
-      status = read_reg(STATUS);
-      if (status & STATUS_TX_DS)
+      iobuff[0] = W_TX_PAYLOAD;
+      memcpy(iobuff+1, data, len);
+      bcm2835_spi_transfern((char*)iobuff, len+1);
+      set_CE();
+      bcm2835_delayMicroseconds(15);
+      clear_CE();
+
+      for (int i=0; i < 1000; i++)
       {
-         success=true;
-         write_reg(STATUS, STATUS_TX_DS); //Clear the data sent notice
-         break;
+         uint8_t status = read_reg(STATUS);
+         if (status & STATUS_TX_DS)
+         {
+            success=true;
+            write_reg(STATUS, STATUS_TX_DS); //Clear the data sent notice
+            if (debug) printf(" i:%d ", i);
+            return;
+         }
+         else if (status & STATUS_MAX_RT)
+         {
+            nack_cnt++;
+            write_reg(STATUS, STATUS_MAX_RT);  // clear IRQ
+            iobuff[0] = FLUSH_TX;
+            bcm2835_spi_transfern((char*)&iobuff, 1);
+            break;
+         }
+         bcm2835_delayMicroseconds(50);
       }
-      bcm2835_delayMicroseconds(50);
+      retry_cnt += read_reg(OBSERVE_TX) & 0x0f;
    }
 
-   if (status & STATUS_MAX_RT)
-   {
-      nack_cnt++;
-      write_reg(STATUS, STATUS_MAX_RT);  // clear IRQ
-      iobuff[0] = FLUSH_TX;
-      bcm2835_spi_transfern((char*)&iobuff, 1);
-   }
-
-   retry_cnt += read_reg(OBSERVE_TX) & 0x0f;
-   printf(" i:%d ", i);
-   return success;
+   printf("No response after %d tries. Terminating\n", retry_cnt);
+   exit(-1);
 }
 
 
