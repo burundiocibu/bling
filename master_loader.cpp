@@ -4,10 +4,8 @@
   This is the programmer side of the boot loader implemented in nrf_boot.cpp.
   It is written to run on a raspberry pi with a nRF24L01+ radio conected to
   its SPI interface. See nrf_boot.cpp for details about the protocol that
-  is used across the radio. This program bascially reads in an SREC file,
+  is used across the radio. This program bascially reads in an Inte hex file,
   chopps it up and feeds it to the slave to be programmed.
-
-  http://en.wikipedia.org/wiki/SREC_(file_format)
 
   While this code uses some constants from nrf24l01_defines it also uses
   some rourintes from nrf24l01.cpp. The latter needs to be fixed so the
@@ -19,7 +17,6 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
-#include <iostream>
 #include <sys/time.h>
 #include <time.h>
 
@@ -41,30 +38,43 @@ void set_CE(void);
 std::string timestamp(void);  // A string timestam for logs
 void nrf_setup(int slave);
 
+void hex_dump(const void* buff, size_t len)
+{
+   const uint8_t *p = static_cast<const uint8_t*>(buff);
+   for (unsigned i=0; i<len; i++)
+      printf("%02x", *p++);
+}
+
 
 using namespace std;
 using namespace nRF24L01;
 
-
 int main(int argc, char **argv)
 {
    int verbose=1,debug=1;
-   string input_fn("slave_main.hex");
+   char input_fn[] = "slave_main.hex";
    unsigned slave_no=2;
+
+   FILE* fp = fopen(input_fn, "r");
+   if (fp == NULL)
+   {
+      printf("Could not open %s. Terminating.\n", input_fn);
+      exit(-1);
+   }
 
    if (slave_no == 0)
    {
-      cout << "We don't program slave 0 (everybody at once) yet. Specify slave." << endl;
+      printf("We don't program slave 0 (everybody at once) yet. Specify slave.\n");
       exit(1);
    }
    else if (slave_no >= ensemble::num_slaves)
    {
-      cout << "Invalid slave number: " << slave_no << ". Terminating" << endl;
+      printf("Invalid slave number: %d. Terminating.\n", slave_no);
       exit(-1);
    }
 
-   cout << timestamp() <<  " programming slave " << slave_no << " [";
-   for (int i=0;i<4;i++)
+   printf("%s programming slave %d [", timestamp().c_str(), slave_no);
+   for (int i=0; i<4; i++)
       printf("%02x", (int)ensemble::slave_addr[slave_no][i]);
    printf("]\n");
 
@@ -74,7 +84,7 @@ int main(int argc, char **argv)
    gettimeofday(&tv, NULL);
    double t0 = tv.tv_sec + 1e-6*tv.tv_usec;
    double t_hb = t0;
-      
+   
    uint8_t buff[boot_message_size];
    for (long i=0; i < 200000; i++)
    {
@@ -84,24 +94,22 @@ int main(int argc, char **argv)
       if (t - t_hb >= 1.0)
       {
          uint8_t *p = buff;
-         buff[1] = 0xff & (boot_magic_word >> 8);
-         buff[2] = 0xff & (boot_magic_word);
+         buff[0] = 0xff & (boot_magic_word >> 8);
+         buff[1] = 0xff & (boot_magic_word);
          buff[2] = bl_no_op;
          bool ack = false;
-         if (debug) cout << timestamp();
+         if (debug) printf("%s ", timestamp().c_str());
          ack = nrf_tx(buff, boot_message_size);
-         if (!ack)
-            cout << " x";
-         else
-            cout << " !";
-         if (debug) cout << endl;
+         if (!ack) printf("x");
+         if (debug) printf("\n");
          t_hb = t;
       }
       bcm2835_delayMicroseconds(10000);
    }
 
    bcm2835_spi_end();
-   cout << "Done programming" << endl;
+   fclose(fp);
+   printf("Done programming\n");
    return 0;
 }
 
@@ -110,7 +118,7 @@ void nrf_setup(int slave_no)
 {
    if (!bcm2835_init())
    {
-      cout << "Cound not initialize bcm2835 interface. Got root?" << endl;
+      printf("Cound not initialize bcm2835 interface. Got root?\n");
       exit(-1);
    }
 
@@ -129,7 +137,7 @@ void nrf_setup(int slave_no)
 
    if (read_reg(CONFIG) == 0xff || read_reg(STATUS) == 0xff)
    {
-      cout << "Failed to find nRF24L01. Exiting." << endl;
+      printf("Failed to find nRF24L01. Exiting.\n");
       exit(-1);
    }
 
@@ -171,8 +179,9 @@ bool nrf_tx(uint8_t* data, size_t len)
    bcm2835_spi_transfern((char*)iobuff, len+1);
 
    set_CE();
-   bcm2835_delayMicroseconds(10);
+   bcm2835_delayMicroseconds(15);
    clear_CE();
+
    uint8_t status;
    int i;
    for (i=0; i < 1000; i++)
