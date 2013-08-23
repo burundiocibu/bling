@@ -86,17 +86,21 @@ int main(int argc, char **argv)
    double t_hb = t0;
    
    uint8_t buff[boot_message_size];
-   for (long i=0; i < 200000; i++)
-   {
-      gettimeofday(&tv, NULL);
-      double t = tv.tv_sec + 1e-6*tv.tv_usec;
 
-      if (t - t_hb >= 1.0)
+   const size_t file_size = 4096;
+   uint8_t file_buff[file_size];
+   for (int i=0; i < file_size; i++)
+      file_buff[i] = i & 0xff;
+   const unsigned num_pages = file_size/page_size;
+
+   for (int page=0; page < 
+   for (int chunk=0; chunk < sizeof(file_buff)/boot_chunk_size; chunk++)
       {
-         uint8_t *p = buff;
          buff[0] = 0xff & (boot_magic_word >> 8);
          buff[1] = 0xff & (boot_magic_word);
-         buff[2] = bl_no_op;
+         buff[2] = bl_load_flash_chunk;
+         uint16_t addr=chunk*boot_chunk_size;
+         memcpy(buff
          bool ack = false;
          if (debug) printf("%s ", timestamp().c_str());
          ack = nrf_tx(buff, boot_message_size);
