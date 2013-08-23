@@ -39,6 +39,7 @@ void read_reg(uint8_t reg, uint8_t* data, const size_t len);
 void clear_CE(void);
 void set_CE(void);
 std::string timestamp(void);  // A string timestam for logs
+void nrf_setup(int slave);
 
 
 using namespace std;
@@ -67,6 +68,45 @@ int main(int argc, char **argv)
       printf("%02x", (int)ensemble::slave_addr[slave_no][i]);
    printf("]\n");
 
+   nrf_setup(slave_no);
+
+   struct timeval tv;
+   gettimeofday(&tv, NULL);
+   double t0 = tv.tv_sec + 1e-6*tv.tv_usec;
+   double t_hb = t0;
+      
+   for (long i=0; i < 200000; i++)
+   {
+      gettimeofday(&tv, NULL);
+      double t = tv.tv_sec + 1e-6*tv.tv_usec;
+
+      if (t - t_hb >= 1.0)
+      {
+         uint8_t *p = buff;
+         buff[0] = 0xff & (boot_magic_word >> 8);
+         buff[1] = 0xff & (boot_magic_word);
+         buff[2] = bl_no_op;
+         bool ack = false;
+         if (debug) cout << timestamp();
+         ack = nrf_tx(buff, boot_message_size);
+         if (!ack)
+            cout << " x";
+         else
+            cout << " !";
+         if (debug) cout << endl;
+         t_hb = t;
+      }
+      bcm2835_delayMicroseconds(10000);
+   }
+
+   bcm2835_spi_end();
+   cout << "Done programming" << endl;
+   return 0;
+}
+
+
+void nrf_setup(int slave_no)
+{
    if (!bcm2835_init())
    {
       cout << "Cound not initialize bcm2835 interface. Got root?" << endl;
@@ -105,9 +145,9 @@ int main(int argc, char **argv)
    // Clear the various interrupt bits
    write_reg(STATUS, STATUS_TX_DS|STATUS_RX_DR|STATUS_MAX_RT);
 
-   write_reg(EN_AA, EN_AA_ENAA_P0);  // require acks on pipe 0
    write_reg(RX_ADDR_P0, ensemble::master_addr, ensemble::addr_len);
    write_reg(TX_ADDR, ensemble::slave_addr[slave_no], ensemble::addr_len);
+   write_reg(EN_AA, EN_AA_ENAA_P0); // don't know if this is needed on the PTX
    write_reg(EN_RXADDR, EN_RXADDR_ERX_P0);
 
    buff[0] = FLUSH_RX;
@@ -116,39 +156,6 @@ int main(int argc, char **argv)
    bcm2835_spi_transfern((char*)&buff, 1);
       
    write_reg(CONFIG, cfg | CONFIG_PWR_UP);
-
-   struct timeval tv;
-   gettimeofday(&tv, NULL);
-   double t0 = tv.tv_sec + 1e-6*tv.tv_usec;
-   double t_hb = t0;
-      
-   for (long i=0; i < 200000; i++)
-   {
-      gettimeofday(&tv, NULL);
-      double t = tv.tv_sec + 1e-6*tv.tv_usec;
-
-      if (t - t_hb >= 1.0)
-      {
-         uint8_t *p = buff;
-         buff[0] = 0xff & (boot_magic_word >> 8);
-         buff[1] = 0xff & (boot_magic_word);
-         buff[2] = bl_no_op;
-         bool ack = false;
-         if (debug) cout << timestamp();
-         ack = nrf_tx(buff, boot_message_size);
-         if (!ack)
-            cout << " x";
-         else
-            cout << " !";
-         if (debug) cout << endl;
-         t_hb = t;
-      }
-      bcm2835_delayMicroseconds(10000);
-   }
-
-   bcm2835_spi_end();
-   cout << "Done programming" << endl;
-   return 0;
 }
 
 

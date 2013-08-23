@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 
    RunTime rt;
 
-   nRF24L01::channel = ensemble::channel;
+   nRF24L01::channel = ensemble::default_channel;
    memcpy(nRF24L01::master_addr,    ensemble::master_addr,   nRF24L01::addr_len);
    memcpy(nRF24L01::broadcast_addr, ensemble::slave_addr[0], nRF24L01::addr_len);
    memcpy(nRF24L01::slave_addr,     ensemble::slave_addr[2], nRF24L01::addr_len);

@@ -14,7 +14,7 @@ using namespace std;
 int main(int argc, char **argv)
 {
    RunTime rt;
-   nRF24L01::channel = ensemble::channel;
+   nRF24L01::channel = ensemble::default_channel;
    memcpy(nRF24L01::master_addr,    ensemble::master_addr,   nRF24L01::addr_len);
    memcpy(nRF24L01::broadcast_addr, ensemble::slave_addr[0], nRF24L01::addr_len);
    memcpy(nRF24L01::slave_addr,     ensemble::slave_addr[2], nRF24L01::addr_len);
@@ -39,7 +39,7 @@ int main(int argc, char **argv)
 
       uint32_t t = rt.msec();
       messages::encode_heartbeat(buff, t);
-      nRF24L01::write_tx_payload(buff, sizeof(buff), ensemble::slave_addr[0], false);
+      nRF24L01::write_tx_payload(buff, sizeof(buff), (const char*)ensemble::slave_addr[0], false);
 
       printf(" #%d %ld\n", i, t);
       for(int j=0; ((nRF24L01::read_reg(nRF24L01::STATUS) & nRF24L01::STATUS_TX_DS)== 0x00) && j<100; j++)

@@ -115,7 +115,7 @@ void nrf_tx(unsigned slave, uint8_t *buff, size_t len, bool updateDisplay)
    static unsigned tx_err=0;
    bool ack = slave != 0;
 
-   write_tx_payload(buff, len, ensemble::slave_addr[slave], ack);
+   write_tx_payload(buff, len, (const char *) ensemble::slave_addr[slave], ack);
 
    uint8_t status;
    int j;
