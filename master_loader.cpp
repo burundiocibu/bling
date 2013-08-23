@@ -75,6 +75,7 @@ int main(int argc, char **argv)
    double t0 = tv.tv_sec + 1e-6*tv.tv_usec;
    double t_hb = t0;
       
+   uint8_t buff[boot_message_size];
    for (long i=0; i < 200000; i++)
    {
       gettimeofday(&tv, NULL);
@@ -83,8 +84,8 @@ int main(int argc, char **argv)
       if (t - t_hb >= 1.0)
       {
          uint8_t *p = buff;
-         buff[0] = 0xff & (boot_magic_word >> 8);
-         buff[1] = 0xff & (boot_magic_word);
+         buff[1] = 0xff & (boot_magic_word >> 8);
+         buff[2] = 0xff & (boot_magic_word);
          buff[2] = bl_no_op;
          bool ack = false;
          if (debug) cout << timestamp();
@@ -129,14 +130,14 @@ void nrf_setup(int slave_no)
    if (read_reg(CONFIG) == 0xff || read_reg(STATUS) == 0xff)
    {
       cout << "Failed to find nRF24L01. Exiting." << endl;
-      return -1;
+      exit(-1);
    }
 
    const uint8_t cfg=CONFIG_EN_CRC | CONFIG_CRCO | CONFIG_MASK_TX_DS | CONFIG_MASK_MAX_RT;
    write_reg(CONFIG, cfg);
    clear_CE();
       
-   write_reg(SETUP_RETR, SETUP_RETR_ARC_4); // auto retransmit 3 x 250us
+   write_reg(SETUP_RETR, SETUP_RETR_ARC_10 | SETUP_RETR_ARD_750); // auto retransmit 10 x 750us
    write_reg(SETUP_AW, SETUP_AW_4BYTES);  // 4 byte addresses
    write_reg(RF_SETUP, 0b00001110);  // 2Mbps data rate, 0dBm
    write_reg(RF_CH, default_channel); // use channel 2
@@ -145,8 +146,8 @@ void nrf_setup(int slave_no)
    // Clear the various interrupt bits
    write_reg(STATUS, STATUS_TX_DS|STATUS_RX_DR|STATUS_MAX_RT);
 
-   write_reg(RX_ADDR_P0, ensemble::master_addr, ensemble::addr_len);
    write_reg(TX_ADDR, ensemble::slave_addr[slave_no], ensemble::addr_len);
+   write_reg(RX_ADDR_P0, ensemble::slave_addr[slave_no], ensemble::addr_len);
    write_reg(EN_AA, EN_AA_ENAA_P0); // don't know if this is needed on the PTX
    write_reg(EN_RXADDR, EN_RXADDR_ERX_P0);
 
@@ -162,8 +163,7 @@ void nrf_setup(int slave_no)
 bool nrf_tx(uint8_t* data, size_t len)
 {
    bool success=false;
-   static unsigned t_tx=0, nack_cnt=0, retry_cnt=0;
-   static int dt=0;
+   static unsigned nack_cnt=0, retry_cnt=0;
    uint8_t iobuff[len+1];
 
    iobuff[0] = W_TX_PAYLOAD;
@@ -173,30 +173,30 @@ bool nrf_tx(uint8_t* data, size_t len)
    set_CE();
    bcm2835_delayMicroseconds(10);
    clear_CE();
-
-   for (int i=0; i < 200; i++)
+   uint8_t status;
+   int i;
+   for (i=0; i < 1000; i++)
    {
-      uint8_t status = read_reg(STATUS);
-      if (status & STATUS_MAX_RT)
+      status = read_reg(STATUS);
+      if (status & STATUS_TX_DS)
       {
-         nack_cnt++;
-         write_reg(STATUS, STATUS_MAX_RT);  // clear IRQ
-         iobuff[0] = FLUSH_TX;
-         bcm2835_spi_transfern((char*)&iobuff, 1);
-         break;
-      }
-      else if (status & STATUS_TX_DS)
-      {
-         write_reg(STATUS, STATUS_TX_DS); //Clear the data sent notice
          success=true;
+         write_reg(STATUS, STATUS_TX_DS); //Clear the data sent notice
          break;
       }
-      bcm2835_delayMicroseconds(10);
+      bcm2835_delayMicroseconds(50);
    }
 
-   uint8_t obs_tx = read_reg(OBSERVE_TX);
-   retry_cnt += obs_tx & 0x0f;
-   cout << " retry: " << retry_cnt;
+   if (status & STATUS_MAX_RT)
+   {
+      nack_cnt++;
+      write_reg(STATUS, STATUS_MAX_RT);  // clear IRQ
+      iobuff[0] = FLUSH_TX;
+      bcm2835_spi_transfern((char*)&iobuff, 1);
+   }
+
+   retry_cnt += read_reg(OBSERVE_TX) & 0x0f;
+   printf(" i:%d ", i);
    return success;
 }
 
