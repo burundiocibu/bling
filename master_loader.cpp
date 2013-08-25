@@ -19,6 +19,7 @@
 #include <string>
 #include <sys/time.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <bcm2835.h>
 
@@ -27,7 +28,7 @@
 #include "nrf_boot.h"
 
 
-void nrf_tx(uint8_t* buff, size_t len);
+void nrf_tx(uint8_t* buff, size_t len, unsigned retry=50);
 void nrf_rx(void);
 void write_reg(uint8_t reg, const uint8_t* data, const size_t len);
 void write_reg(uint8_t reg, uint8_t data);
@@ -53,8 +54,21 @@ using namespace nRF24L01;
 
 int main(int argc, char **argv)
 {
-   char input_fn[] = "slave_main.hex";
+   char *input_fn;
    unsigned slave_no=2;
+
+   opterr = 0;
+   int c;
+   while ((c = getopt(argc, argv, "di:s:")) != -1)
+      switch (c)
+      {
+         case 'd': debug++; break;
+         case 'i': input_fn = optarg; break;
+         case 's': slave_no = atoi(optarg); break;
+         default:
+            printf("Usage %s -i fn -s slave_no [-d]\n", argv[0]);
+            exit(-1);
+      }
 
    FILE* fp = fopen(input_fn, "r");
    if (fp == NULL)
@@ -79,7 +93,6 @@ int main(int argc, char **argv)
          break;
       int len, addr, id;
       sscanf(line+1, "%02x%04x%02x", &len, &addr, &id);
-      printf("len: %d addr: %04x id: %d\n", len, addr, id);
 
       if (id==0)
       {
@@ -130,7 +143,12 @@ int main(int argc, char **argv)
 
    uint8_t buff[boot_message_size];
    buff[0] = boot_magic_word >> 8;
-   buff[1] = boot_magic_word;
+   buff[1] = 0xff & boot_magic_word;
+
+   buff[2] = bl_no_op;
+   if (debug) printf("%s Looking for slave.\n", timestamp().c_str());
+   nrf_tx(buff, boot_message_size, 50000);
+   if (debug) printf("%s Found Slave.\n", timestamp().c_str());
 
    for (int page=0; page < num_pages; page++)
    {
@@ -141,12 +159,12 @@ int main(int argc, char **argv)
          buff[2] = bl_load_flash_chunk;
          buff[3] = chunk;
          buff[4] = page_addr>>8;
-         buff[5] = page_addr;
+         buff[5] = 0xff & page_addr;
          memcpy(buff+6, image_buff + chunk_start, boot_chunk_size);
-         if (debug) printf("%s load pg:%02x chunk:%02x ", timestamp().c_str(), page, chunk);
-         if (debug>1) hex_dump(buff, boot_message_size);
+         if (debug>1) printf("%s load pg:%02x chunk:%02x ", timestamp().c_str(), page, chunk);
+         if (debug>2) hex_dump(buff, boot_message_size);
          nrf_tx(buff, boot_message_size);
-         if (debug) printf("!\n");
+         if (debug>1) printf("!\n");
       }
       buff[2] = bl_write_flash_page;
       if (debug) printf("%s write page at %04x ", timestamp().c_str(), page_addr);
@@ -154,9 +172,9 @@ int main(int argc, char **argv)
       if (debug) printf("!\n");
 
       buff[2] = bl_check_write_complete;
-      if (debug) printf("%s write complete ", timestamp().c_str());
+      if (debug>2) printf("%s write complete ", timestamp().c_str());
       nrf_tx(buff, boot_message_size);
-      if (debug) printf("!\n");
+      if (debug>2) printf("!\n");
    }
 
    buff[2] = bl_start_app;
@@ -225,13 +243,13 @@ void nrf_setup(int slave_no)
 }
 
 
-void nrf_tx(uint8_t* data, size_t len)
+void nrf_tx(uint8_t* data, size_t len, unsigned retry)
 {
    bool success=false;
    static unsigned nack_cnt=0, retry_cnt=0;
    uint8_t iobuff[len+1];
 
-   for (int j=0; j<50; j++)
+   for (int j=0; j<retry; j++)
    {
       iobuff[0] = W_TX_PAYLOAD;
       memcpy(iobuff+1, data, len);
@@ -247,7 +265,6 @@ void nrf_tx(uint8_t* data, size_t len)
          {
             success=true;
             write_reg(STATUS, STATUS_TX_DS); //Clear the data sent notice
-            if (debug) printf(" i:%d ", i);
             return;
          }
          else if (status & STATUS_MAX_RT)
