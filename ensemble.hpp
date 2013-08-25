@@ -1,8 +1,8 @@
 #ifndef _ENSEMBLE_HPP
 #define _ENSEMBLE_HPP
 
-#include <cstdint>
-#include <cstddef>
+#include <stdint.h>
+#include <stddef.h>
 
 // Details about the entire ensemble of slaves
 namespace ensemble
