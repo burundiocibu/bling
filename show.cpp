@@ -198,7 +198,7 @@ void slider(unsigned slave, uint8_t ch, uint16_t &v, int dir)
 			v >>= 1;
 	}
 
-	uint8_t buff[::messages::message_size];
+	uint8_t buff[ensemble::message_size];
 	for (int i=0; i<sizeof(buff); i++) buff[i]=0;
 	::messages::encode_set_tlc_ch(buff, ch, v);
 	nrf_tx(slave, buff, sizeof(buff), false, 0);
@@ -224,7 +224,7 @@ void heartbeat(int slave)
 	static uint32_t last_hb=0;
 	if (runtime.msec() - last_hb < 1000)
 		return;
-	uint8_t buff[::messages::message_size];
+	uint8_t buff[ensemble::message_size];
 	::messages::encode_heartbeat(buff, runtime.msec());
 	nrf_tx(slave, buff, sizeof(buff), false, 0);
 	last_hb = runtime.msec();
@@ -282,7 +282,7 @@ class Throb : public Effect
 			int v = ms;
 			if (!(sec & 1))
 				v = 1000-ms;
-			uint8_t buff[::messages::message_size];
+			uint8_t buff[ensemble::message_size];
 			::messages::encode_set_tlc_ch(buff, 0, v);
 			nrf_tx(slave, buff, sizeof(buff), false, 0);
 		}
@@ -354,7 +354,7 @@ void process_ui(void)
 		{
 			if(effect >= 0)
 			{
-				uint8_t buff[::messages::message_size];
+				uint8_t buff[ensemble::message_size];
 				::messages::encode_start_effect(buff, effect, runtime.msec(), 1000);
 				nrf_tx(BROADCAST_ADDRESS, buff, sizeof(buff), true, 0);
 				logfile << 1e-3*runtime.msec() << " effect " << 0 << endl;
@@ -412,7 +412,7 @@ void Oldprocess_ui(void)
 		}
 		else if (b & lcd_plate::SELECT)
 		{
-			uint8_t buff[::messages::message_size];
+			uint8_t buff[ensemble::message_size];
 			::messages::encode_start_effect(buff, 0, runtime.msec(), 1000);
 			nrf_tx(slave, buff, sizeof(buff), true, 0);
 			logfile << 1e-3*runtime.msec() << " effect " << 0 << endl;

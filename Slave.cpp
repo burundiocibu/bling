@@ -25,7 +25,7 @@ bool Slave::tx()
    t_tx = runtime.msec();
    tx_cnt++;
    bool ack = true;
-   write_tx_payload(buff, messages::message_size, (const char*)ensemble::slave_addr[slave_no], ack);
+   write_tx_payload(buff, ensemble::message_size, (const char*)ensemble::slave_addr[slave_no], ack);
 
    uint64_t t0=runtime.usec();
    for (int i=0; i < 200; i++)
@@ -72,7 +72,7 @@ void Slave::rx()
       uint8_t status = read_reg(STATUS);
       if (status & STATUS_RX_DR)
       {
-         read_rx_payload((char*)buff, messages::message_size, pipe);
+         read_rx_payload((char*)buff, ensemble::message_size, pipe);
          rx_dt = runtime.usec() - t0;
          write_reg(STATUS, STATUS_RX_DR); // clear data received bit
          uint8_t* p = buff;

@@ -5,6 +5,7 @@
 #include "rt_utils.hpp"
 #include "nrf24l01.hpp"
 #include "messages.hpp"
+#include "ensemble.hpp"
 
 class Slave
 {
@@ -22,7 +23,7 @@ public:
    int32_t batt_cap;
 
    // used for the tx & rx functions
-   uint8_t buff[messages::message_size];
+   uint8_t buff[ensemble::message_size];
 
    bool tx(); // Returns true if it was successfull
    void rx();

@@ -53,7 +53,7 @@ int main(int argc, char **argv)
    const int LED=RPI_GPIO_P1_07;
    bcm2835_gpio_fsel(LED, BCM2835_GPIO_FSEL_OUTP);
 
-   uint8_t buff[messages::message_size];
+   uint8_t buff[ensemble::message_size];
    for (int i=0; i<sizeof(buff); i++) buff[i]=0;
    uint16_t red=0,green=0,blue=0;
    unsigned hb_count=0;
@@ -170,7 +170,7 @@ void nrf_tx(uint8_t *buff, size_t len, unsigned slave)
 void nrf_rx(void)
 {
    using namespace nRF24L01;
-   uint8_t buff[messages::message_size];
+   uint8_t buff[ensemble::message_size];
    uint8_t pipe;
    char config = read_reg(CONFIG);
    config |= CONFIG_PRIM_RX;
@@ -183,7 +183,7 @@ void nrf_rx(void)
    {
       if (read_reg(STATUS) & STATUS_RX_DR)
       {
-         read_rx_payload((char*)buff, messages::message_size, pipe);
+         read_rx_payload((char*)buff, ensemble::message_size, pipe);
          write_reg(STATUS, STATUS_RX_DR); // clear data received bit
          break;
       }
@@ -205,7 +205,7 @@ void nrf_rx(void)
    mvprintw(14, 0, "%8.3f ", 0.001*t_rx);
    soc = 0xff & (soc >> 8);
    printw("%2d %3d %1.3f mv %d%%  ", id, i, 1e-3*vcell, soc);
-   hexdump(buff, messages::message_size);
+   hexdump(buff, ensemble::message_size);
 }
 
 
@@ -232,7 +232,7 @@ void slider(uint8_t ch, uint16_t &v, int dir)
          v >>= 1;
    }
 
-   uint8_t buff[messages::message_size];
+   uint8_t buff[ensemble::message_size];
    for (int i=0; i<sizeof(buff); i++) buff[i]=0;
    messages::encode_set_tlc_ch(buff, ch, v);
    nrf_tx(buff, sizeof(buff), slave);
