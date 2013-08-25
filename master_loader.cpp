@@ -83,7 +83,10 @@ int main(int argc, char **argv)
    uint8_t *image_buff;
    uint8_t *p;
 
-   image_buff = (uint8_t*)malloc(0x8000);
+   const size_t ibsize = 0x8000;
+   image_buff = (uint8_t*)malloc(ibsize);
+   memset(image_buff, 0xff, ibsize);
+   
    p = image_buff;
    while (!got_image)
    {
@@ -114,7 +117,7 @@ int main(int argc, char **argv)
       exit(-1);
    }
 
-   const unsigned num_pages = image_size/boot_page_size;
+   const unsigned num_pages = image_size/boot_page_size + 1;
    const unsigned chunks_per_page = boot_page_size/boot_chunk_size;
 
    if (slave_no == 0)
