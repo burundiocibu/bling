@@ -1,6 +1,9 @@
 #ifndef _ENSEMBLE_HPP
 #define _ENSEMBLE_HPP
 
+#include <cstdint>
+#include <cstddef>
+
 // Details about the entire ensemble of slaves
 namespace ensemble
 {

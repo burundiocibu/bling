@@ -146,6 +146,7 @@ extern void* __bss_end;
 void kavr(void) NAKED SECTION(".vectors");
 void kavr(void)
 {
+   // 5 ms * 400 = 2 seconds
    const unsigned timeout_lim = 400;
    unsigned timeout_cnt=0;
    uint32_t curr_page = 0xffff; // Address of page we are working on
@@ -162,14 +163,12 @@ void kavr(void)
    asm volatile ("ldi r28, lo8(%0)" :: "i" (&__bss_end));
    asm volatile ("ldi r29, hi8(%0)" :: "i" (&__bss_end));
 
-
    // we don't need no stinking interrupts
    cli();
 
    // Turn off the 12V supply
    DDRB |= _BV(PB1);
    PORTB &= ~_BV(PB1);
-   //PORTB |= _BV(PB1);
 
    // Set the tlc5940 BLANK line to to disable PWM output
    DDRC  |= _BV(PC2);
@@ -226,7 +225,7 @@ void kavr(void)
             break;
 
          case bl_start_app:
-            boot_rww_enable();
+            boot_rww_enable_safe();
             ((APP*)0)();
 
          case bl_check_write_complete:
@@ -402,6 +401,7 @@ uint8_t read_payload(uint8_t* buff, const size_t len)
    return pipe;
 }
 
+// This uses the V12 line as a debug output
 void blink(int n)
 {
    for (int i=0; i<n; i++)

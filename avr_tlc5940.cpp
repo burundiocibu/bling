@@ -32,6 +32,7 @@ namespace avr_tlc5940
       //==============================================================
       // tlc5940 interface
       // use Timer0 to generate a 4 MHz GSCLK on OC0A
+      cli();
       TCCR0A = _BV(COM0A0) | _BV(WGM01); // Clear Timer on Compare match mode, toggle OC0A on match
       TCCR0B = _BV(CS00); // prescaler div = 1
       TIMSK0 = 0; // make sure it generates no interrupts

@@ -15,6 +15,7 @@
 #include "avr_max1704x.hpp"
 #include "messages.hpp"
 #include "slave_eeprom.h"
+#include "nrf_boot.h"
 
 
 struct Effect
@@ -87,7 +88,11 @@ int main (void)
             break;
          nRF24L01::read_rx_payload(buff, sizeof(buff), pipe);
          nRF24L01::clear_IRQ();
-         
+
+         // First see if this looks like a bootloader packet
+         if (buff[0] == 0 && buff[1] == (0xff * boot_magic_word))
+            ((APP*)BOOTADDR)(); 
+
          switch (messages::get_id(buff))
          {
             case messages::heartbeat_id:    do_heartbeat(buff, t_hb); break;
@@ -96,7 +101,6 @@ int main (void)
             case messages::set_tlc_ch_id:   do_set_tlc_ch(buff); break;
             case messages::set_rgb_id:      do_set_rgb(buff); break;
             case messages::ping_id:         do_ping(buff, pipe); break;
-            case messages::bootloader_id:   ((APP*)BOOTADDR)(); break;
          }
       }
 
@@ -228,4 +232,3 @@ void do_ping(uint8_t* buff, uint8_t pipe)
    delay_us(150);
    set_CE();
 }
-

@@ -113,8 +113,14 @@ nrf_boot.o: nrf_boot.cpp
 nrf_boot.flash: nrf_boot.hex
 	$(AVRDUDE) -U lfuse:w:0xe2:m -U hfuse:w:0xd0:m -U efuse:w:0x07:m
 	$(AVRDUDE) -U flash:w:$^:i
-
 #=================================================================
+# This is a helper program that runs on the local machine. It is
+# used with the slave_init.sh script
+get_param: get_param.cpp ensemble.hpp nrf_boot.h
+	gcc -std=gnu++11 -o $@ $?
+#=================================================================
+
+
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 

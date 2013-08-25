@@ -16,3 +16,4 @@ Makefile
 master_probe
 master_loader
 show
+get_param
