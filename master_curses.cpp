@@ -35,7 +35,7 @@ int main(int argc, char **argv)
    prev_curs = ::curs_set(0);   // we want an invisible cursor.
    mvprintw(0,0, "HB#   slave  R   G   B      j    tx_err  tx_obs ack_err");
 
-   nRF24L01::channel = ensemble::channel;
+   nRF24L01::channel = ensemble::default_channel;
    memcpy(nRF24L01::master_addr,    ensemble::master_addr,   nRF24L01::addr_len);
    memcpy(nRF24L01::broadcast_addr, ensemble::slave_addr[0], nRF24L01::addr_len);
    memcpy(nRF24L01::slave_addr,     ensemble::slave_addr[2], nRF24L01::addr_len);
@@ -134,7 +134,7 @@ void nrf_tx(uint8_t *buff, size_t len, unsigned slave)
    static unsigned tx_err=0;
    bool ack = slave != 0;
 
-   write_tx_payload(buff, len, ensemble::slave_addr[slave], ack);
+   write_tx_payload(buff, len, (const char*)ensemble::slave_addr[slave], ack);
 
    uint8_t status;
    int j;

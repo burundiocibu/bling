@@ -1,5 +1,5 @@
 CPPFLAGS+=-std=c++0x
-ALL_BIN=master_curses master_lcd spi-time tx-test rx-test master_probe show 
+ALL_BIN=master_curses master_lcd master_probe show master_loader
 
 
 all: $(ALL_BIN)

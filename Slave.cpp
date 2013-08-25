@@ -25,7 +25,7 @@ bool Slave::tx()
    t_tx = runtime.msec();
    tx_cnt++;
    bool ack = true;
-   write_tx_payload(buff, messages::message_size, ensemble::slave_addr[slave_no], ack);
+   write_tx_payload(buff, messages::message_size, (const char*)ensemble::slave_addr[slave_no], ack);
 
    uint64_t t0=runtime.usec();
    for (int i=0; i < 200; i++)

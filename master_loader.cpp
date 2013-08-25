@@ -48,13 +48,12 @@ void hex_dump(const void* buff, size_t len)
       printf("%02x", *p++);
 }
 
-
 using namespace std;
 using namespace nRF24L01;
 
 int main(int argc, char **argv)
 {
-   char *input_fn = "slave_main.hex";
+   char *input_fn;
    unsigned slave_no=2;
 
    opterr = 0;
@@ -69,6 +68,12 @@ int main(int argc, char **argv)
             printf("Usage %s -i fn -s slave_no [-d]\n", argv[0]);
             exit(-1);
       }
+
+   if (input_fn==NULL)
+   {
+      printf("Please specify slave image hex file.\n");
+      exit(-1);
+   }
 
    FILE* fp = fopen(input_fn, "r");
    if (fp == NULL)
