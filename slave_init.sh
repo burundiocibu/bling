@@ -2,7 +2,7 @@
 
 eval `get_param $1`
 
-if [ -z $slave_addr ]; then
+if [ -z "$slave_addr" ]; then
     exit
 fi
 

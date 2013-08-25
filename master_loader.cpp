@@ -149,13 +149,13 @@ int main(int argc, char **argv)
    double t_hb = t0;
 
 
-   uint8_t buff[boot_message_size];
+   uint8_t buff[ensemble::message_size];
    buff[0] = boot_magic_word >> 8;
    buff[1] = 0xff & boot_magic_word;
 
    buff[2] = bl_no_op;
    if (debug) printf("%s Looking for slave.\n", timestamp().c_str());
-   nrf_tx(buff, boot_message_size, 50000);
+   nrf_tx(buff, ensemble::message_size, 50000);
    if (debug) printf("%s Found Slave.\n", timestamp().c_str());
 
    for (int page=0; page < num_pages; page++)
@@ -170,24 +170,24 @@ int main(int argc, char **argv)
          buff[5] = 0xff & page_addr;
          memcpy(buff+6, image_buff + chunk_start, boot_chunk_size);
          if (debug>1) printf("%s load pg:%02x chunk:%02x ", timestamp().c_str(), page, chunk);
-         if (debug>2) hex_dump(buff, boot_message_size);
-         nrf_tx(buff, boot_message_size);
+         if (debug>2) hex_dump(buff, ensemble::message_size);
+         nrf_tx(buff, ensemble::message_size);
          if (debug>1) printf("!\n");
       }
       buff[2] = bl_write_flash_page;
       if (debug) printf("%s write page at %04x ", timestamp().c_str(), page_addr);
-      nrf_tx(buff, boot_message_size);
+      nrf_tx(buff, ensemble::message_size);
       if (debug) printf("!\n");
 
       buff[2] = bl_check_write_complete;
       if (debug>2) printf("%s write complete ", timestamp().c_str());
-      nrf_tx(buff, boot_message_size);
+      nrf_tx(buff, ensemble::message_size);
       if (debug>2) printf("!\n");
    }
 
    buff[2] = bl_start_app;
    if (debug) printf("%s start app ", timestamp().c_str());
-   nrf_tx(buff, boot_message_size);
+   nrf_tx(buff, ensemble::message_size);
    if (debug) printf("!\n");
 
    bcm2835_spi_end();
@@ -216,7 +216,7 @@ void nrf_setup(int slave_no)
    bcm2835_spi_chipSelect(BCM2835_SPI_CS0);                      // The default
    bcm2835_spi_setChipSelectPolarity(BCM2835_SPI_CS0, LOW);      // the default
 
-   uint8_t buff[boot_message_size];
+   uint8_t buff[ensemble::message_size];
 
    if (read_reg(CONFIG) == 0xff || read_reg(STATUS) == 0xff)
    {
@@ -231,8 +231,8 @@ void nrf_setup(int slave_no)
    write_reg(SETUP_RETR, SETUP_RETR_ARC_10 | SETUP_RETR_ARD_750); // auto retransmit 10 x 750us
    write_reg(SETUP_AW, SETUP_AW_4BYTES);  // 4 byte addresses
    write_reg(RF_SETUP, 0b00001110);  // 2Mbps data rate, 0dBm
-   write_reg(RF_CH, default_channel); // use channel 2
-   write_reg(RX_PW_P0, boot_message_size);
+   write_reg(RF_CH, ensemble::default_channel); // use channel 2
+   write_reg(RX_PW_P0, ensemble::message_size);
 
    // Clear the various interrupt bits
    write_reg(STATUS, STATUS_TX_DS|STATUS_RX_DR|STATUS_MAX_RT);
