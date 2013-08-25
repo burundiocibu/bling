@@ -54,7 +54,7 @@ using namespace nRF24L01;
 
 int main(int argc, char **argv)
 {
-   char *input_fn;
+   char *input_fn = "slave_main.hex";
    unsigned slave_no=2;
 
    opterr = 0;
