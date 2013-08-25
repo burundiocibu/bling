@@ -16,7 +16,6 @@ namespace messages
       set_rgb_id = 5,
       status_id = 6
    };
-   const size_t message_size=12;
 
    inline uint8_t get_id(uint8_t* p)
    {return *p;}

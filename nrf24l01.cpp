@@ -17,15 +17,15 @@
 #include "nrf24l01.hpp"
 #include "avr_rtc.hpp"
 #include "messages.hpp"
+#include "ensemble.hpp"
 
 namespace nRF24L01
 {
-   const size_t max_message_size = 32;
    uint8_t channel;
    char master_addr[addr_len];
    char broadcast_addr[addr_len];
    char slave_addr[addr_len];
-   char iobuff[max_message_size+1];
+   char iobuff[ensemble::message_size+1];
 
    void write_data(char* data, size_t len)
    {
@@ -183,9 +183,9 @@ namespace nRF24L01
       write_reg(RF_SETUP, 0b00001110);  // 2Mbps data rate, 0dBm
       write_reg(RF_CH, channel); // use channel 2
 
-      write_reg(nRF24L01::RX_PW_P0, messages::message_size);
-      write_reg(nRF24L01::RX_PW_P1, messages::message_size);
-      write_reg(nRF24L01::RX_PW_P2, messages::message_size);
+      write_reg(nRF24L01::RX_PW_P0, ensemble::message_size);
+      write_reg(nRF24L01::RX_PW_P1, ensemble::message_size);
+      write_reg(nRF24L01::RX_PW_P2, ensemble::message_size);
 
       // Clear the various interrupt bits
       write_reg(STATUS, STATUS_TX_DS|STATUS_RX_DR|STATUS_MAX_RT);

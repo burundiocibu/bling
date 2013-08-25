@@ -16,7 +16,7 @@
 #include "messages.hpp"
 #include "slave_eeprom.h"
 #include "nrf_boot.h"
-
+#include "ensemble.hpp"
 
 struct Effect
 {
@@ -58,7 +58,7 @@ int main (void)
    if (!nRF24L01::configure_base())
       avr_dbg::die(1, 1000);
    nRF24L01::configure_PRX();
-   uint8_t buff[messages::message_size];
+   uint8_t buff[ensemble::message_size];
 
    // Turn on 12V supply
    DDRB |= _BV(PB1);
@@ -200,7 +200,7 @@ void do_ping(uint8_t* buff, uint8_t pipe)
    uint16_t soc = avr_max1704x::read_soc();
    p = messages::encode_var<uint16_t>(p, soc);
    p = messages::encode_var<uint16_t>(p, slave_id);
-   write_data(iobuff, messages::message_size+1);
+   write_data(iobuff, ensemble::message_size+1);
    
    set_CE();
    delay_us(10);
