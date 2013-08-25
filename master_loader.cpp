@@ -63,6 +63,47 @@ int main(int argc, char **argv)
       exit(-1);
    }
 
+   bool got_image=false;
+   char line[80];
+   size_t image_size=0;
+   uint8_t *image_buff;
+   uint8_t *p;
+
+   image_buff = (uint8_t*)malloc(0x8000);
+   p = image_buff;
+   while (!got_image)
+   {
+      if (fgets(line, sizeof(line), fp) == NULL)
+         break;
+      if (line[0] != ':')
+         break;
+      int len, addr, id;
+      sscanf(line+1, "%02x%04x%02x", &len, &addr, &id);
+      printf("len: %d addr: %04x id: %d\n", len, addr, id);
+
+      if (id==0)
+      {
+         for (int i=0; i<len; i++)
+            sscanf(line+9+2*i, "%02x", p++);
+
+         image_size+=len;
+      }
+      else if (id==1)
+         got_image = true;
+   }
+
+   if (debug)
+      printf("Image length: %d\n", image_size);
+
+   if (!got_image)
+   {
+      printf("Failed to read image to load. Exiting.\n");
+      exit(-1);
+   }
+
+   const unsigned num_pages = image_size/boot_page_size;
+   const unsigned chunks_per_page = boot_page_size/boot_chunk_size;
+
    if (slave_no == 0)
    {
       printf("We don't program slave 0 (everybody at once) yet. Specify slave.\n");
@@ -85,29 +126,25 @@ int main(int argc, char **argv)
    gettimeofday(&tv, NULL);
    double t0 = tv.tv_sec + 1e-6*tv.tv_usec;
    double t_hb = t0;
-   
-   uint8_t buff[boot_message_size];
 
-   const size_t file_size = 4096;
-   uint8_t file_buff[file_size];
-   for (int i=0; i < file_size; i++)
-      file_buff[i] = i & 0xff;
-   const boot_page_size=128; //bytes
-   const unsigned num_pages = file_size/boot_page_size;
-   const unsigned chunks_per_page = page_size/boot_chunk_size;
+
+   uint8_t buff[boot_message_size];
+   buff[0] = boot_magic_word >> 8;
+   buff[1] = boot_magic_word;
 
    for (int page=0; page < num_pages; page++)
    {
+      uint16_t page_addr=page*boot_page_size;
       for (int chunk=0; chunk < chunks_per_page; chunk++)
       {
-         uint16_t page_addr=page*page_size;
-         uint16_t chuck_start=page*page_size + chunk*boot_chunk_size;
+         uint16_t chunk_start=page*boot_page_size + chunk*boot_chunk_size;
          buff[2] = bl_load_flash_chunk;
          buff[3] = chunk;
-         buff[4] = 0xff & (page_addr>>8);
-         buff[5] = 0xff & page_addr;
-         memcpy(buff+6, file_buff + chunk_start, boot_chunk_size);
-         if (debug) printf("%s load chunk ", timestamp().c_str());
+         buff[4] = page_addr>>8;
+         buff[5] = page_addr;
+         memcpy(buff+6, image_buff + chunk_start, boot_chunk_size);
+         if (debug) printf("%s load pg:%02x chunk:%02x ", timestamp().c_str(), page, chunk);
+         if (debug>1) hex_dump(buff, boot_message_size);
          nrf_tx(buff, boot_message_size);
          if (debug) printf("!\n");
       }
@@ -193,9 +230,6 @@ void nrf_tx(uint8_t* data, size_t len)
    bool success=false;
    static unsigned nack_cnt=0, retry_cnt=0;
    uint8_t iobuff[len+1];
-
-   data[0] = 0xff & (boot_magic_word >> 8);
-   data[1] = 0xff & (boot_magic_word);
 
    for (int j=0; j<50; j++)
    {
