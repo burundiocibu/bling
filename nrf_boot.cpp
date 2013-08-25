@@ -108,6 +108,7 @@ id=11:
 #include "slave_eeprom.h"
 #include "nrf24l01_defines.hpp"
 #include "nrf_boot.h"
+#include "ensemble.hpp"
 
 // macros
 #define PACKED          __attribute__((__packed__))
@@ -116,15 +117,8 @@ id=11:
 #define SECTION(a)      __attribute__((section(a)))
 
 
-// Some local buffers
-// It appears when building a bootloader, arrays need to be statically declaired
-uint8_t channel;
-uint8_t master_addr[addr_len];
-uint8_t broadcast_addr[addr_len];
-uint8_t slave_addr[addr_len];
-
-uint8_t io_buff[message_size];
-uint8_t rx_buff[message_size];
+uint8_t io_buff[33];
+uint8_t rx_buff[33];
 
 uint8_t page_buff[SPM_PAGESIZE]; // where we build up this page
 
@@ -140,8 +134,9 @@ void write_reg(uint8_t reg, uint8_t data);
 char read_reg(uint8_t reg);
 void read_reg(uint8_t reg, uint8_t* data, const size_t len);
 static uint8_t read_payload(uint8_t* buff, const size_t len);
+void blink(int n);
 
-
+using namespace nRF24L01;
 
 // defined in linker script
 extern void* __bss_end;
@@ -151,11 +146,22 @@ extern void* __bss_end;
 void kavr(void) NAKED SECTION(".vectors");
 void kavr(void)
 {
+   const unsigned timeout_lim = 400;
+   unsigned timeout_cnt=0;
+   uint32_t curr_page = 0xffff; // Address of page we are working on
+   uint8_t last_chunk=0; // last chunk that was wrtten into the page_buff
+   uint8_t status;
+   uint16_t rx_magic_word;
+   uint8_t id;
+   uint8_t rx_chunk;
+   uint16_t pg_addr;
+
    // Instead of linking __init:
    // (how to avoid this assembly code? Anyone?)
    asm volatile ("clr r1");
    asm volatile ("ldi r28, lo8(%0)" :: "i" (&__bss_end));
    asm volatile ("ldi r29, hi8(%0)" :: "i" (&__bss_end));
+
 
    // we don't need no stinking interrupts
    cli();
@@ -163,30 +169,20 @@ void kavr(void)
    // Turn off the 12V supply
    DDRB |= _BV(PB1);
    PORTB &= ~_BV(PB1);
+   //PORTB |= _BV(PB1);
 
    // Set the tlc5940 BLANK line to to disable PWM output
    DDRC  |= _BV(PC2);
    PORTC |= _BV(PC2);
 
-   // Read the radio config from EEPROM
-   channel  = eeprom_read_byte((const uint8_t*)EE_CHANNEL);
-   eeprom_read_block((void*)master_addr,    (const void*)EE_MASTER_ADDR,    4);
-   eeprom_read_block((void*)broadcast_addr, (const void*)EE_BROADCAST_ADDR, 4);
-   eeprom_read_block((void*)slave_addr,     (const void*)EE_SLAVE_ADDR,     4);
-
    // Initialize the nRF interface
    nrf_setup();
 
    // Countdown till giving up and jumping to the user app
-   const unsigned timeout_lim = 2000;
-   unsigned timeout_cnt=0;
-   uint32_t curr_page = 0xffff; // Address of page we are working on
-   uint8_t last_chunk=0; // last chunk that was wrtten into the page_buff
-
    while (timeout_cnt < timeout_lim)
    {
       // check to see if we received any data
-      uint8_t status=read_reg(nRF24L01::STATUS);
+      status = read_reg(STATUS);
       if (status == 0x0e)
       {
          timeout_cnt++;
@@ -194,56 +190,58 @@ void kavr(void)
          continue;
       }
 
-      read_payload(rx_buff, message_size);
+      read_payload(rx_buff, boot_message_size);
 
-      const uint16_t rx_magic_word = rx_buff[0] << 8 | rx_buff[1];
-      if (rx_magic_word != magic_word)
+      rx_magic_word = rx_buff[0] << 8 | rx_buff[1];
+      // really shouldn't have to ignore the MSB of the magic word
+      if ((0xff & rx_magic_word) != (0xff & boot_magic_word))
          continue;
 
       // Since we received a valid boot loader packet, reset the timeout
       timeout_cnt = 0;
-      const uint8_t id=rx_buff[2];
-      const uint8_t rx_chunk = rx_buff[3];
-      const uint16_t pg_addr =  rx_buff[4] << 8 | rx_buff[5];
+      id=rx_buff[2];
+      rx_chunk = rx_buff[3];
+      pg_addr =  rx_buff[4] << 8 | rx_buff[5];
       switch (id)
       {
          // This command simply loads more data into the page buffer
-         case load_flash_chunk:
+         case bl_load_flash_chunk:
             if (pg_addr != curr_page)
             {
                curr_page = pg_addr;
-               memset(page_buff, 0, sizeof(page_buff));
+               memset(page_buff, 0x00, sizeof(page_buff));
             }
-            memcpy(page_buff + rx_chunk*chunk_size, &rx_buff[6], chunk_size);
+            memcpy(page_buff + rx_chunk*boot_chunk_size, &rx_buff[6], boot_chunk_size);
             last_chunk = rx_chunk;
             break;
                
          // This command writes whatever is in the flash page buffer
-         case write_flash_page:
-            if (last_chunk-1 != SPM_PAGESIZE/chunk_size)
-               ; // not sure what to do here...
+         case bl_write_flash_page:
             // Turn off the radio so we don't ACK during the write.
             clear_CE();
+            if (last_chunk+1 != SPM_PAGESIZE/boot_chunk_size)
+               blink(1); // blink an error code
             flash_page_write(curr_page, page_buff);
             set_CE();  // Turn the radio back on
             break;
 
-         case start_app:
+         case bl_start_app:
             boot_rww_enable();
             ((APP*)0)();
 
-         case check_write_complete:
+         case bl_check_write_complete:
             // really don't have to do anything here
             // the ACK will be sufficient to tell the master
             // that the write is complete
+            blink(0);
             break;
 
-         case write_eeprom:
-         case read_flash_request:
-         case read_flash_chunk:
-         case read_eeprom:
-         case no_op:
-            ;
+         case bl_write_eeprom:
+         case bl_read_flash_request:
+         case bl_read_flash_chunk:
+         case bl_read_eeprom:
+         case bl_no_op:
+            break;
       }
    }
 
@@ -301,7 +299,16 @@ inline void set_CE(void)
 
 void nrf_setup(void)
 {
-   using namespace nRF24L01;
+   uint8_t config;
+   uint8_t channel;
+   uint8_t master_addr[ensemble::addr_len];
+   uint8_t slave_addr[ensemble::addr_len];
+
+   // Read the radio config from EEPROM
+   channel  = eeprom_read_byte((const uint8_t*)EE_CHANNEL);
+   eeprom_read_block((void*)master_addr, (const void*)EE_MASTER_ADDR,  ensemble::addr_len);
+   eeprom_read_block((void*)slave_addr,  (const void*)EE_SLAVE_ADDR,   ensemble::addr_len);
+
    // Setup up the SPI inerface
    // MOSI, SCK, and SS are outputs
    DDRB |= _BV(PB2) | _BV(PB3) | _BV(PB5);
@@ -314,41 +321,28 @@ void nrf_setup(void)
    clear_CE();
 
    // Note this leaves the nRF powered down
-   const uint8_t config=CONFIG_PRIM_RX | CONFIG_EN_CRC | CONFIG_CRCO | CONFIG_MASK_TX_DS | CONFIG_MASK_MAX_RT;
+   config=CONFIG_PRIM_RX | CONFIG_EN_CRC | CONFIG_CRCO |
+      CONFIG_MASK_TX_DS | CONFIG_MASK_MAX_RT | CONFIG_MASK_RX_DR;
    write_reg(CONFIG, config);
-   
-   write_reg(SETUP_RETR, SETUP_RETR_ARC_4); // auto retransmit 3 x 250us
    
    write_reg(SETUP_AW, SETUP_AW_4BYTES);  // 4 byte addresses
    write_reg(RF_SETUP, 0b00001110);  // 1Mbps data rate, 0dBm
    write_reg(RF_CH, channel);
-   
-   write_reg(RX_PW_P0, message_size);
-   write_reg(RX_PW_P1, message_size);
-   write_reg(RX_PW_P2, message_size);
+   write_reg(RX_PW_P0, boot_message_size);
    
    // Clear the various interrupt bits
    write_reg(STATUS, STATUS_TX_DS|STATUS_RX_DR|STATUS_MAX_RT);
    
+   write_reg(TX_ADDR, master_addr, addr_len);
+   write_reg(RX_ADDR_P0, slave_addr, ensemble::addr_len);
+   write_reg(EN_AA, EN_AA_ENAA_P0);  // auto ack on pipe 0
+   write_reg(EN_RXADDR, EN_RXADDR_ERX_P0);
+
    // Flush the RX/TX FIFOs
    io_buff[0] = FLUSH_RX;
    spi_transact(io_buff, 1);
    io_buff[0] = FLUSH_TX;
    spi_transact(io_buff, 1);
-
-   memcpy(io_buff, master_addr, addr_len); // only TX to master
-   write_reg(TX_ADDR, io_buff, addr_len);
-
-   // pipe 0 is for receiving broadcast 
-   memcpy(io_buff, broadcast_addr, addr_len);
-   write_reg(RX_ADDR_P0, io_buff, addr_len);
-
-   // pipe 1 is this each slave's private address
-   memcpy(io_buff, slave_addr, addr_len);
-   write_reg(RX_ADDR_P1, io_buff, addr_len);
-
-   write_reg(EN_RXADDR, EN_RXADDR_ERX_P0 | EN_RXADDR_ERX_P1);
-   write_reg(EN_AA, EN_AA_ENAA_P1);  // auto ack on pipe 1 only
 
    // after power up, can't write to most registers anymore
    write_reg(CONFIG, config | CONFIG_PWR_UP);
@@ -359,7 +353,7 @@ void nrf_setup(void)
    
 void write_reg(uint8_t reg, uint8_t* data, const size_t len)
 {
-   io_buff[0]=nRF24L01::W_REGISTER | reg;
+   io_buff[0]=W_REGISTER | reg;
    memcpy(io_buff+1, data, len);
    spi_transact(io_buff, len+1);
 }
@@ -367,7 +361,7 @@ void write_reg(uint8_t reg, uint8_t* data, const size_t len)
    
 void write_reg(uint8_t reg, uint8_t data)
 {
-   io_buff[0]=nRF24L01::W_REGISTER | reg;
+   io_buff[0]=W_REGISTER | reg;
    io_buff[1]=data;
    spi_transact(io_buff, 2);
 }
@@ -375,7 +369,7 @@ void write_reg(uint8_t reg, uint8_t data)
 
 char read_reg(uint8_t reg)
 {
-   io_buff[0]=nRF24L01::R_REGISTER | reg;
+   io_buff[0]=R_REGISTER | reg;
    io_buff[1] = 0;
    spi_transact(io_buff, 2);
    return io_buff[1];
@@ -384,7 +378,7 @@ char read_reg(uint8_t reg)
 
 void read_reg(uint8_t reg, uint8_t* data, const size_t len)
 {
-   io_buff[0]=nRF24L01::R_REGISTER | reg;
+   io_buff[0]=R_REGISTER | reg;
    io_buff[1]=0;
    memcpy(io_buff+1, data, len);
    spi_transact(io_buff, len+1);
@@ -393,19 +387,28 @@ void read_reg(uint8_t reg, uint8_t* data, const size_t len)
 
 uint8_t read_payload(uint8_t* buff, const size_t len)
 {
-   uint8_t pipe = (read_reg(nRF24L01::STATUS) & 0x0e) >> 1;
+   uint8_t pipe = (read_reg(STATUS) & 0x0e) >> 1;
 
    // read the packet out of the nRF's FIFO
    clear_CE();
-   io_buff[0]=nRF24L01::R_RX_PAYLOAD;
+   io_buff[0]=R_RX_PAYLOAD;
    spi_transact(io_buff, len+1);
    set_CE();
    
       // clear all the IRQ bits!
-   write_reg(nRF24L01::STATUS,
-             nRF24L01::STATUS_RX_DR | nRF24L01::STATUS_TX_DS | nRF24L01::STATUS_MAX_RT);
+   write_reg(STATUS, STATUS_RX_DR | STATUS_TX_DS | STATUS_MAX_RT);
 
    memcpy(buff, &io_buff[1], len);
    return pipe;
 }
 
+void blink(int n)
+{
+   for (int i=0; i<n; i++)
+   {
+      PORTB |= _BV(PB1);
+      _delay_ms(100);
+      PORTB &= ~_BV(PB1);
+      _delay_ms(100);
+   }
+}

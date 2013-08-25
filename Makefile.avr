@@ -100,17 +100,18 @@ fuse328:
 
 #===============================================
 # This is a special target to build the nRF24L01 bootloader
-BOOTADDR=0x3800
+# Note that this address is in bytes where as the AVR docs specfy it in words. For a 
+# bootloader to be located at 0x3800, specify an address of 0x7000
+BOOTADDR=0x7000
 # kavr also had -nodefaultlibs
 nrf_boot%: LDFLAGS=-Wl,-Ttext,$(BOOTADDR),--relax -mmcu=$(MCU) -nostartfiles
 nrf_boot%: CPPFLAGS=-g -Os -fno-inline-small-functions -Wall -mmcu=$(MCU) -I. -DF_CPU=$(F_CPU) -DBOOTADDR=$(BOOTADDR)
-
 nrf_boot.o: nrf_boot.cpp
 
 # Note this programs the fuses to have the device boot to the boot flash as opposed to the app
 # and preserve the EEPROM through chip erases
-flash_nrf_boot: nrf_boot.hex
-	$(AVRDUDE) -v -U  lfuse:w:0xe2:m -U hfuse:w:0xd0:m -U efuse:w:0x07:m
+nrf_boot.flash: nrf_boot.hex
+	$(AVRDUDE) -U lfuse:w:0xe2:m -U hfuse:w:0xd0:m -U efuse:w:0x07:m
 	$(AVRDUDE) -U flash:w:$^:i
 
 #=================================================================
@@ -131,4 +132,4 @@ flash_nrf_boot: nrf_boot.hex
 	avr-objdump --source -d $^ > $@
 
 %.flash : %.hex
-	$(AVRDUDE) -U flash:w:$<
+	$(AVRDUDE) -D -U flash:w:$<
