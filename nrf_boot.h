@@ -2,11 +2,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-// These two probabaly should be used form ensemble.hpp
-const unsigned default_channel = 2;
-const size_t addr_len = 4;
-
-const size_t boot_message_size = 22;
 const size_t boot_chunk_size = 16; // bytes
 const size_t boot_page_size = 128; // bytes
 const uint16_t boot_magic_word = 0xbabe;

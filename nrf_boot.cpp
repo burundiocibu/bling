@@ -189,7 +189,7 @@ void kavr(void)
          continue;
       }
 
-      read_payload(rx_buff, boot_message_size);
+      read_payload(rx_buff, ensemble::message_size);
 
       rx_magic_word = rx_buff[0] << 8 | rx_buff[1];
       // really shouldn't have to ignore the MSB of the magic word
@@ -327,12 +327,12 @@ void nrf_setup(void)
    write_reg(SETUP_AW, SETUP_AW_4BYTES);  // 4 byte addresses
    write_reg(RF_SETUP, 0b00001110);  // 1Mbps data rate, 0dBm
    write_reg(RF_CH, channel);
-   write_reg(RX_PW_P0, boot_message_size);
+   write_reg(RX_PW_P0, ensemble::message_size);
    
    // Clear the various interrupt bits
    write_reg(STATUS, STATUS_TX_DS|STATUS_RX_DR|STATUS_MAX_RT);
    
-   write_reg(TX_ADDR, master_addr, addr_len);
+   write_reg(TX_ADDR, master_addr, ensemble::addr_len);
    write_reg(RX_ADDR_P0, slave_addr, ensemble::addr_len);
    write_reg(EN_AA, EN_AA_ENAA_P0);  // auto ack on pipe 0
    write_reg(EN_RXADDR, EN_RXADDR_ERX_P0);
