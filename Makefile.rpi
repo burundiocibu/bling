@@ -32,3 +32,6 @@ master_loader: master_loader.o
 show:  LDLIBS+=-lbcm2835 -lstdc++
 show: show.o showLists.o rt_utils.o nrf24l01.o messages.o i2c.o lcd_plate.o
 
+parseNames:LDLIBS+=-lstdc++
+parseNames: parseNames.o
+
