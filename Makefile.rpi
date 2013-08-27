@@ -38,3 +38,6 @@ show: show.o showLists.o rt_utils.o nrf24l01.o messages.o i2c.o lcd_plate.o
 get_param: get_param.cpp ensemble.hpp nrf_boot.h
 	gcc -o $@ $?
 #=================================================================
+
+parseNames:LDLIBS+=-lstdc++
+parseNames: parseNames.o

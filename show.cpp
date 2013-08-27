@@ -129,7 +129,7 @@ void nrf_tx(unsigned slave, uint8_t *buff, size_t len, bool updateDisplay, int r
 	int numXmit;
 	for (numXmit=0; numXmit <= resendCount; numXmit++)
 	{
-		if(numXmit != 0) delay_us(DELAY_BETWEEN_XMIT);
+		if(numXmit != 0) bcm2835_delay(5);
 
 		write_tx_payload(buff, len, (const char *) ensemble::slave_addr[slave], ack);
 
@@ -354,9 +354,10 @@ void process_ui(void)
 		{
 			if(effect >= 0)
 			{
+				// Build message and send repeatedly for 1 second
 				uint8_t buff[ensemble::message_size];
 				::messages::encode_start_effect(buff, effect, runtime.msec(), 1000);
-				nrf_tx(BROADCAST_ADDRESS, buff, sizeof(buff), true, 0);
+				nrf_tx(BROADCAST_ADDRESS, buff, sizeof(buff), true, 200);
 				logfile << 1e-3*runtime.msec() << " effect " << 0 << endl;
 			}
 		}
