@@ -9,7 +9,7 @@ AVRDUDE_PORT=
 OPTLEVEL=s
 F_CPU=8000000
 
-AVRDUDE=avrdude -F -p $(PROGRAMMER_MCU) $(AVRDUDE_PROGRAMMERID) $(AVRDUDE_PORT)
+AVRDUDE=sudo avrdude -F -p $(PROGRAMMER_MCU) $(AVRDUDE_PROGRAMMERID) $(AVRDUDE_PORT)
 
 CFLAGS=-I. $(INC) -g -mmcu=$(MCU) -O$(OPTLEVEL) \
 	-fpack-struct -fshort-enums             \
@@ -38,7 +38,7 @@ CPP=avr-gcc
 .PHONY: clean %.flash
 .PRECIOUS: %.hex
 
-all: slave_main.flash
+all: slave_main.hex nrf_boot.hex
 
 clean:
 	rm -f *.hex *.o *.elf *.map *.lst
@@ -61,8 +61,6 @@ slave_main.o: slave_main.cpp
 tlc-test.o: slave_main.cpp
 rtc-test.o: rtc-test.cpp
 
-prog: slave_main.flash
-
 slave_main.elf: slave_main.o avr_rtc.o avr_spi.o i2c.o lcd_plate.o avr_tlc5940.o avr_mike.o nrf24l01.o messages.o avr_dbg.o \
 	avr_max1704x.o
 
@@ -82,7 +80,7 @@ getfuse:
 #	$(AVRDUDE) -U lfuse:r:-:i -U hfuse:r:-:i -U efuse:r:-:i
 
 geteeprom:
-	$(AVRDUDE) -U eeprom:r:-:r | hexdump 
+	$(AVRDUDE) -U eeprom:r:-:r | hexdump
 
 getfusetiny:
 	avrdude -c usbtiny -B 5 -p m32u4 -U lfuse:r:-:i -U hfuse:r:-:i -U efuse:r:-:i
@@ -113,11 +111,6 @@ nrf_boot.o: nrf_boot.cpp
 nrf_boot.flash: nrf_boot.hex
 	$(AVRDUDE) -U lfuse:w:0xe2:m -U hfuse:w:0xd0:m -U efuse:w:0x07:m
 	$(AVRDUDE) -U flash:w:$^:i
-#=================================================================
-# This is a helper program that runs on the local machine. It is
-# used with the slave_init.sh script
-get_param: get_param.cpp ensemble.hpp nrf_boot.h
-	gcc -std=gnu++11 -o $@ $?
 #=================================================================
 
 
