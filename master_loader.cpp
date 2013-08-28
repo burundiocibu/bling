@@ -39,7 +39,7 @@ void set_CE(void);
 std::string timestamp(void);  // A string timestam for logs
 void nrf_setup(int slave);
 
-unsigned debug=1;
+unsigned debug=0;
 
 void hex_dump(const void* buff, size_t len)
 {
@@ -136,7 +136,7 @@ int main(int argc, char **argv)
       exit(-1);
    }
 
-   printf("%s programming slave %d [", timestamp().c_str(), slave_no);
+   printf("%s Programming slave %d [", timestamp().c_str(), slave_no);
    for (int i=0; i<4; i++)
       printf("%02x", (int)ensemble::slave_addr[slave_no][i]);
    printf("]\n");
@@ -157,6 +157,7 @@ int main(int argc, char **argv)
    if (debug) printf("%s Looking for slave.\n", timestamp().c_str());
    nrf_tx(buff, ensemble::message_size, 50000);
    if (debug) printf("%s Found Slave.\n", timestamp().c_str());
+   if (debug==1) printf("%s Writing pages ", timestamp().c_str());
 
    for (int page=0; page < num_pages; page++)
    {
@@ -170,29 +171,28 @@ int main(int argc, char **argv)
          buff[5] = 0xff & page_addr;
          memcpy(buff+6, image_buff + chunk_start, boot_chunk_size);
          if (debug>1) printf("%s load pg:%02x chunk:%02x ", timestamp().c_str(), page, chunk);
-         if (debug>2) hex_dump(buff, ensemble::message_size);
          nrf_tx(buff, ensemble::message_size);
          if (debug>1) printf("!\n");
       }
       buff[2] = bl_write_flash_page;
-      if (debug) printf("%s write page at %04x ", timestamp().c_str(), page_addr);
+      if (debug>1) printf("%s write page at %04x ", timestamp().c_str(), page_addr);
+      if (debug==1) printf(".");
       nrf_tx(buff, ensemble::message_size);
-      if (debug) printf("!\n");
+      if (debug>1) printf("\n");
 
       buff[2] = bl_check_write_complete;
       if (debug>2) printf("%s write complete ", timestamp().c_str());
       nrf_tx(buff, ensemble::message_size);
-      if (debug>2) printf("!\n");
+      if (debug>2) printf("\n");
    }
+   if (debug==1) printf("\n");
 
    buff[2] = bl_start_app;
-   if (debug) printf("%s start app ", timestamp().c_str());
+   printf("%s Starting app\n", timestamp().c_str());
    nrf_tx(buff, ensemble::message_size);
-   if (debug) printf("!\n");
 
    bcm2835_spi_end();
    fclose(fp);
-   printf("Done programming\n");
    return 0;
 }
 

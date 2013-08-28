@@ -95,6 +95,7 @@ int main (void)
          nRF24L01::read_rx_payload(buff, sizeof(buff), pipe);
          nRF24L01::clear_IRQ();
 
+
          const uint8_t boot_id = boot_magic_word >> 8;
 
          good_id_count++;
