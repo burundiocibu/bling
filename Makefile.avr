@@ -131,4 +131,4 @@ nrf_boot.flash: nrf_boot.hex
 	avr-objdump --source -d $^ > $@
 
 %.flash : %.hex
-	$(AVRDUDE) -D -U flash:w:$<
+	$(AVRDUDE) -U flash:w:$<
