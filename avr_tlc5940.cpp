@@ -63,6 +63,8 @@ namespace avr_tlc5940
 
       for (unsigned i=0; i<sizeof(gsdata); i++)
          gsdata[i]=0;
+      need_xlat=false;
+      pending_gsdata=true;
       output_gsdata();
       PORTD |= _BV(PD4);
       PORTD &= ~_BV(PD4); // additional SCLK pulse
