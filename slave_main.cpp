@@ -41,12 +41,19 @@ void do_set_rgb(uint8_t* buff);
 void do_ping(uint8_t* buff, uint8_t pipe);
 
 uint16_t slave_id;
+uint16_t bad_id_count;
+uint8_t last_bad_id;
+uint16_t good_id_count;
 
 int main (void)
 {
    avr_tlc5940::setup();
    avr_rtc::setup();
    avr_max1704x::setup();
+
+   last_bad_id = 0xff;
+   bad_id_count = 0;
+   good_id_count = 0;
 
    slave_id = eeprom_read_word(EE_SLAVE_ID);
    nRF24L01::channel  = eeprom_read_byte((const uint8_t*)EE_CHANNEL);
@@ -63,7 +70,6 @@ int main (void)
    // Turn on 12V supply
    DDRB |= _BV(PB1);
    PORTB |= _BV(PB1);
-
    // Things to wake us up:
    // nRF IRQ,              random
    // TLC5940 BLANK needed  1.024 kHz
@@ -89,10 +95,9 @@ int main (void)
          nRF24L01::read_rx_payload(buff, sizeof(buff), pipe);
          nRF24L01::clear_IRQ();
 
-         // First see if this looks like a bootloader packet
-         if (buff[0] == 0 && buff[1] == (0xff * boot_magic_word))
-            ((APP*)BOOTADDR)(); 
+         const uint8_t boot_id = boot_magic_word >> 8;
 
+         good_id_count++;
          switch (messages::get_id(buff))
          {
             case messages::heartbeat_id:    do_heartbeat(buff, t_hb); break;
@@ -101,9 +106,14 @@ int main (void)
             case messages::set_tlc_ch_id:   do_set_tlc_ch(buff); break;
             case messages::set_rgb_id:      do_set_rgb(buff); break;
             case messages::ping_id:         do_ping(buff, pipe); break;
+            case boot_id:                   ((APP*)BOOTADDR)(); 
+            default:
+               bad_id_count++;
+               good_id_count--;
+               last_bad_id=messages::get_id(buff);
          }
       }
-
+      
       effect.execute();
       avr_tlc5940::output_gsdata();
       sleep_mode();
@@ -200,6 +210,8 @@ void do_ping(uint8_t* buff, uint8_t pipe)
    uint16_t soc = avr_max1704x::read_soc();
    p = messages::encode_var<uint16_t>(p, soc);
    p = messages::encode_var<uint16_t>(p, slave_id);
+   p = messages::encode_var<uint16_t>(p, bad_id_count);
+   p = messages::encode_var<uint8_t>(p, last_bad_id);
    write_data(iobuff, ensemble::message_size+1);
    
    set_CE();

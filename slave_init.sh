@@ -19,7 +19,7 @@ if [ ! -f "$show_hex" ]; then
     exit -1
 fi
 
-avrdude="sudo avrdude -F -p m328p -c usbtiny"
+avrdude="sudo avrdude -C avrdude.conf -p m328 -c usbtiny"
 avrterm="$avrdude -t -qq"
 
 echo "Initializing slave ${slave_no}, addr=${slave_addr}"
