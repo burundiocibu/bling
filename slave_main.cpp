@@ -17,40 +17,20 @@
 #include "slave_eeprom.h"
 #include "nrf_boot.h"
 #include "ensemble.hpp"
+#include "Effect.hpp"
 
-struct Effect
-{
-   Effect() :
-      state(complete) {};
-   uint8_t id;
-   uint32_t start_time;
-   uint16_t duration;
-   int dt;
-   int prev_dt;
-   int cldt;
 
-   enum State
-   {
-      complete, unstarted, started
-   } state;
-   
-   void execute(void);
-
-   void e0();
-   void e1();
-};
-
-void do_all_stop(Effect& effect);
 void do_heartbeat(uint8_t* buff, uint32_t& t_hb);
 void do_set_tlc_ch(uint8_t* buff);
-void do_start_effect(uint8_t* buff, Effect& effect);
 void do_set_rgb(uint8_t* buff);
 void do_ping(uint8_t* buff, uint8_t pipe);
 
-uint16_t slave_id;
 uint16_t bad_id_count;
 uint8_t last_bad_id;
 uint16_t good_id_count;
+
+uint16_t slave_id;
+
 
 int main (void)
 {
@@ -83,7 +63,7 @@ int main (void)
    // rtc:      1 kHz
 
    uint32_t t_hb=0;
-   Effect effect;
+   Effect effect(slave_id);
    typedef void APP(void);  // used to jump to the bootloader
 
    for (;;)
@@ -109,8 +89,8 @@ int main (void)
          switch (messages::get_id(buff))
          {
             case messages::heartbeat_id:    do_heartbeat(buff, t_hb); break;
-            case messages::all_stop_id:     do_all_stop(effect); break;
-            case messages::start_effect_id: do_start_effect(buff, effect); break;
+            case messages::all_stop_id:     effect.all_stop(); break;
+            case messages::start_effect_id: effect.init(buff); break;
             case messages::set_tlc_ch_id:   do_set_tlc_ch(buff); break;
             case messages::set_rgb_id:      do_set_rgb(buff); break;
             case messages::ping_id:         do_ping(buff, pipe); break;
@@ -129,101 +109,6 @@ int main (void)
 }
 
 
-void Effect::e0()
-{
-   int v = 4096 - dt*4;
-   if (v<0)
-      v=0;
-   for (unsigned ch=0; ch<12; ch++)
-      avr_tlc5940::set_channel(ch, v);
-}
-
-
-// Ramp up to vmax and down to zero every cl ms
-void Effect::e1()
-{
-   long cl = 3000; // length of cycle in ms
-   long phi = 0; // offset into cycle
-   long vmax = 4095; // intensity at peak
-   long cl2 = cl >> 1; 
-
-   long dtp = dt-phi;
-   long cldt = dtp<=0 ? 0 : dtp % cl;
-
-   int v;
-   if (cldt < cl2)
-      v = 2 * (vmax * cldt) / cl;
-   else
-      v = -2 * (vmax * cldt) / cl + 2*vmax;
-
-   // red starts at ch 1, green starts at ch 0
-   for (unsigned ch=1; ch<12; ch+=3)
-      avr_tlc5940::set_channel(ch, v);
-
-   phi = 1000;
-   dtp = dt-phi;
-   cldt = dtp<=0 ? 0 : dtp % cl;
-   if (cldt < cl2)
-      v = 2 * (vmax * cldt) / cl;
-   else
-      v = -2 * (vmax * cldt) / cl + 2*vmax;
-
-   for (unsigned ch=2; ch<12; ch+=3)
-      avr_tlc5940::set_channel(ch, v);
-
-   phi = 2000;
-   dtp = dt-phi;
-   cldt = dtp<=0 ? 0 : dtp % cl;
-   if (cldt < cl2)
-      v = 2 * (vmax * cldt) / cl;
-   else
-      v = -2 * (vmax * cldt) / cl + 2*vmax;
-
-   // red starts at ch 1, green starts at ch 0
-   for (unsigned ch=0; ch<12; ch+=3)
-      avr_tlc5940::set_channel(ch, v);
-}
-
-
-void Effect::execute()
-{
-   if (state==complete)
-      return;
-
-   dt = avr_rtc::t_ms - start_time;
-
-   if (dt>int(duration) && state==started)
-   {
-      state=complete;
-      for (unsigned ch=0; ch<14; ch++)
-         avr_tlc5940::set_channel(ch, 0);
-      return;
-   }
-   else if (dt>0 && dt<int(duration) && state==unstarted)
-      state=started;
-
-   // Don't really need to update the LEDs more often than 50 Hz
-   if (prev_dt>0 && dt - prev_dt < 20)
-      return;
-
-   if (state==started)
-      switch(id)
-      {
-         case 0: e0(); break;
-         case 1: e1(); break;
-      }
-   prev_dt = dt;
-}
-
-
-void do_all_stop(Effect& effect)
-{
-   effect.state = Effect::complete;
-   for (int ch=0; ch<14; ch++)
-      avr_tlc5940::set_channel(ch, 0);
-}
-
-
 void do_heartbeat(uint8_t* buff, uint32_t& t_hb)
 {
    messages::decode_heartbeat(buff, t_hb);
@@ -234,22 +119,13 @@ void do_heartbeat(uint8_t* buff, uint32_t& t_hb)
       avr_rtc::step(dt);
 }
 
+
 void do_set_tlc_ch(uint8_t* buff)
 {
    uint8_t ch;
    uint16_t value;
    messages::decode_set_tlc_ch(buff, ch, value);
    avr_tlc5940::set_channel(ch, value);
-}
-
-
-void do_start_effect(uint8_t* buff, Effect& effect)
-{
-   messages::decode_start_effect(buff, effect.id, effect.start_time, effect.duration);
-   effect.cldt = 0;
-   effect.dt = 0;
-   effect.prev_dt = 0;
-   effect.state = Effect::unstarted;
 }
 
 
