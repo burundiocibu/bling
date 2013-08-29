@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <ncurses.h>
+#include <unistd.h>
 
 #include <bcm2835.h>
 
@@ -19,9 +20,22 @@ void nrf_rx();
 void slider(uint8_t ch, uint16_t &v, int dir);
 void hexdump(uint8_t* buff, size_t len);
 
+int debug;
 
 int main(int argc, char **argv)
 {
+   opterr = 0;
+   int c;
+   while ((c = getopt(argc, argv, "di:s:")) != -1)
+      switch (c)
+      {
+         case 'd': debug++; break;
+         case 's': slave = atoi(optarg); break;
+         default:
+            printf("Usage %s -i fn -s slave_no [-d]\n", argv[0]);
+            exit(-1);
+      }
+
    WINDOW *win;
    int prev_curs;
 
@@ -81,41 +95,44 @@ int main(int argc, char **argv)
       if (key=='q')
          break;
 
-      if (key != 0xff)
+      if (key == 0xff)
       {
-         switch(key)
-         {
-            case '0': slave=0; break;
-            case '1': slave=1; break;
-            case '2': slave=2; break;
-            case 'G': slider(0, red,  -1);  break;
-            case 'g': slider(0, red,   1);  break;
-            case 'R': slider(1, green, -1); break;
-            case 'r': slider(1, green,  1); break;
-            case 'B': slider(2, blue,  -1); break;
-            case 'b': slider(2, blue,   1); break;
-            case 'w': slider(0, red,  1); slider(1, green,  1); slider(2, blue,  1); break;
-            case 'W': slider(0, red, -1); slider(1, green, -1); slider(2, blue, -1); break;
-            case ' ':
-               messages::encode_start_effect(buff, 0, t, 1000);
-               nrf_tx(buff, sizeof(buff), slave);
-               break;
-            case 's':
-            case 'S':
-               messages::encode_all_stop(buff);
-               nrf_tx(buff, sizeof(buff), slave);
-               red=0;green=0;blue=0;
-               break;
-            case 'p':
-               messages::encode_ping(buff);
-               nrf_tx(buff, sizeof(buff), slave);
-               nrf_rx();
-               break;
-         }
-         mvprintw(1, 6, "%3d   %03x %03x %03x", slave, red, green, blue);
+         // sleep 10 ms
+         bcm2835_delayMicroseconds(10000);
+         continue;
       }
-      // sleep 10 ms
-      bcm2835_delayMicroseconds(10000);
+
+      if (key >= '0' && key <='9' )
+      {
+         uint8_t id = key - '0';
+         messages::encode_start_effect(buff, id, t, 15000);
+         nrf_tx(buff, sizeof(buff), slave);
+         continue;
+      }         
+      
+      switch(key)
+      {
+         case 'G': slider(0, red,  -1);  break;
+         case 'g': slider(0, red,   1);  break;
+         case 'R': slider(1, green, -1); break;
+         case 'r': slider(1, green,  1); break;
+         case 'B': slider(2, blue,  -1); break;
+         case 'b': slider(2, blue,   1); break;
+         case 'w': slider(0, red,  1); slider(1, green,  1); slider(2, blue,  1); break;
+         case 'W': slider(0, red, -1); slider(1, green, -1); slider(2, blue, -1); break;
+         case 's':
+         case 'S':
+            messages::encode_all_stop(buff);
+            nrf_tx(buff, sizeof(buff), slave);
+            red=0;green=0;blue=0;
+            break;
+         case 'p':
+            messages::encode_ping(buff);
+            nrf_tx(buff, sizeof(buff), slave);
+            nrf_rx();
+            break;
+      }
+      mvprintw(1, 6, "%3d   %03x %03x %03x", slave, red, green, blue);
    }
 
    nRF24L01::shutdown();
