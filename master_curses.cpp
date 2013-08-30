@@ -102,14 +102,6 @@ int main(int argc, char **argv)
          continue;
       }
 
-      if (key >= '0' && key <='9' )
-      {
-         uint8_t id = key - '0';
-         messages::encode_start_effect(buff, id, t, 15000);
-         nrf_tx(buff, sizeof(buff), slave);
-         continue;
-      }         
-      
       switch(key)
       {
          case 'G': slider(0, red,  -1);  break;
@@ -120,6 +112,19 @@ int main(int argc, char **argv)
          case 'b': slider(2, blue,   1); break;
          case 'w': slider(0, red,  1); slider(1, green,  1); slider(2, blue,  1); break;
          case 'W': slider(0, red, -1); slider(1, green, -1); slider(2, blue, -1); break;
+         case '0':
+            messages::encode_start_effect(buff, 0, t, 1000);
+            nrf_tx(buff, sizeof(buff), slave);
+            break;
+         case '1':
+            messages::encode_start_effect(buff, 1, t, 20000);
+            nrf_tx(buff, sizeof(buff), slave);
+            break;
+         case '2':
+            messages::encode_start_effect(buff, 2, t, 8000);
+            nrf_tx(buff, sizeof(buff), slave);
+            break;
+            
          case 's':
          case 'S':
             messages::encode_all_stop(buff);
