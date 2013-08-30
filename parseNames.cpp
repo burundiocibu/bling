@@ -90,9 +90,11 @@ int parseCsvHatListFile()
 					break;
 				case 7:
 					strcpy(circuitNumber, item.c_str());
+					if (strlen(circuitNumber) < 1) strcpy(circuitNumber, "0");
 					break;
 				case 8:
 					strcpy(drillId, item.c_str());
+					if (strlen(drillId) < 1) strcpy(drillId, "0");
 					break;
 				default:
 					break;
@@ -125,7 +127,7 @@ void writeHppFile()
 	outHppFile << "typedef struct nameHatInfo NameHatInfo;" << endl << endl;
 	outHppFile << "extern const int numberEntries;" << endl;
 	outHppFile << "extern NameHatInfo nameList[];" << endl << endl;
-	outHppFile << "typedef struct nameHatInfo {" << endl;
+	outHppFile << "typedef struct nameHatInfo" << endl <<  "{" << endl;
 	outHppFile << "    char name[120];" << endl;
 	outHppFile << "    int hatNumber;" << endl;
 	outHppFile << "    int circuitBoardNumber;" << endl;
