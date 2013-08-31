@@ -10,14 +10,59 @@ Effect::Effect(uint16_t slave)
    slave_id = slave;
 };
 
+
 void Effect::init(uint8_t* buff)
 {
    messages::decode_start_effect(buff, id, start_time, duration);
    dt = 0;
    prev_dt = 0;
    state = unstarted;
+   if (id==1)
+   {
+      start_time += slave_id;
+   }
 }
 
+
+void Effect::execute()
+{
+   if (state==complete)
+      return;
+
+   dt = avr_rtc::t_ms - start_time;
+
+   if (dt>int(duration) && state==started)
+   {
+      state=complete;
+      for (unsigned ch=0; ch<14; ch++)
+         avr_tlc5940::set_channel(ch, 0);
+      return;
+   }
+   else if (dt>0 && dt<int(duration) && state==unstarted)
+      state=started;
+
+   // Don't really need to update the LEDs more often than 50 Hz
+   if (prev_dt>0 && dt - prev_dt < 20)
+      return;
+
+   if (state==started)
+      switch(id)
+      {
+         case 0: e0(); break;
+         case 1: e1(); break;
+         case 2: e2(); break;
+         case 3: e3(); break;
+      }
+   prev_dt = dt;
+}
+
+
+void Effect::all_stop()
+{
+   state = complete;
+   for (int ch=0; ch<14; ch++)
+      avr_tlc5940::set_channel(ch, 0);
+}
 
 void Effect::e0()
 {
@@ -29,12 +74,19 @@ void Effect::e0()
 }
 
 
-// Ramp up to vmax and down to zero every cl ms
 void Effect::e1()
 {
    long cl = 3000; // length of cycle in ms
    long phi = 0; // offset into cycle
+   long tte = duration - dt; // time to end
+
    long vmax = 4095; // intensity at peak
+   // and this fades out intensity at the end...
+   if (tte <1000)
+   {
+      vmax *= tte;
+      vmax /= 1000;
+   }
    long cl2 = cl >> 1; 
 
    long dtp = dt-phi;
@@ -75,40 +127,23 @@ void Effect::e1()
 }
 
 
-void Effect::execute()
+void Effect::e2()
 {
-   if (state==complete)
-      return;
-
-   dt = avr_rtc::t_ms - start_time;
-
-   if (dt>int(duration) && state==started)
-   {
-      state=complete;
-      for (unsigned ch=0; ch<14; ch++)
-         avr_tlc5940::set_channel(ch, 0);
-      return;
-   }
-   else if (dt>0 && dt<int(duration) && state==unstarted)
-      state=started;
-
-   // Don't really need to update the LEDs more often than 50 Hz
-   if (prev_dt>0 && dt - prev_dt < 20)
-      return;
-
-   if (state==started)
-      switch(id)
-      {
-         case 0: e0(); break;
-         case 1: e1(); break;
-      }
-   prev_dt = dt;
+   const long vmax = 4095;
+   long m = vmax/duration;
+   int v = vmax - dt * vmax / duration;
+   if (v<0)
+      v=0;
+   for (unsigned ch=0; ch<12; ch++)
+      avr_tlc5940::set_channel(ch, v);
 }
 
 
-void Effect::all_stop()
+void Effect::e3()
 {
-   state = complete;
-   for (int ch=0; ch<14; ch++)
-      avr_tlc5940::set_channel(ch, 0);
+   int v = 4096 - dt*4;
+   if (v<0)
+      v=0;
+   for (unsigned ch=0; ch<12; ch++)
+      avr_tlc5940::set_channel(ch, v);
 }

@@ -25,8 +25,10 @@ struct Effect
    void execute(void);
    void all_stop(void);
 
-   void e0();
-   void e1();
+   void e0(); // Fast on white, fades out over 4 seconds
+   void e1(); // a simple color cycle...
+   void e2();
+   void e3();
 };
 
 #endif

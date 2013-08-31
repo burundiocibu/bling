@@ -23,7 +23,7 @@ avrdude="sudo avrdude -C avrdude.conf -p m328 -c usbtiny"
 avrterm="$avrdude -t -qq"
 
 echo "Initializing slave ${slave_no}, addr=${slave_addr}"
-$avrdude -U lfuse:w:0xe2:m -U hfuse:w:0xd0:m -U efuse:w:0x07:m
+$avrdude -q -U lfuse:w:0xe2:m -U hfuse:w:0xd0:m -U efuse:w:0x07:m
 
 echo "Writing boot loader to flash ..."
 $avrdude -U flash:w:$loader_hex:i
