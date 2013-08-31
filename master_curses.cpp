@@ -121,7 +121,7 @@ int main(int argc, char **argv)
             nrf_tx(buff, sizeof(buff), slave);
             break;
          case '2':
-            messages::encode_start_effect(buff, 2, t, 8000);
+            messages::encode_start_effect(buff, 2, t, 20000);
             nrf_tx(buff, sizeof(buff), slave);
             break;
             

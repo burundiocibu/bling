@@ -17,6 +17,7 @@ void Effect::init(uint8_t* buff)
    dt = 0;
    prev_dt = 0;
    state = unstarted;
+
    if (id==1)
    {
       start_time += slave_id*300;
@@ -64,9 +65,13 @@ void Effect::all_stop()
       avr_tlc5940::set_channel(ch, 0);
 }
 
+
+// Flash all full intensity and fade out over a the duration
 void Effect::e0()
 {
-   int v = 4096 - dt*4;
+   const long vmax = 4095;
+   long m = vmax/duration;
+   int v = vmax - dt * vmax / duration;
    if (v<0)
       v=0;
    for (unsigned ch=0; ch<12; ch++)
@@ -74,6 +79,7 @@ void Effect::e0()
 }
 
 
+// A simple color fade that cycles every 3 seconds and fades out at the end
 void Effect::e1()
 {
    long cl = 3000; // length of cycle in ms
@@ -82,7 +88,7 @@ void Effect::e1()
 
    long vmax = 4095; // intensity at peak
    // and this fades out intensity at the end...
-   if (tte <1000)
+   if (tte <1500)
    {
       vmax *= tte;
       vmax /= 1000;
@@ -102,7 +108,7 @@ void Effect::e1()
    for (unsigned ch=1; ch<12; ch+=3)
       avr_tlc5940::set_channel(ch, v);
 
-   phi = 1000;
+   phi += 1000;
    dtp = dt-phi;
    cldt = dtp<=0 ? 0 : dtp % cl;
    if (cldt < cl2)
@@ -113,7 +119,7 @@ void Effect::e1()
    for (unsigned ch=2; ch<12; ch+=3)
       avr_tlc5940::set_channel(ch, v);
 
-   phi = 2000;
+   phi += 2000;
    dtp = dt-phi;
    cldt = dtp<=0 ? 0 : dtp % cl;
    if (cldt < cl2)
@@ -127,23 +133,27 @@ void Effect::e1()
 }
 
 
+// Flash red/green/blue for the duration of the effect
+// mainly for testing
 void Effect::e2()
 {
-   const long vmax = 4095;
-   long m = vmax/duration;
-   int v = vmax - dt * vmax / duration;
-   if (v<0)
-      v=0;
+   long vmax = 512; // intensity at peak
+   long cldt = dt & 0x3ff;
    for (unsigned ch=0; ch<12; ch++)
-      avr_tlc5940::set_channel(ch, v);
+      avr_tlc5940::set_channel(ch, 1);
+   if (cldt < 170)
+      for (unsigned ch=0; ch<12; ch+=3)
+         avr_tlc5940::set_channel(ch, vmax);
+   else if (341 < cldt && cldt < 511)
+      for (unsigned ch=1; ch<12; ch+=3)
+         avr_tlc5940::set_channel(ch, vmax);
+   else if (680 < cldt && cldt < 852)
+      for (unsigned ch=2; ch<12; ch+=3)
+         avr_tlc5940::set_channel(ch, vmax);
 }
 
 
+// Flash on and fade out for the duration of the effect
 void Effect::e3()
 {
-   int v = 4096 - dt*4;
-   if (v<0)
-      v=0;
-   for (unsigned ch=0; ch<12; ch++)
-      avr_tlc5940::set_channel(ch, v);
 }
