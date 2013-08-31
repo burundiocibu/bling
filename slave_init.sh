@@ -29,7 +29,7 @@ echo "Writing boot loader to flash ..."
 $avrdude -U flash:w:$loader_hex:i
 
 echo "Writing slave number to eeprom ..."
-echo "write eeprom 0 0" $slave_no | $avrterm
+echo "write eeprom 0" $slave_no "0" | $avrterm
 
 echo "Writing channel number to eeprom ..."
 echo "write eeprom 2" $channel_no | $avrterm

@@ -19,7 +19,7 @@ void Effect::init(uint8_t* buff)
    state = unstarted;
    if (id==1)
    {
-      start_time += slave_id;
+      start_time += slave_id*300;
    }
 }
 
