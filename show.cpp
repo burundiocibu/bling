@@ -33,6 +33,7 @@ using namespace std;
 
 const int BROADCAST_ADDRESS  = 0;
 const int DELAY_BETWEEN_XMIT = 1000;
+const int NUMBER_5MS_PER_SECOND = 200;
 
 // Two global objects. sorry
 RunTime runtime;
@@ -116,9 +117,9 @@ void shutdown(int param)
  * buff          - char buffer to send to slave
  * len           - number of characters in buffer
  * updateDisplay - true to update send status on display, false otherwise
- * resendCount   - How many times to resend the command.  0 to send once.
+ * secondsToSendMsgFor   - How many seconds the command should be resent over (sends every 5 mSec).  0 to send once.
  */
-void nrf_tx(unsigned slave, uint8_t *buff, size_t len, bool updateDisplay, int resendCount)
+void nrf_tx(unsigned slave, uint8_t *buff, size_t len, bool updateDisplay, int secondsToSendMsgFor)
 {
 	using namespace nRF24L01;
 
@@ -126,10 +127,25 @@ void nrf_tx(unsigned slave, uint8_t *buff, size_t len, bool updateDisplay, int r
 	static unsigned tx_err=0;
 	bool ack = slave != 0;
 
+	// determine number of times through loop for resend
+	int resendCount;
+	if(secondsToSendMsgFor == 0)
+	{
+		resendCount = 0;
+	}
+	else
+	{
+		resendCount = 1 * NUMBER_5MS_PER_SECOND;
+	}
+
 	int numXmit;
 	for (numXmit=0; numXmit <= resendCount; numXmit++)
 	{
-		if(numXmit != 0) bcm2835_delay(5);
+		if(numXmit != 0)
+		{
+			// except first time through loop, delay 5 mS
+			bcm2835_delay(5);
+		}
 
 		write_tx_payload(buff, len, (const char *) ensemble::slave_addr[slave], ack);
 
@@ -356,7 +372,7 @@ void process_ui(void)
 			{
 				// Build message and send repeatedly for 1 second
 				uint8_t buff[ensemble::message_size];
-				::messages::encode_start_effect(buff, effect, runtime.msec(), 1000);
+				::messages::encode_start_effect(buff, effect, runtime.msec(), showlist::showList[effect].effectDurationInMSec);
 				nrf_tx(BROADCAST_ADDRESS, buff, sizeof(buff), true, 200);
 				logfile << 1e-3*runtime.msec() << " effect " << 0 << endl;
 			}

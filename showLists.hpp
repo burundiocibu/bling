@@ -11,6 +11,7 @@ namespace showlist
 
 	typedef struct showEffect {
 		char effectName[18];
+		int effectDurationInMSec;
 	} ShowEffect;
 }
 #endif
