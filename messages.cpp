@@ -106,7 +106,7 @@ namespace messages
    }
 
    void decode_status(uint8_t* p, uint16_t &slave_id, uint32_t &t_rx, int8_t &major_version, int8_t &minor_version,
-                      uint16_t &vcell, uint16_t &soc, uint16_t &missed_message_count, uint8_t &freshness_count)
+                      uint16_t &vcell, uint16_t &soc, uint16_t &mmc, uint8_t &fc)
    {
       p++; // throw away the message id
       p = messages::decode_var<uint16_t>(p, slave_id);
@@ -115,8 +115,8 @@ namespace messages
       p = messages::decode_var<uint32_t>(p, t_rx);
       p = messages::decode_var<uint16_t>(p, vcell);
       p = messages::decode_var<uint16_t>(p, soc);
-      p = messages::decode_var<uint16_t>(p, missed_message_count);
-      freshness_count = *p++;
+      p = messages::decode_var<uint16_t>(p, mmc);
+      fc = *p++;
    }
 
    // ========================================

@@ -125,6 +125,7 @@ void do_set_rgb(uint8_t* buff)
 void do_ping(uint8_t* buff, uint8_t pipe)
 {
    using namespace nRF24L01;
+   messages::decode_ping(buff);
 
    // Only respond to pings on our private address
    if (pipe==0)
