@@ -47,7 +47,6 @@ int main(int argc, char **argv)
    intrflush(win, true);
    keypad(win, true);
    prev_curs = ::curs_set(0);   // we want an invisible cursor.
-   mvprintw(0,0, "HB#   slave  R   G   B      j    tx_err  tx_obs ack_err");
 
    nRF24L01::channel = ensemble::default_channel;
    memcpy(nRF24L01::master_addr,    ensemble::master_addr,   nRF24L01::addr_len);
@@ -72,7 +71,9 @@ int main(int argc, char **argv)
    uint16_t red=0,green=0,blue=0;
    unsigned hb_count=0;
    uint32_t last_hb=0;
+   mvprintw(0,0, "tx_fc  slave  R   G   B      j    tx_err  tx_obs ack_err");
    mvprintw(1, 6, "%3d   %03x %03x %03x", slave, red, green, blue);
+   mvprintw(9, 0, "   t_rx   fc   #  ver   Vbat,soc     mmc");
 
    for (int i=0; ; i++)
    {
@@ -88,7 +89,7 @@ int main(int argc, char **argv)
          nrf_tx(buff, sizeof(buff), slave);
          hb_count++;
          last_hb = t;
-         mvprintw(1, 0, "%d", hb_count);
+         mvprintw(1, 0, "%02x", messages::freshness_count);
       }
 
       char key = getch();
@@ -182,9 +183,6 @@ void nrf_tx(uint8_t *buff, size_t len, unsigned slave)
 
    uint8_t obs_tx = read_reg(OBSERVE_TX);
    mvprintw(1, 27, "%3d  %3d       %02x    %3d", j, tx_err, obs_tx, ack_err);
-
-   mvprintw(4+buff[0], 0, "%8.3f  ", 0.001* runtime.msec());
-   hexdump(buff, len);
 }
 
 
@@ -217,17 +215,18 @@ void nrf_rx(void)
    clear_CE();
 
    uint32_t t_rx;
-   uint16_t soc,vcell;
-   uint8_t id;
-   uint8_t* p = buff;
-   p = messages::decode_var<uint8_t>(p, id);
-   p = messages::decode_var<uint32_t>(p, t_rx);
-   p = messages::decode_var<uint16_t>(p, vcell);
-   p = messages::decode_var<uint16_t>(p, soc);
-   mvprintw(14, 0, "%8.3f ", 0.001*t_rx);
+   uint16_t slave_id, soc, vcell, missed_message_count;
+   uint8_t msg_id, freshness_count;
+   int8_t major_version, minor_version;
+
+   messages::decode_status(buff, slave_id, t_rx, major_version, minor_version,
+                           vcell, soc, missed_message_count, freshness_count);
+
+   mvprintw(10, 0, "%8.3f ", 0.001*t_rx);
    soc = 0xff & (soc >> 8);
-   printw("%2d %3d %1.3f mv %d%%  ", id, i, 1e-3*vcell, soc);
-   hexdump(buff, ensemble::message_size);
+   printw(" %02x %3d %d.%d  %1.3fmV %d%%   %d  ",
+          freshness_count, slave_id, major_version,
+          minor_version, 1e-3*vcell,  soc,  missed_message_count);
 }
 
 

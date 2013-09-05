@@ -13,15 +13,26 @@ Effect::Effect(uint16_t slave)
 
 void Effect::init(uint8_t* buff)
 {
-   messages::decode_start_effect(buff, id, start_time, duration);
+   uint8_t new_id;
+   uint32_t new_start_time;
+   uint16_t new_duration;
+
+   messages::decode_start_effect(buff, new_id, new_start_time, new_duration);
+
+   // If we are already running this command, don't start over...
+   if (new_id == id && new_start_time == start_time && new_duration == duration)
+      return;
+
+   id = new_id;
+   start_time = new_start_time;
+   duration = new_duration;
    dt = 0;
    prev_dt = 0;
    state = unstarted;
-
+   
+   // offset start of effect 1 by 300 ms / slave
    if (id==1)
-   {
       start_time += slave_id*300;
-   }
 }
 
 

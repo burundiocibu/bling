@@ -25,22 +25,17 @@ void do_set_tlc_ch(uint8_t* buff);
 void do_set_rgb(uint8_t* buff);
 void do_ping(uint8_t* buff, uint8_t pipe);
 
-uint16_t bad_id_count;
-uint8_t last_bad_id;
-uint16_t good_id_count;
-
 uint16_t slave_id;
 
+// 0.1 was original app load to slaves
+const int8_t major_version = 0;
+const int8_t minor_version = 2;
 
 int main (void)
 {
    avr_tlc5940::setup();
    avr_rtc::setup();
    avr_max1704x::setup();
-
-   last_bad_id = 0xff;
-   bad_id_count = 0;
-   good_id_count = 0;
 
    slave_id = eeprom_read_word(EE_SLAVE_ID);
    nRF24L01::channel  = eeprom_read_byte((const uint8_t*)EE_CHANNEL);
@@ -82,10 +77,8 @@ int main (void)
          nRF24L01::read_rx_payload(buff, sizeof(buff), pipe);
          nRF24L01::clear_IRQ();
 
-
          const uint8_t boot_id = boot_magic_word >> 8;
 
-         good_id_count++;
          switch (messages::get_id(buff))
          {
             case messages::heartbeat_id:    do_heartbeat(buff, t_hb); break;
@@ -95,10 +88,6 @@ int main (void)
             case messages::set_rgb_id:      do_set_rgb(buff); break;
             case messages::ping_id:         do_ping(buff, pipe); break;
             case boot_id:                   ((APP*)BOOTADDR)(); 
-            default:
-               bad_id_count++;
-               good_id_count--;
-               last_bad_id=messages::get_id(buff);
          }
       }
       
@@ -149,19 +138,15 @@ void do_ping(uint8_t* buff, uint8_t pipe)
    flush_tx();
    write_reg(CONFIG, config | CONFIG_PWR_UP); // power back up
 
+   // Gather some data to send back...
+   uint16_t vcell = avr_max1704x::read_vcell();
+   uint16_t soc = avr_max1704x::read_soc();
+
    // delay_us(150);
    // above delay not required because the I2C reads will take much longer than that.
-   uint8_t* p = (uint8_t*)(&iobuff[0]);
-   *p++ = W_TX_PAYLOAD;
-   *p++ = messages::status_id;
-   p = messages::encode_var<uint32_t>(p, t_rx);
-   uint16_t vcell = avr_max1704x::read_vcell();
-   p = messages::encode_var<uint16_t>(p, vcell);
-   uint16_t soc = avr_max1704x::read_soc();
-   p = messages::encode_var<uint16_t>(p, soc);
-   p = messages::encode_var<uint16_t>(p, slave_id);
-   p = messages::encode_var<uint16_t>(p, bad_id_count);
-   p = messages::encode_var<uint8_t>(p, last_bad_id);
+   iobuff[0] = W_TX_PAYLOAD;
+   messages::encode_status((uint8_t*)&iobuff[1], slave_id, t_rx, major_version, minor_version,
+                           vcell, soc);
    write_data(iobuff, ensemble::message_size+1);
    
    set_CE();

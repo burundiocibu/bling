@@ -73,7 +73,7 @@ int main(int argc, char **argv)
          nrf_tx(buff, sizeof(buff), slave);
          hb_count++;
          last_hb = t;
-         bcm2835_delayMicroseconds(100);
+
          messages::encode_start_effect(buff, 2, t, 20000);
          nrf_tx(buff, sizeof(buff), slave);
       }
