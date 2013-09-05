@@ -87,6 +87,7 @@ int main (void)
             case messages::set_tlc_ch_id:   do_set_tlc_ch(buff); break;
             case messages::set_rgb_id:      do_set_rgb(buff); break;
             case messages::ping_id:         do_ping(buff, pipe); break;
+            case messages::reboot_id:       ((APP*)0)();
             case boot_id:                   ((APP*)BOOTADDR)(); 
          }
       }

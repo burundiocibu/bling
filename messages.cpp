@@ -12,12 +12,15 @@ namespace messages
    // last received fc in the slave code
    uint8_t freshness_count = 0;
 
+   uint16_t rx_count = 0;
+
    uint8_t* check_fc(uint8_t* p)
    {
       uint8_t dfc = *p - freshness_count;
-      if (dfc != 1 )
+      if (dfc != 1 && rx_count > 0)
          missed_message_count += dfc-1;
       freshness_count = *p;
+      rx_count += 1;
       return p+1;
    }
 
@@ -127,6 +130,19 @@ namespace messages
    }
 
    void decode_ping(uint8_t* p)
+   {
+      p++; // skip ID
+      p = check_fc(p);
+   }
+
+   // ========================================
+   void encode_reboot(uint8_t* p)
+   {
+      *p++ = reboot_id;
+      *p++ = ++freshness_count;
+   }
+
+   void decode_reboot(uint8_t* p)
    {
       p++; // skip ID
       p = check_fc(p);

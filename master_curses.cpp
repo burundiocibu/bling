@@ -137,6 +137,10 @@ int main(int argc, char **argv)
             nrf_tx(buff, sizeof(buff), slave);
             nrf_rx();
             break;
+         case 'z':
+            messages::encode_reboot(buff);
+            nrf_tx(buff, sizeof(buff), slave);
+            break;
       }
       mvprintw(1, 6, "%3d   %03x %03x %03x", slave, red, green, blue);
    }
