@@ -47,7 +47,7 @@ int main(int argc, char **argv)
    uint32_t last_hb=0;
    Slave ship[ensemble::num_slaves];
    for (int i=0; i < ensemble::num_slaves; i++)
-      ship[i].slave_no = i;
+      ship[i].m_Slave_no = i;
 
    for (long i=0; ; i++)
    {
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
          messages::encode_ping(slave.buff);
          if (slave.tx())
             slave.rx();
-         mvprintw(1+slave.slave_no, 0, slave.status().c_str());
+         mvprintw(1+slave.m_Slave_no, 0, slave.status().c_str());
       }
    }
 

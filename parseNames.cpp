@@ -75,12 +75,17 @@ int parseCsvHatListFile()
 		stringstream ss(line);
 		string item;
 		int columnCount=0;
-		while (getline(ss, item, ','))
+		bool validLine = true;
+		while (getline(ss, item, ',') && validLine==true)
 		{
 			switch(columnCount)
 			{
 				case 0:
 					strcpy(lastName, item.c_str());
+					if((strlen(lastName) < 1) || strstr(lastName, "Complete") != NULL)
+					{
+						validLine = false;
+					}
 					break;
 				case 1:
 					strcpy(firstName, item.c_str());
@@ -90,23 +95,29 @@ int parseCsvHatListFile()
 					break;
 				case 7:
 					strcpy(circuitNumber, item.c_str());
-					if (strlen(circuitNumber) < 1) strcpy(circuitNumber, "0");
+					if (strlen(circuitNumber) < 1) 
+					{
+						validLine = false;
+					}
 					break;
 				case 8:
 					strcpy(drillId, item.c_str());
-					if (strlen(drillId) < 1) strcpy(drillId, "0");
+					if (strlen(drillId) < 1) strcpy(drillId, "XX");
 					break;
 				default:
 					break;
 			}
 			columnCount++;
 		}
-		// Only write the information out if there is a valid hat number
-		if((strlen(hatNumber) > 0) && (hatNumber[0] != 'N'))
+		// Only write the information out if there is a valid hat number and circuit board is not "N/A"
+		if (validLine == true)
 		{
-			outFile << "\"" << firstName << " " << lastName << "\", " 
-				<< hatNumber << ", " << circuitNumber << ", " << drillId << "," << endl;
-			numTableEntries++;
+			if(((strlen(hatNumber) > 0) && (hatNumber[0] != 'N')) && (circuitNumber[0] != 'N'))
+			{
+				outFile << "\"" << firstName << " " << lastName << "\", " 
+					<< hatNumber << ", " << circuitNumber << ", \"" << drillId << "\"," << endl;
+				numTableEntries++;
+			}
 		}
 	}    
 	inFile.close();
@@ -131,7 +142,7 @@ void writeHppFile()
 	outHppFile << "    char name[120];" << endl;
 	outHppFile << "    int hatNumber;" << endl;
 	outHppFile << "    int circuitBoardNumber;" << endl;
-	outHppFile << "    int drillId;" << endl;
+	outHppFile << "    char drillId[4];" << endl;
 	outHppFile << "    }  NameHatInfo;" << endl;
 	outHppFile << "}" << endl;
 	outHppFile << "#endif" << endl;

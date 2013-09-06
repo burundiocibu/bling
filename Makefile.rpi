@@ -35,6 +35,9 @@ master_loader: master_loader.o
 show:  LDLIBS+=-lbcm2835 -lstdc++
 show: show.o showLists.o rt_utils.o nrf24l01.o messages.o i2c.o lcd_plate.o
 
+checkBatt:LDLIBS+=-lstdc++ -lbcm2835
+checkBatt: checkBatt.o Slave.o nameList.o nrf24l01.o rt_utils.o messages.o
+
 #=================================================================
 # This is a helper program that runs on the local machine. It is
 # used with the slave_init.sh script
