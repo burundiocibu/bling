@@ -1,5 +1,5 @@
 CPPFLAGS+=-std=c++0x
-ALL_BIN=master_curses master_lcd master_probe show master_loader get_param
+ALL_BIN=master_curses master_lcd master_probe show master_loader get_param master_blaster
 
 
 all: $(ALL_BIN)
@@ -31,6 +31,9 @@ master_lcd: master_lcd.o rt_utils.o nrf24l01.o messages.o i2c.o lcd_plate.o
 
 master_loader: LDLIBS+=-lbcm2835 -lstdc++
 master_loader: master_loader.o
+
+master_blaster: LDLIBS+=-lbcm2835 -lstdc++
+master_blaster: master_blaster.o
 
 show:  LDLIBS+=-lbcm2835 -lstdc++
 show: show.o showLists.o rt_utils.o nrf24l01.o messages.o i2c.o lcd_plate.o

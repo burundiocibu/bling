@@ -125,6 +125,12 @@ int main(int argc, char **argv)
             messages::encode_start_effect(buff, 2, t, 20000);
             nrf_tx(buff, sizeof(buff), slave);
             break;
+
+         case '3':
+            // First real effect; 
+            messages::encode_start_effect(buff, 3, t, 2000);
+            nrf_tx(buff, sizeof(buff), slave);
+            break;
             
          case 's':
          case 'S':
@@ -228,7 +234,7 @@ void nrf_rx(void)
 
    mvprintw(10, 0, "%8.3f ", 0.001*t_rx);
    soc = 0xff & (soc >> 8);
-   printw(" %02x %3d %d.%d  %1.3fmV %d%%   %d  ",
+   printw(" %02x %3d %d.%d  %1.3fmV %d%%    %d            ",
           freshness_count, slave_id, major_version,
           minor_version, 1e-3*vcell,  soc,  missed_message_count);
 }

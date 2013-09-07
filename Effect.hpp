@@ -27,8 +27,10 @@ struct Effect
 
    void e0(); // Fast on white, fades out over 4 seconds
    void e1(); // a simple color cycle...
-   void e2();
-   void e3();
+   void e2(); // The test pattern 
+   void e3(); // Set4, Count 56 effect
+   void e4(); // Set4, count 66 effect
+   void e5(); 
 };
 
 #endif
