@@ -99,6 +99,10 @@ int parseCsvHatListFile()
 					{
 						validLine = false;
 					}
+					else if((circuitNumber[0] == 'x') || (circuitNumber[0] == 'X'))
+					{
+						strcpy(circuitNumber, "999");
+					}
 					break;
 				case 8:
 					strcpy(drillId, item.c_str());
