@@ -82,7 +82,7 @@ int main ()
 		unreachableOutFile << endl << "Unreachable Slaves:" << endl;
 		for(int i=0; i < unreachableList.size(); i++)
 		{
-			unreachableOutFile << "  Student: " << unreachableList[i].student_name << ", Slave Number " << unreachableList[i].slave_no << ", Hat Number " << unreachableList[i].hat_no << endl;
+			unreachableOutFile << "  Student: " << unreachableList[i].student_name << ", Board Number " << unreachableList[i].slave_no << ", Hat Number " << unreachableList[i].hat_no << endl;
 		}
 		unreachableOutFile.close();
 	}
@@ -100,8 +100,8 @@ int main ()
 		errorOutFile << endl << "Batteries Needing Replacement:" << endl;
 		for(int i=0; i < errorList.size(); i++)
 		{
-			errorOutFile << "  Student: " << errorList[i].student_name << ", Slave Number " << errorList[i].slave_no << ", Hat Number " << errorList[i].hat_no << ", Battery Level " << errorList[i].batt_cap << endl;
-			cout << "  Student: " << errorList[i].student_name << ", Slave Number " << errorList[i].slave_no << ", Hat Number " << errorList[i].hat_no << ", Battery Level " << errorList[i].batt_cap << endl;
+			errorOutFile << "  Student: " << errorList[i].student_name << ", Board Number " << errorList[i].slave_no << ", Hat Number " << errorList[i].hat_no << ", Battery Level " << errorList[i].stateOfCharge << endl;
+			cout << "  Student: " << errorList[i].student_name << ", Board Number " << errorList[i].slave_no << ", Hat Number " << errorList[i].hat_no << ", Battery Level " << errorList[i].stateOfCharge << endl;
 		}
 		errorOutFile.close();
 	}
@@ -118,7 +118,7 @@ int main ()
 		warnOutFile << endl << "Batteries low but not critical:" << endl;
 		for(int i=0; i < warnList.size(); i++)
 		{
-			warnOutFile << "  Student: " << warnList[i].student_name << ", Slave Number " << warnList[i].slave_no << ", Hat Number " << warnList[i].hat_no << ", Battery Level " << warnList[i].batt_cap << endl;
+			warnOutFile << "  Student: " << warnList[i].student_name << ", Board Number " << warnList[i].slave_no << ", Hat Number " << warnList[i].hat_no << ", Battery Level " << warnList[i].stateOfCharge << endl;
 		}
 		warnOutFile.close();
 	}
@@ -135,7 +135,7 @@ int main ()
 		okOutFile << endl << "OK Batteries:" << endl;
 		for(int i=0; i < okList.size(); i++)
 		{
-			okOutFile << "  Student: " << okList[i].student_name << ", Slave Number " << okList[i].slave_no << ", Hat Number " << okList[i].hat_no << ", Battery Level " << okList[i].batt_cap << endl;
+			okOutFile << "  Student: " << okList[i].student_name << ", Board Number " << okList[i].slave_no << ", Hat Number " << okList[i].hat_no << ", Battery Level " << okList[i].stateOfCharge << endl;
 		}
 		okOutFile.close();
 	}

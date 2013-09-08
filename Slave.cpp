@@ -51,12 +51,12 @@ void Slave::checkBattStatus()
 
 bool Slave::isActNow()
 {
-	return batt_cap < ERROR_LEVEL;
+	return stateOfCharge < ERROR_LEVEL;
 }
 
 bool Slave::isWarnNow()
 {
-	return batt_cap < WARN_LEVEL;
+	return stateOfCharge < WARN_LEVEL;
 }
 
 bool Slave::readStatusSuccess()
@@ -157,13 +157,14 @@ void Slave::rx()
 	messages::decode_status(buff, slave_no, t_rx, majorVersion, minorVersion,
 			vcell, soc, missed_message_count, freshness_count);
 
-	batt_cap = 1e-2 * vcell;
+	vlevel = 1e-3 * vcell;
 	major_version = (int)majorVersion;
 	minor_version = (int)minorVersion;
-
+	stateOfCharge = (int)((soc >> 8) & 0xff);
+	
 	if(DEBUG_OUTPUT)
 	{
-		std::cout << std::endl << "Tx Read " << slave_no << ", t_rx=" << t_rx << ", Major= " << major_version << ", Minor=" << minor_version << ", batt_cap=" << batt_cap << std::endl;
+		std::cout << std::endl << "Tx Read " << slave_no << ", t_rx=" << t_rx << ", Major= " << major_version << ", Minor=" << minor_version << ", stateOfCharge=" << stateOfCharge << ", vlevel=" << vlevel << std::endl << std::endl;
 	}
 }
 
@@ -177,7 +178,7 @@ std::string Slave::status() const
 	sprintf(buff, "%3d  %9.3f  %5d  %5d   %5d  %5d(%7.3f)  %9.3f  %5d  %6d  ",
 			slave_no, 0.001*t_tx, tx_dt, tx_cnt, retry_cnt, nack_cnt, nack_pct, 0.001*t_rx, rx_dt, no_resp);
 	//	if (id==6)
-	//		sprintf(buff+80, "%5d", batt_cap);
+	//		sprintf(buff+80, "%5d", vlevel);
 	return std::string(buff);
 }
 

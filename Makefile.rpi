@@ -1,5 +1,5 @@
 CPPFLAGS+=-std=c++0x
-ALL_BIN=master_curses master_lcd show master_loader get_param master_blaster
+ALL_BIN=master_curses master_lcd show master_loader get_param master_blaster checkBatt parseNames
 
 
 all: $(ALL_BIN)

@@ -27,7 +27,8 @@ class Slave
 		bool validRead;
 
 		//uint8_t id;
-		uint16_t batt_cap;
+		uint16_t vlevel;
+		uint16_t stateOfCharge;
 
 		// used for the tx & rx functions
 		uint8_t buff[ensemble::message_size];
