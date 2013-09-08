@@ -82,7 +82,7 @@ int main (void)
          switch (messages::get_id(buff))
          {
             case messages::heartbeat_id:    do_heartbeat(buff, t_hb); break;
-            case messages::all_stop_id:     effect.all_stop(); break;
+            case messages::all_stop_id:     effect.all_stop(buff); break;
             case messages::start_effect_id: effect.init(buff); break;
             case messages::set_tlc_ch_id:   do_set_tlc_ch(buff); break;
             case messages::set_rgb_id:      do_set_rgb(buff); break;

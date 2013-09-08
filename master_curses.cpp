@@ -105,16 +105,16 @@ int main(int argc, char **argv)
 
       switch(key)
       {
-         case 'G': slider(0, red,  -1);  break;
-         case 'g': slider(0, red,   1);  break;
-         case 'R': slider(1, green, -1); break;
-         case 'r': slider(1, green,  1); break;
-         case 'B': slider(2, blue,  -1); break;
-         case 'b': slider(2, blue,   1); break;
-         case 'w': slider(0, red,  1); slider(1, green,  1); slider(2, blue,  1); break;
-         case 'W': slider(0, red, -1); slider(1, green, -1); slider(2, blue, -1); break;
+         case 'G': slider(2, green,  -1);  break;
+         case 'g': slider(2, green,   1);  break;
+         case 'R': slider(1, red, -1); break;
+         case 'r': slider(1, red,  1); break;
+         case 'B': slider(0, blue,  -1); break;
+         case 'b': slider(0, blue,   1); break;
+         case 'w': slider(1, red,  1); slider(2, green,  1); slider(0, blue,  1); break;
+         case 'W': slider(1, red, -1); slider(2, green, -1); slider(0, blue, -1); break;
          case '0':
-            messages::encode_start_effect(buff, 0, t, 1000);
+            messages::encode_start_effect(buff, 0, t, 750);
             nrf_tx(buff, sizeof(buff), slave);
             break;
          case '1':
@@ -125,10 +125,12 @@ int main(int argc, char **argv)
             messages::encode_start_effect(buff, 2, t, 20000);
             nrf_tx(buff, sizeof(buff), slave);
             break;
-
          case '3':
-            // First real effect; 
-            messages::encode_start_effect(buff, 3, t, 2000);
+            messages::encode_start_effect(buff, 3, t, 3000);
+            nrf_tx(buff, sizeof(buff), slave);
+            break;
+         case '4':
+            messages::encode_start_effect(buff, 4, t, 3000);
             nrf_tx(buff, sizeof(buff), slave);
             break;
             

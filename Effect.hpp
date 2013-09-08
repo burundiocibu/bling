@@ -15,15 +15,20 @@ struct Effect
    int dt;
    int prev_dt;
 
+   // slave/effect specific delay, indexed by effect number
+   static const unsigned max_effect = 10;
+   uint16_t se_delay[max_effect];
+
    void init(uint8_t* buff);
+   void execute(void);
+   void all_stop(uint8_t* buff);
+   void reset();
 
    enum State
    {
-      complete, unstarted, started
+      stopped, pending, running
    } state;
    
-   void execute(void);
-   void all_stop(void);
 
    void e0(); // Fast on white, fades out over 4 seconds
    void e1(); // a simple color cycle...

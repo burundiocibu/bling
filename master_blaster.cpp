@@ -152,7 +152,7 @@ int main(int argc, char **argv)
          loss_count = 0;
          if (prog_slave(slave_no, image_buff, image_size, loss_count))
          {
-            printf("%s Slave %d Programmed.\n", timestamp().c_str(), slave_no);
+            printf("%s Slave %d Programmed. (loss=%d)\n", timestamp().c_str(), slave_no, loss_count);
             prog_set.insert(slave_no);
             un_prog_set.erase(slave_no);
          }

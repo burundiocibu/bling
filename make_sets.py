@@ -18,7 +18,7 @@ with open("HatList_Sep_9_2013.csv", "rU") as fh:
 print did2sid
 print len(did2sid)
 
-# Woodwinds in front of field
+# Woodwinds set the hats down
 set4_count56 =[
     'F10', 'F13', 'F7', 'F11', 'F2', 'F8', 'F17', 'F14', 'F12', 'F18', 'F9',
     'F6', 'F19', 'F5', 'F20', 'F4', 'F16', 'F3', 'F15', 'F23', 'F22', 'F21',
@@ -28,6 +28,7 @@ set4_count56 =[
     'C10', 'C9', 'C6', 'C13', 'C11', 'C7'
     ]
 
+# Brass set the hats down
 set4_count66 = [
     'B7', 'B25', 'B21', 'B15', 'B10', 'B9', 'B24', 'B20', 'B2',
     'B14', 'B6', 'B5', 'B22', 'B13', 'B8', 'B4', 'B17', 'B26', 'B18', 'B23', 'B15', 'B3', 'B19',
@@ -36,7 +37,7 @@ set4_count66 = [
     'T7', 'T12', 'T8', 'T19', 'T11', 'T10', 'T20', 'T18'
     ]
 
-lut=[0xffff for i in range(150)]
+lut=[0xff for i in range(150)]
 
 for i in range(len(set4_count56)):
     did = set4_count56[i]
@@ -44,8 +45,8 @@ for i in range(len(set4_count56)):
         print "slave id not found for", did
         continue
     sid = did2sid[did]
-    lut[sid] = i * 30 # 30 ms delay between marcher * 44 in line = 1.3 seconds across whole line
+    lut[sid] = i
 
 lut = [str(i) for i in lut]
-print "const uint16_t set4_count56[] PROGMEM = {"
+print "const uint8_t e3_delays[] PROGMEM = {"
 print ", ".join(lut), "};"

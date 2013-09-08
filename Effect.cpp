@@ -7,10 +7,40 @@
 
 
 
+const uint8_t e1_delays[] PROGMEM = {
+   //           2     3     4     5     6     7     8     9
+   0xff, 0xff, 0x00, 0xff, 0xff, 0x08, 0x02, 0x04, 0x06, 0xff
+};
+
+const uint8_t e3_delays[] PROGMEM = {
+255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 3, 255, 42, 255, 14, 255, 29, 255, 255, 28, 255, 255, 10, 255, 255, 56, 11, 255, 43, 255, 41, 255, 255, 255, 54, 255, 255, 36, 8, 255, 255, 61, 55, 20, 255, 255, 255, 255, 255, 255, 255, 22, 255, 255, 53, 255, 255, 58, 21, 255, 255, 255, 255, 48, 16, 27, 255, 17, 255, 47, 255, 255, 255, 57, 255, 2, 255, 15, 4, 23, 255, 255, 50, 255, 255, 255, 255, 44, 255, 255, 38, 19, 255, 255, 51, 255, 255, 0, 255, 31, 255, 255, 60, 255, 59, 255, 13, 255, 255, 255, 12, 26, 255, 32, 255, 255, 255, 255, 46, 255, 255, 52, 1, 30, 255, 49, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 };
+
+
 Effect::Effect(uint16_t slave)
 {
-   state = complete;
    slave_id = slave;
+   reset();
+
+   for (size_t i=0; i<max_effect; i++)
+      se_delay[i] = 0;
+
+   se_delay[1] = 0xffff;
+   if (slave_id < sizeof(e1_delays))
+   {
+      uint8_t d = pgm_read_byte( &(e1_delays[slave_id]));
+      if  (d!=0xff)
+         se_delay[1] = d * 30;
+   }
+
+   se_delay[3] = 0xffff;
+   return;
+   if (slave_id < sizeof(e3_delays))
+   {
+      uint8_t d = pgm_read_byte( &(e3_delays[slave_id]));
+      if (d!=0xff)
+         se_delay[3] = d * 30;
+   }
+
 };
 
 
@@ -19,62 +49,82 @@ void Effect::init(uint8_t* buff)
    uint8_t new_id;
    uint32_t new_start_time;
    uint16_t new_duration;
-
    messages::decode_start_effect(buff, new_id, new_start_time, new_duration);
 
+   if (new_id >= max_effect)
+   {
+      reset();
+      return;
+   }
+
    // If we are already running this command, don't start over...
-   if (new_id == id && new_start_time == start_time && new_duration == duration)
+   if (new_id !=0 && new_id == id && new_start_time == start_time && new_duration == duration)
       return;
 
+   // If our effect/slave specific delay is 0xffff, don't execute this effect
+   if (se_delay[new_id] == 0xffff)
+      return;
+
+   reset();
+
    id = new_id;
-   start_time = new_start_time;
+   start_time = new_start_time + se_delay[id];
    duration = new_duration;
-   dt = 0;
-   prev_dt = 0;
-   state = unstarted;
-   
-   // offset start of effect 1 by 300 ms / slave
-   if (id==1)
-      start_time += slave_id*300;
+   state = pending;
 }
 
 
 void Effect::execute()
 {
-   if (state==complete)
+   if (state==stopped)
       return;
 
    dt = avr_rtc::t_ms - start_time;
 
-   if (dt>int(duration) && state==started)
+   if (dt < 0)
+      return;
+
+   if (dt>int(duration) && state!=stopped)
    {
-      state=complete;
-      for (unsigned ch=0; ch<14; ch++)
-         avr_tlc5940::set_channel(ch, 0);
+      reset();
       return;
    }
-   else if (dt>0 && dt<int(duration) && state==unstarted)
-      state=started;
+   
+   if (state==pending)
+      state=running;
+//   else if (prev_dt>0 && dt - prev_dt < 20)
+      // Don't really need to update the LEDs more often than 50 Hz
+//      return;
 
-   // Don't really need to update the LEDs more often than 50 Hz
-   if (prev_dt>0 && dt - prev_dt < 20)
-      return;
-
-   if (state==started)
-      switch(id)
-      {
-         case 0: e0(); break;
-         case 1: e1(); break;
-         case 2: e2(); break;
-         case 3: e3(); break;
-      }
+   switch(id)
+   {
+      case 0: e0(); break;
+      case 1: e1(); break;
+      case 2: e2(); break;
+      case 3: e3(); break;
+      case 4: e4(); break;
+   }
    prev_dt = dt;
 }
 
 
-void Effect::all_stop()
+void Effect::all_stop(uint8_t* buff)
 {
-   state = complete;
+   uint8_t new_id;
+   uint32_t new_start_time;
+   uint16_t new_duration;
+   messages::decode_start_effect(buff, new_id, new_start_time, new_duration);
+   reset();
+}
+
+
+void Effect::reset()
+{
+   state = stopped;
+   id = messages::all_stop_id;
+   start_time = 0;
+   duration = 0;
+
    for (int ch=0; ch<14; ch++)
       avr_tlc5940::set_channel(ch, 0);
 }
@@ -84,7 +134,6 @@ void Effect::all_stop()
 void Effect::e0()
 {
    const long vmax = 4095;
-   long m = vmax/duration;
    int v = vmax - dt * vmax / duration;
    if (v<0)
       v=0;
@@ -147,8 +196,7 @@ void Effect::e1()
 }
 
 
-// Flash red/green/blue for the duration of the effect
-// mainly for testing
+// Flash red/green/blue for the duration of the effect; mainly for testing.
 void Effect::e2()
 {
    long vmax = 512; // intensity at peak
@@ -167,23 +215,22 @@ void Effect::e2()
 }
 
 
-const uint16_t set4_count56[] PROGMEM = {
-65535, 65535, 65535, 65535, 65535, 65535, 65535, 65535, 65535, 65535, 90, 65535, 1260, 65535, 420, 65535, 870, 65535, 65535, 840, 65535, 65535, 300, 65535, 65535, 1680, 330, 65535, 1290, 65535, 1230, 65535, 65535, 65535, 1620, 65535, 65535, 1080, 240, 65535, 65535, 1830, 1650, 600, 65535, 65535, 65535, 65535, 65535, 65535, 65535, 660, 65535, 65535, 1590, 65535, 65535, 1740, 630, 65535, 65535, 65535, 65535, 1440, 480, 810, 65535, 510, 65535, 1410, 65535, 65535, 65535, 1710, 65535, 60, 65535, 450, 120, 690, 65535, 65535, 1500, 65535, 65535, 65535, 65535, 1320, 65535, 65535, 1140, 570, 65535, 65535, 1530, 65535, 65535, 0, 65535, 930, 65535, 65535, 1800, 65535, 1770, 65535, 390, 65535, 65535, 65535, 360, 780, 65535, 960, 65535, 65535, 65535, 65535, 1380, 65535, 65535, 1560, 30, 900, 65535, 1470, 65535, 65535, 65535, 65535, 65535, 65535, 65535, 65535, 65535, 65535, 65535, 65535, 65535, 65535, 65535, 65535, 65535, 65535, 65535, 65535, 65535, 65535, 65535, 65535 };
-
-
 // Set 4, Count 56 start
 void Effect::e3()
 {
-   if (slave_id > sizeof(set4_count56))
-      return;
-   uint16_t offset = pgm_read_word( &(set4_count56[slave_id]));
-   if (offset == 0xffff)
-      return;
+   const long vmax = 4095;
+   int v = vmax - dt * vmax / duration;
+   if (v<0)
+      v=0;
+   for (unsigned ch=0; ch<12; ch++)
+      avr_tlc5940::set_channel(ch, v);
 }
+
 
 void Effect::e4()
 {
 }
+
 
 void Effect::e5()
 {
