@@ -33,7 +33,6 @@ Effect::Effect(uint16_t slave)
    }
 
    se_delay[3] = 0xffff;
-   return;
    if (slave_id < sizeof(e3_delays))
    {
       uint8_t d = pgm_read_byte( &(e3_delays[slave_id]));
@@ -218,12 +217,7 @@ void Effect::e2()
 // Set 4, Count 56 start
 void Effect::e3()
 {
-   const long vmax = 4095;
-   int v = vmax - dt * vmax / duration;
-   if (v<0)
-      v=0;
-   for (unsigned ch=0; ch<12; ch++)
-      avr_tlc5940::set_channel(ch, v);
+   e1();
 }
 
 
