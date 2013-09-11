@@ -2,6 +2,7 @@
 #define _SLAVE_HPP
 
 #include <string>
+#include <iostream>
 #include "rt_utils.hpp"
 #include "nrf24l01.hpp"
 #include "messages.hpp"
@@ -12,8 +13,8 @@ class Slave
 	public:
 		uint16_t slave_no;
 		int hat_no;
-		char drill_id[10];
-		char student_name[120];
+                std::string drill_id;
+                std::string student_name;
 
 		unsigned tx_cnt;
 		unsigned retry_cnt;

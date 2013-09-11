@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <iomanip>
 #include <string>
 #include <cstdlib>
 #include <cstdio>
@@ -16,10 +17,24 @@
 
 using namespace std;
 
-vector<Slave> createSlaveList();
+ostream& operator<<(std::ostream& strm, const vector<Slave> sv)
+{
+   vector<Slave>::const_iterator i;
+   for (i=sv.begin(); i != sv.end(); i++)
+      strm << left << setw(3) << i->slave_no << " " << setw(3) << i->drill_id << " "
+           << right << setw(3) << i->stateOfCharge << "%  "
+           << left << i->student_name << endl;
+}
 
 int main ()
 {
+   vector<Slave> slaveList;
+   for(int entry = 0; entry < nameList::numberEntries; entry++)
+      slaveList.push_back(Slave(nameList::nameList[entry].circuitBoardNumber,
+                                nameList::nameList[entry].hatNumber,
+                                nameList::nameList[entry].drillId,
+                                nameList::nameList[entry].name));
+
 	nRF24L01::channel = 2;
 	memcpy(nRF24L01::master_addr,    ensemble::master_addr,   nRF24L01::addr_len);
 	memcpy(nRF24L01::broadcast_addr, ensemble::slave_addr[0], nRF24L01::addr_len);
@@ -33,8 +48,6 @@ int main ()
 	}
 	nRF24L01::configure_PTX();
 	nRF24L01::flush_tx();
-
-	vector<Slave> slaveList = createSlaveList();
 
 
 	vector<Slave> okList;
@@ -50,40 +63,40 @@ int main ()
 	ofstream unreachableOutFile;
 	const char unreachableOutFileName[] = "unreachable.txt";
 
-
-	for(int i=0; i < slaveList.size(); i++)
+        vector<Slave>::iterator i;
+	for(i=slaveList.begin(); i != slaveList.end(); i++)
 	{
-		slaveList[i].checkBattStatus();
-		if(slaveList[i].readStatusSuccess())
-		{
-			if(slaveList[i].isActNow())
-			{
-				errorList.push_back(slaveList[i]);
-			}
-			else if(slaveList[i].isWarnNow())
-			{
-				warnList.push_back(slaveList[i]);
-			}
-			else
-			{
-				okList.push_back(slaveList[i]);
-			}
-		}
-		else
-		{
-			unreachableList.push_back(slaveList[i]);
-		}
+           Slave& slave(*i);
+           if (slave.slave_no == 999)
+              continue;
+           slave.checkBattStatus();
+           if(slave.readStatusSuccess())
+           {
+              if(slave.isActNow())
+              {
+                 errorList.push_back(slave);
+              }
+              else if(slave.isWarnNow())
+              {
+                 warnList.push_back(slave);
+              }
+              else
+              {
+                 okList.push_back(slave);
+              }
+           }
+           else
+           {
+              unreachableList.push_back(slave);
+           }
 	}
 
 	// Output list of Slaves that we failed to read
 	if(unreachableList.size() > 0)
 	{
 		unreachableOutFile.open(unreachableOutFileName, ofstream::trunc);
-		unreachableOutFile << endl << "Unreachable Slaves:" << endl;
-		for(int i=0; i < unreachableList.size(); i++)
-		{
-			unreachableOutFile << "  Student: " << unreachableList[i].student_name << ", Board Number " << unreachableList[i].slave_no << ", Hat Number " << unreachableList[i].hat_no << endl;
-		}
+		unreachableOutFile << endl << "Unreachable Slaves:" << endl
+                                   << unreachableList;
 		unreachableOutFile.close();
 	}
 	else
@@ -96,14 +109,11 @@ int main ()
 	if(errorList.size() > 0)
 	{
 		errorOutFile.open(errorOutFileName, ofstream::trunc);
-		cout << endl << "Batteries Needing Replacement:" << endl;
-		errorOutFile << endl << "Batteries Needing Replacement:" << endl;
-		for(int i=0; i < errorList.size(); i++)
-		{
-			errorOutFile << "  Student: " << errorList[i].student_name << ", Board Number " << errorList[i].slave_no << ", Hat Number " << errorList[i].hat_no << ", Battery Level " << errorList[i].stateOfCharge << endl;
-			cout << "  Student: " << errorList[i].student_name << ", Board Number " << errorList[i].slave_no << ", Hat Number " << errorList[i].hat_no << ", Battery Level " << errorList[i].stateOfCharge << endl;
-		}
+		errorOutFile << endl << "Batteries Needing Replacement:" << endl
+                             << errorList;
 		errorOutFile.close();
+		cout << endl << "Batteries Needing Replacement:" << endl
+                             << errorList;
 	}
 	else
 	{
@@ -115,11 +125,8 @@ int main ()
 	if(warnList.size() > 0)
 	{
 		warnOutFile.open(warnOutFileName, ofstream::trunc);
-		warnOutFile << endl << "Batteries low but not critical:" << endl;
-		for(int i=0; i < warnList.size(); i++)
-		{
-			warnOutFile << "  Student: " << warnList[i].student_name << ", Board Number " << warnList[i].slave_no << ", Hat Number " << warnList[i].hat_no << ", Battery Level " << warnList[i].stateOfCharge << endl;
-		}
+		warnOutFile << endl << "Batteries low but not critical:" << endl
+                            << warnList;
 		warnOutFile.close();
 	}
 	else
@@ -132,11 +139,8 @@ int main ()
 	if(okList.size() > 0)
 	{
 		okOutFile.open(okOutFileName, ofstream::trunc);
-		okOutFile << endl << "OK Batteries:" << endl;
-		for(int i=0; i < okList.size(); i++)
-		{
-			okOutFile << "  Student: " << okList[i].student_name << ", Board Number " << okList[i].slave_no << ", Hat Number " << okList[i].hat_no << ", Battery Level " << okList[i].stateOfCharge << endl;
-		}
+		okOutFile << endl << "OK Batteries:" << endl
+                          << okList;
 		okOutFile.close();
 	}
 	else
@@ -146,25 +150,3 @@ int main ()
 	}
 
 }
-
-vector<Slave> createSlaveList()
-{
-	vector<Slave> slaveList;
-
-	ifstream inFile;
-	string inFileName = "nameList.cpp";
-	inFile.open(inFileName, ifstream::in);
-
-	char name[120];
-	char hatNumber[10];
-	char circuitNumber[10];
-	char drillId[10];
-
-	for(int entry = 0; entry < nameList::numberEntries; entry++)
-	{
-		Slave *slave = new Slave(nameList::nameList[entry].circuitBoardNumber, nameList::nameList[entry].hatNumber, nameList::nameList[entry].drillId, nameList::nameList[entry].name);
-		slaveList.push_back(*slave);
-	}
-	return slaveList;
-}
-

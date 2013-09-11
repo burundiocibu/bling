@@ -33,10 +33,10 @@ Slave::Slave()
 
 Slave::Slave(uint16_t slave, int hatNumber, char* drillId, char *studentName)
 {
-	slave_no = slave;
-	hat_no = hatNumber;
-	strcpy(drill_id, drillId);
-	strcpy(student_name, studentName);
+   slave_no = slave;
+   hat_no = hatNumber;
+   drill_id = drillId;
+   student_name = studentName;
 }
 
 void Slave::checkBattStatus()
@@ -181,4 +181,3 @@ std::string Slave::status() const
 	//		sprintf(buff+80, "%5d", vlevel);
 	return std::string(buff);
 }
-
