@@ -168,8 +168,12 @@ int main(int argc, char **argv)
             nrf_tx(buff, sizeof(buff), slave);
             break;
          case '3':
-            messages::encode_start_effect(buff, 3, t, 3000);
-            nrf_tx(buff, sizeof(buff), slave);
+            messages::encode_start_effect(buff, 3, t, 10000);
+            for (int i=0; i<20; i++)
+            {
+               nrf_tx(buff, sizeof(buff), slave);
+               bcm2835_delayMicroseconds(5000);
+            }
             break;
          case '4':
             messages::encode_start_effect(buff, 4, t, 3000);
@@ -351,6 +355,13 @@ void set_rgb(rgb_t rgb)
    messages::encode_set_tlc_ch(buff, 1, rgb.r);
    nrf_tx(buff, sizeof(buff), slave);
    messages::encode_set_tlc_ch(buff, 0, rgb.b);
+   nrf_tx(buff, sizeof(buff), slave);
+
+   messages::encode_set_tlc_ch(buff, 5, rgb.g);
+   nrf_tx(buff, sizeof(buff), slave);
+   messages::encode_set_tlc_ch(buff, 4, rgb.r);
+   nrf_tx(buff, sizeof(buff), slave);
+   messages::encode_set_tlc_ch(buff, 3, rgb.b);
    nrf_tx(buff, sizeof(buff), slave);
 }
 
