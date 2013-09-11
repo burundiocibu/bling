@@ -2,6 +2,8 @@
 
 import csv
 
+from sys import exit
+
 from argparse import ArgumentParser
 parser = ArgumentParser()
 parser.add_argument('-d', dest="debug", action='count', help='Increase debug level.')
@@ -29,12 +31,22 @@ with open("hatList.csv", "rU") as fh:
         except:
             pass    
 
+
 if args.debug:
     print "Record for {} marchers".format(len(did2sid))
     print "Missing Flute Boards:"
     for did,sid in did2sid.iteritems():
         if did[0] == 'F' and sid==999:
             print did2name[did], did
+
+
+if args.missing>1:
+    print "Marcher IDs with missing boards:"
+    for did,sid in did2sid.iteritems():
+        if sid==999:
+            print "{:3s} {}".format(did, did2name[did])
+    exit()
+
 
 # Woodwinds set the hats down
 set4_count56 = [
