@@ -37,6 +37,9 @@ Slave::Slave(uint16_t slave, int hatNumber, char* drillId, char *studentName)
    hat_no = hatNumber;
    drill_id = drillId;
    student_name = studentName;
+   vlevel = 0;
+   stateOfCharge = 0;
+
 }
 
 void Slave::checkBattStatus()

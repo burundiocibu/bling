@@ -14,6 +14,8 @@ args = parser.parse_args()
 did2sid={}
 # Find marcher name from drill id
 did2name = {}
+# Find hat number from drill id
+did2hid = {}
 with open("hatList.csv", "rU") as fh:
     title=fh.next()
     reader = csv.DictReader(fh);
@@ -28,6 +30,7 @@ with open("hatList.csv", "rU") as fh:
                 print row['First Name'], row['Last Name'], did, sid
             did2sid[did] = sid
             did2name[did] = row['First Name'] + " " + row['Last Name']
+            did2hid[did] = row['Hat #']
         except:
             pass    
 
@@ -37,7 +40,7 @@ if args.debug:
     print "Missing Flute Boards:"
     for did,sid in did2sid.iteritems():
         if did[0] == 'F' and sid==999:
-            print did2name[did], did
+            print "{:3s} {:3s} {}".format(did, did2hid[did], did2name[did])
 
 
 if args.missing>1:

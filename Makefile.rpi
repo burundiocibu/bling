@@ -32,6 +32,10 @@ master_loader: master_loader.o
 master_blaster: LDLIBS+=-lbcm2835 -lstdc++
 master_blaster: master_blaster.o
 
+flash_list: LDLIBS+=-lbcm2835 -lstdc++
+flash_list: flash_list.o nameList.o Slave.o rt_utils.o nrf24l01.o messages.o
+
+
 show:  LDLIBS+=-lbcm2835 -lstdc++
 show: show.o showLists.o rt_utils.o nrf24l01.o messages.o i2c.o lcd_plate.o
 
