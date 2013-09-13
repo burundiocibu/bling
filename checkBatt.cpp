@@ -17,6 +17,9 @@
 
 using namespace std;
 
+void outputList(std::string text, std::string fileName, list<Slave>& slaveList);
+
+
 const int MAX_RETRY_COUNT = 10;
 
 ostream& operator<<(std::ostream& strm, const list<Slave> sv)
@@ -55,18 +58,13 @@ int main ()
 
 
 	list<Slave> okList;
-	ofstream okOutFile;
-	const char okOutFileName[] = "ok.txt";
+	std::string okOutFileName = "ok.txt";
 	list<Slave> warnList;
-	ofstream warnOutFile;
-	const char warnOutFileName[] = "warn.txt";
+	std::string warnOutFileName = "warn.txt";
 	list<Slave> errorList;
-	ofstream errorOutFile;
-	const char errorOutFileName[] = "error.txt";
+	std::string errorOutFileName = "error.txt";
+	std::string unreachableOutFileName = "unreachable.txt";
 	list<Slave> unreachableList;
-	ofstream unreachableOutFile;
-	const char unreachableOutFileName[] = "unreachable.txt";
-
 
 	// Do Initial read of all Slaves
 	list<Slave>::iterator i;
@@ -82,7 +80,10 @@ int main ()
 			{
 				if(slave.stateOfCharge == 0)
 				{
-					// assume read error for now
+					/* 
+					 * If got charge=0, try again assuming
+					 * that there might be a read error
+					 */
 					unreachableList.push_back(*i);
 				}
 				errorList.push_back(slave);
@@ -126,13 +127,14 @@ int main ()
 			{
 				if(slave.isActNow())
 				{
-					// Don't move to error list if charge=0 and not last read
-					if(slave.stateOfCharge != 0)
-					{
-						unreachableList.remove(slave);
-						errorList.push_back(slave);
-					}
-					else if (lastRead == true)
+					/* 
+					 * Reached Slave and got low battery level.
+					 * If charge=0, leave on unreachable list to try
+					 * again in case it was an invalid read.
+					 *
+					 * If this is the last read, move to error list.
+					 */
+					if((slave.stateOfCharge != 0) || (lastRead == true))
 					{
 						unreachableList.remove(slave);
 						errorList.push_back(slave);
@@ -154,63 +156,33 @@ int main ()
 		retry++;
 	}
 
-
 	// Output list of Slaves that we failed to read
-	if(unreachableList.size() > 0)
-	{
-		unreachableOutFile.open(unreachableOutFileName, ofstream::trunc);
-		unreachableOutFile << endl << "Unreachable Slaves:" << endl
-			<< unreachableList;
-		unreachableOutFile.close();
-	}
-	else
-	{
-		// remove any existing file
-		remove(unreachableOutFileName);
-	}
+	outputList("Unreachable Slaves:", unreachableOutFileName, unreachableList);
 
 	// Output list of Slaves with battery level requiring replacement
-	if(errorList.size() > 0)
-	{
-		errorOutFile.open(errorOutFileName, ofstream::trunc);
-		errorOutFile << endl << "Batteries Needing Replacement:" << endl
-			<< errorList;
-		errorOutFile.close();
-		cout << endl << "Batteries Needing Replacement:" << endl
-			<< errorList;
-	}
-	else
-	{
-		// remove any existing file
-		remove(errorOutFileName);
-	}
+	outputList("Batteries Needing Replacement:", errorOutFileName, errorList);
 
 	// Output list of Slaves with battery level low, but not critical
-	if(warnList.size() > 0)
-	{
-		warnOutFile.open(warnOutFileName, ofstream::trunc);
-		warnOutFile << endl << "Batteries low but not critical:" << endl
-			<< warnList;
-		warnOutFile.close();
-	}
-	else
-	{
-		// remove any existing file
-		remove(warnOutFileName);
-	}
+	outputList("Batteries low but not critical:", warnOutFileName, warnList);
 
 	// Output list of OK Slaves
-	if(okList.size() > 0)
+	outputList("OK Batteries:", okOutFileName, okList);
+
+}
+
+void outputList(std::string text, std::string fileName, list<Slave>& slaveList)
+{
+	ofstream OutFile;
+	// Output list
+	if(slaveList.size() > 0)
 	{
-		okOutFile.open(okOutFileName, ofstream::trunc);
-		okOutFile << endl << "OK Batteries:" << endl
-			<< okList;
-		okOutFile.close();
+		OutFile.open(fileName, ofstream::trunc);
+		OutFile << endl << text << endl << slaveList;
+		OutFile.close();
 	}
 	else
 	{
 		// remove any existing file
-		remove(okOutFileName);
+		remove(fileName.c_str());
 	}
-
 }
