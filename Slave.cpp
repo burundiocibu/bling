@@ -33,22 +33,54 @@ Slave::Slave()
 
 Slave::Slave(uint16_t slave, int hatNumber, char* drillId, char *studentName)
 {
-   slave_no = slave;
-   hat_no = hatNumber;
-   drill_id = drillId;
-   student_name = studentName;
-   vlevel = 0;
-   stateOfCharge = 0;
-
+	slave_no = slave;
+	hat_no = hatNumber;
+	drill_id = drillId;
+	student_name = studentName;
+	vlevel = 0;
+	stateOfCharge = 0;
 }
+
+int Slave::operator==(const Slave &slave) const 
+{ 
+	if(this->slave_no == slave.slave_no) return 1; 
+	return 0; 
+} 
 
 void Slave::checkBattStatus()
 {
-	//messages::encode_ping(buff);
 	messages::encode_ping(buff);
 	if(tx())
 	{
-		rx();
+		rxBatt(READ_BATT);
+	}
+	else
+	{	
+		// not successful read
+		stateOfCharge = 0;
+	}
+}
+
+void Slave::readMissedMsgCnt()
+{
+	messages::encode_ping(buff);
+	if(tx())
+	{
+		rxBatt(READ_MMC);
+	}
+	else
+	{	
+		// not successful read
+		missed_message_count = 0;
+	}
+}
+
+void Slave::sendAllStop()
+{
+	messages::encode_all_stop(buff);
+	if(tx())
+	{
+		rxStop();
 	}
 }
 
@@ -118,7 +150,7 @@ bool Slave::tx()
 }
 
 
-void Slave::rx()
+void Slave::rxBatt(ReadType type)
 {
 	using namespace nRF24L01;
 
@@ -130,7 +162,7 @@ void Slave::rx()
 	set_CE();
 
 	uint64_t t0=runtime.usec();
-	uint16_t soc, missed_message_count, vcell;
+	uint16_t soc, missedMessageCount, vcell;
 	uint8_t freshness_count;
 	int8_t majorVersion, minorVersion;
 
@@ -158,17 +190,67 @@ void Slave::rx()
 	}
 
 	messages::decode_status(buff, slave_no, t_rx, majorVersion, minorVersion,
-			vcell, soc, missed_message_count, freshness_count);
+			vcell, soc, missedMessageCount, freshness_count);
 
-	vlevel = 1e-3 * vcell;
-	major_version = (int)majorVersion;
-	minor_version = (int)minorVersion;
-	stateOfCharge = (int)((soc >> 8) & 0xff);
-	
+	switch(type)
+	{
+		case READ_BATT:
+			vlevel = 1e-3 * vcell;
+			major_version = (int)majorVersion;
+			minor_version = (int)minorVersion;
+			stateOfCharge = (int)((soc >> 8) & 0xff);
+			break;
+		case READ_MMC:
+			missed_message_count = (int)missedMessageCount;
+			break;
+	}
+
 	if(DEBUG_OUTPUT)
 	{
 		std::cout << std::endl << "Tx Read " << slave_no << ", t_rx=" << t_rx << ", Major= " << major_version << ", Minor=" << minor_version << ", stateOfCharge=" << stateOfCharge << ", vlevel=" << vlevel << std::endl << std::endl;
 	}
+}
+
+
+void Slave::rxStop()
+{
+	using namespace nRF24L01;
+
+	uint8_t pipe;
+	char config = read_reg(CONFIG);
+	config |= CONFIG_PRIM_RX;
+	write_reg(CONFIG, config); // should still be powered on
+	delay_us(1000);  // Really should be 1.5 ms at least
+	set_CE();
+
+	uint64_t t0=runtime.usec();
+	uint16_t soc, missed_message_count, vcell;
+	uint8_t freshness_count;
+	int8_t majorVersion, minorVersion;
+
+	int i;
+	for (i=0; i<100; i++)
+	{
+		if (read_reg(STATUS) & STATUS_RX_DR)
+		{
+			read_rx_payload((char*)buff, ensemble::message_size, pipe);
+			write_reg(STATUS, STATUS_RX_DR); // clear data received bit
+			break;
+		}
+		delay_us(200);
+	}
+
+	config &= ~CONFIG_PRIM_RX;
+	write_reg(CONFIG, config); // should still be powered on
+	clear_CE();
+
+	if(DEBUG_OUTPUT)
+	{
+		for (int i = 0; i <ensemble::message_size; i++)
+			printf("%.2X ", buff[i]);
+	}
+
+	messages::decode_all_stop(buff);
 }
 
 
