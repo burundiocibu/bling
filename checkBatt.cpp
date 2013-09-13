@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <sstream>
-#include <vector>
+#include <list>
 #include <bcm2835.h>
 
 #include <string.h>
@@ -17,23 +17,27 @@
 
 using namespace std;
 
-ostream& operator<<(std::ostream& strm, const vector<Slave> sv)
+const int MAX_RETRY_COUNT = 10;
+
+ostream& operator<<(std::ostream& strm, const list<Slave> sv)
 {
-   vector<Slave>::const_iterator i;
-   for (i=sv.begin(); i != sv.end(); i++)
-      strm << left << setw(3) << i->slave_no << " " << setw(3) << i->drill_id << " "
-           << right << setw(3) << i->stateOfCharge << "%  "
-           << left << i->student_name << endl;
+	list<Slave>::const_iterator i;
+	for (i=sv.begin(); i != sv.end(); i++)
+		strm << left << setw(3) << i->slave_no << " " << setw(3) << i->drill_id << " "
+			<< right << setw(3) << i->stateOfCharge << "%  "
+			<< left << i->student_name << endl;
 }
 
 int main ()
 {
-   vector<Slave> slaveList;
-   for(int entry = 0; entry < nameList::numberEntries; entry++)
-      slaveList.push_back(Slave(nameList::nameList[entry].circuitBoardNumber,
-                                nameList::nameList[entry].hatNumber,
-                                nameList::nameList[entry].drillId,
-                                nameList::nameList[entry].name));
+	list<Slave> slaveList;
+	for(int entry = 0; entry < nameList::numberEntries; entry++)
+	{
+		slaveList.push_back(Slave(nameList::nameList[entry].circuitBoardNumber,
+					nameList::nameList[entry].hatNumber,
+					nameList::nameList[entry].drillId,
+					nameList::nameList[entry].name));
+	}
 
 	nRF24L01::channel = 2;
 	memcpy(nRF24L01::master_addr,    ensemble::master_addr,   nRF24L01::addr_len);
@@ -50,53 +54,113 @@ int main ()
 	nRF24L01::flush_tx();
 
 
-	vector<Slave> okList;
+	list<Slave> okList;
 	ofstream okOutFile;
 	const char okOutFileName[] = "ok.txt";
-	vector<Slave> warnList;
+	list<Slave> warnList;
 	ofstream warnOutFile;
 	const char warnOutFileName[] = "warn.txt";
-	vector<Slave> errorList;
+	list<Slave> errorList;
 	ofstream errorOutFile;
 	const char errorOutFileName[] = "error.txt";
-	vector<Slave> unreachableList;
+	list<Slave> unreachableList;
 	ofstream unreachableOutFile;
 	const char unreachableOutFileName[] = "unreachable.txt";
 
-        vector<Slave>::iterator i;
+
+	// Do Initial read of all Slaves
+	list<Slave>::iterator i;
 	for(i=slaveList.begin(); i != slaveList.end(); i++)
 	{
-           Slave& slave(*i);
-           if (slave.slave_no == 999)
-              continue;
-           slave.checkBattStatus();
-           if(slave.readStatusSuccess())
-           {
-              if(slave.isActNow())
-              {
-                 errorList.push_back(slave);
-              }
-              else if(slave.isWarnNow())
-              {
-                 warnList.push_back(slave);
-              }
-              else
-              {
-                 okList.push_back(slave);
-              }
-           }
-           else
-           {
-              unreachableList.push_back(slave);
-           }
+		Slave& slave(*i);
+		if (slave.slave_no == 999)
+			continue;
+		slave.checkBattStatus();
+		if(slave.readStatusSuccess())
+		{
+			if(slave.isActNow())
+			{
+				if(slave.stateOfCharge == 0)
+				{
+					// assume read error for now
+					unreachableList.push_back(*i);
+				}
+				errorList.push_back(slave);
+			}
+			else if(slave.isWarnNow())
+			{
+				warnList.push_back(slave);
+			}
+			else
+			{
+				okList.push_back(slave);
+			}
+		}
+		else
+		{
+			unreachableList.push_back(slave);
+		}
 	}
+
+
+	// For any Slaves not successfully read, try again
+	int retry = 0;
+	bool lastRead = false;
+	while((unreachableList.size() > 0) && (retry < MAX_RETRY_COUNT))
+	{
+
+		// Make copy of unreachable list so not editing the list that am iterating
+		list<Slave> copyUnreachable;
+		list<Slave>::iterator i; 
+		for(i=unreachableList.begin(); i != unreachableList.end(); ++i)
+		{
+			copyUnreachable.push_back(*i);
+		}
+
+		// Cycle through all unreachable slaves querying for battery
+		for(i=copyUnreachable.begin(); i != copyUnreachable.end(); ++i)
+		{
+			Slave& slave(*i);
+			slave.checkBattStatus();
+			if(slave.readStatusSuccess())
+			{
+				if(slave.isActNow())
+				{
+					// Don't move to error list if charge=0 and not last read
+					if(slave.stateOfCharge != 0)
+					{
+						unreachableList.remove(slave);
+						errorList.push_back(slave);
+					}
+					else if (lastRead == true)
+					{
+						unreachableList.remove(slave);
+						errorList.push_back(slave);
+					}
+				}
+				else if(slave.isWarnNow())
+				{
+					unreachableList.remove(slave);
+					warnList.push_back(slave);
+				}
+				else
+				{
+					unreachableList.remove(slave);
+					okList.push_back(slave);
+				}
+			}
+		}
+		lastRead = (retry == (MAX_RETRY_COUNT-1));
+		retry++;
+	}
+
 
 	// Output list of Slaves that we failed to read
 	if(unreachableList.size() > 0)
 	{
 		unreachableOutFile.open(unreachableOutFileName, ofstream::trunc);
 		unreachableOutFile << endl << "Unreachable Slaves:" << endl
-                                   << unreachableList;
+			<< unreachableList;
 		unreachableOutFile.close();
 	}
 	else
@@ -110,10 +174,10 @@ int main ()
 	{
 		errorOutFile.open(errorOutFileName, ofstream::trunc);
 		errorOutFile << endl << "Batteries Needing Replacement:" << endl
-                             << errorList;
+			<< errorList;
 		errorOutFile.close();
 		cout << endl << "Batteries Needing Replacement:" << endl
-                             << errorList;
+			<< errorList;
 	}
 	else
 	{
@@ -126,7 +190,7 @@ int main ()
 	{
 		warnOutFile.open(warnOutFileName, ofstream::trunc);
 		warnOutFile << endl << "Batteries low but not critical:" << endl
-                            << warnList;
+			<< warnList;
 		warnOutFile.close();
 	}
 	else
@@ -140,7 +204,7 @@ int main ()
 	{
 		okOutFile.open(okOutFileName, ofstream::trunc);
 		okOutFile << endl << "OK Batteries:" << endl
-                          << okList;
+			<< okList;
 		okOutFile.close();
 	}
 	else

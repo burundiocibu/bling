@@ -36,6 +36,7 @@ class Slave
 
 		Slave();
 		Slave(uint16_t slave, int hatNumber, char* drillId, char *studentName);
+		int operator==(const Slave &) const;
 		void checkBattStatus();
 		bool readStatusSuccess();
 		bool isActNow();

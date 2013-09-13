@@ -39,6 +39,12 @@ Slave::Slave(uint16_t slave, int hatNumber, char* drillId, char *studentName)
    student_name = studentName;
 }
 
+int Slave::operator==(const Slave &slave) const 
+{ 
+	if(this->slave_no == slave.slave_no) return 1; 
+	return 0; 
+} 
+
 void Slave::checkBattStatus()
 {
 	//messages::encode_ping(buff);
