@@ -21,12 +21,14 @@ void outputList(std::string text, std::string fileName, list<Slave>& slaveList);
 
 
 const int MAX_RETRY_COUNT = 10;
+const int NUM_MMC_MSGS = 30;
 
 ostream& operator<<(std::ostream& strm, const list<Slave> sv)
 {
 	list<Slave>::const_iterator i;
 	for (i=sv.begin(); i != sv.end(); i++)
-		strm << left << setw(3) << i->slave_no << " " << setw(3) << i->drill_id << " "
+		strm << left << setw(3) << i->slave_no << " " << setw(3) << i->drill_id << "  "
+			<< setw(3) << i->missed_message_count << " "
 			<< right << setw(3) << i->stateOfCharge << "%  "
 			<< left << i->student_name << endl;
 }
@@ -154,6 +156,27 @@ int main ()
 		}
 		lastRead = (retry == (MAX_RETRY_COUNT-1));
 		retry++;
+	}
+
+	// Now test for missed messages
+	list<Slave>::iterator iter;
+	for(int i=0; i<NUM_MMC_MSGS; i++)
+	{
+		bcm2835_delay(5); // delay 5mS	
+		for(iter=slaveList.begin(); iter != slaveList.end(); iter++)
+		{
+			Slave& slave(*iter);
+			if (slave.slave_no == 999)
+				continue;
+			slave.sendAllStop();
+		}
+	}
+	for(iter=slaveList.begin(); iter != slaveList.end(); iter++)
+	{
+		Slave& slave(*iter);
+		if (slave.slave_no == 999)
+			continue;
+		slave.readMissedMsgCnt();
 	}
 
 	// Output list of Slaves that we failed to read

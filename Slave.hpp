@@ -8,6 +8,12 @@
 #include "messages.hpp"
 #include "ensemble.hpp"
 
+enum ReadType
+{
+	READ_BATT,
+	READ_MMC
+};
+
 class Slave
 {
 	public:
@@ -25,6 +31,7 @@ class Slave
 		uint32_t t_tx, t_rx; // time of most recent send and the time in the most recent received packet
 		int major_version; 
 		int minor_version;
+		uint16_t missed_message_count;
 		bool validRead;
 
 		//uint8_t id;
@@ -38,12 +45,15 @@ class Slave
 		Slave(uint16_t slave, int hatNumber, char* drillId, char *studentName);
 		int operator==(const Slave &) const;
 		void checkBattStatus();
+		void readMissedMsgCnt();
+		void sendAllStop();
 		bool readStatusSuccess();
 		bool isActNow();
 		bool isWarnNow();
 
 		bool tx(); // Returns true if it was successfull
-		void rx();
+		void rxBatt(ReadType type);
+		void rxStop();
 		std::string status() const;
 };
 
