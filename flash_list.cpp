@@ -31,9 +31,10 @@ nameList::NameHatInfo testNameList[] =
    "Ebreham Moisesus", 208, 8, "F8",
    "Bob Mellon",    202, 2, "F1",
    "Rob Burgundy",  205, 5, "F5",
+   "006",           206, 6, "F10",
    "OneThirtyNine", 239, 139, "F6",
    "OneThirty",     230, 130, "F2",
-   "OneTwentyEight",228, 128, "F3",
+   "EightyThree",   283, 83, "F3",
    "TwentyNine",    229, 29,  "F4",
    "OneTwentySix",  226, 126, "F7",
    "OneThirtyFive", 235, 135, "F9",
@@ -89,6 +90,7 @@ int main(int argc, char **argv)
 {
    char *input_fn;
    bool test=false;
+   unsigned slave_no=0;
    opterr = 0;
    int c;
    while ((c = getopt(argc, argv, "di:s:t")) != -1)
@@ -97,8 +99,9 @@ int main(int argc, char **argv)
          case 'd': debug++; break;
          case 'i': input_fn = optarg; break;
          case 't': test=true; break;
+         case 's': slave_no=atoi(optarg); break;
          default:
-            printf("Usage %s -i fn [-d]\n", argv[0]);
+            printf("Usage %s -i fn [-d] [-s slave_no] [-t]\n", argv[0]);
             exit(-1);
       }
 
@@ -158,7 +161,9 @@ int main(int argc, char **argv)
    nrf_setup(0);
  
    list<Slave> todo, done, all;
-   if (!test)
+   if (slave_no!=0)
+      todo.push_back(Slave(slave_no, 1, "FXX", "Hingle McCringleberry"));
+   else if (!test)
    {
       for(int i = 0; i < nameList::numberEntries; i++)
          todo.push_back(Slave(nameList::nameList[i].circuitBoardNumber,
@@ -178,7 +183,7 @@ int main(int argc, char **argv)
 
    for (int pass=1; todo.size() > 0; pass++)
    {
-      cout << "Pass " << pass << endl;
+      cout << endl << "Pass " << pass << " remaining boards:" << todo.size() << "  ";
       list<Slave>::iterator i;
       for (i = todo.begin(); i != todo.end(); )
       {
@@ -190,21 +195,22 @@ int main(int argc, char **argv)
          else if (prog_slave(i->slave_no, image_buff, image_size))
          {
             done.push_back(*i);
-            cout << timestamp() << " Programmed " << *i << endl;
+            cout << endl << timestamp() << " Programmed " << *i << " -- ";
             i = todo.erase(i);
          }
          else
          {
-            cout << timestamp() << " Failed programming " << *i << endl;
+            if (debug)
+               cout << endl << timestamp() << " Failed programming >>>>> " << *i
+                    << " <<<<<" << endl;
             i++;
          }
       }
-      if (todo.size())
-         cout << "Boards remaining: " << endl
-              << todo << endl;
+      if (todo.size() && debug)
+         cout << endl << "Boards remaining: " << endl << todo;
    }
 
-   cout << "All boards programmed." << endl;
+   cout << endl << "All boards programmed." << endl;
 
    bcm2835_spi_end();
    fclose(fp);
@@ -224,32 +230,25 @@ bool prog_slave(const uint16_t slave_no, uint8_t* image_buff, size_t image_size)
 
    nrf_set_slave(slave_no);
 
-   if (debug) 
-      printf("%s Looking for slave %d.\n", timestamp().c_str(), slave_no);
+   if (debug>1)
+      cout << endl << timestamp() << " Looking for slave " << setw(3) << slave_no << " -- ";
    if (!nrf_tx(buff, ensemble::message_size, 5, loss_count))
    {
       if (debug>1)
-         printf("%s Slave %d Not Found (loss=%d).\n", timestamp().c_str(), slave_no, loss_count);
+         cout << endl << timestamp() << " Slave " << setw(3) << slave_no << " Not Found. lc=" << loss_count << " -- ";
       return false;
    }
-   if (debug)
-      printf("%s Slave %d Found (loss=%d).\n", timestamp().c_str(), slave_no, loss_count);
    
    const unsigned num_pages = image_size/boot_page_size + 1;
    const unsigned chunks_per_page = boot_page_size/boot_chunk_size;
 
    if (debug)
    {
-      printf("%s Programming slave %d [", timestamp().c_str(), slave_no);
+      cout << endl << timestamp() << " Found slave " << setw(3) << slave_no << " [" << hex << setfill('0');
       for (int i=0; i<4; i++)
-         printf("%02x", (int)ensemble::slave_addr[slave_no][i]);
-      printf("]\n");
+         cout << setw(2) << (int)ensemble::slave_addr[slave_no][i];
+      cout << dec << setfill(' ') << "] lc=" << loss_count << " -- ";
    }
-
-   nrf_set_slave(slave_no);
-
-   if (debug)
-      printf("%s Writing pages ", timestamp().c_str());
 
    for (int page=0; page < num_pages; page++)
    {
@@ -263,31 +262,33 @@ bool prog_slave(const uint16_t slave_no, uint8_t* image_buff, size_t image_size)
          buff[5] = 0xff & page_addr;
          memcpy(buff+6, image_buff + chunk_start, boot_chunk_size);
          if (debug>2)
-            printf("%s load pg:%02x chunk:%02x\n", timestamp().c_str(), page, chunk);
+            cout << endl << timestamp() << hex
+                 << " Load pg:" << setw(2) << page
+                 << " chunk:" << setw(2) << chunk << dec << " -- ";
          if (!nrf_tx(buff, ensemble::message_size, 10, loss_count))
             return false;
       }
       buff[2] = bl_write_flash_page;
       if (debug>1)
-         printf("%s Write page at %04x\n", timestamp().c_str(), page_addr);
+         cout << endl << timestamp() << " Write page " << hex << page_addr << dec << " -- ";
       if (!nrf_tx(buff, ensemble::message_size, 50, loss_count))
          return false;
 
       buff[2] = bl_check_write_complete;
       if (debug>1)
-         printf("%s Write page complete\n", timestamp().c_str());
+         cout << endl << timestamp() << " Write page complete " << " -- ";
       if (!nrf_tx(buff, ensemble::message_size, 50, loss_count))
          return false;
    }
 
    buff[2] = bl_start_app;
    if (debug>2) 
-      printf("%s Starting app\n", timestamp().c_str());
+      cout << endl << timestamp() << " Programming complete. Starting app" << " -- ";
    if (!nrf_tx(buff, ensemble::message_size, 10, loss_count))
       return false;
 
    if (debug)
-      printf("%s Slave %d Programmed. (loss=%d)\n", timestamp().c_str(), slave_no, loss_count);
+      cout << endl << timestamp() << " Programming slave " << slave_no << " complete. lc= " << loss_count << " -- ";
 
    return true;
 }
@@ -324,7 +325,7 @@ void nrf_setup(int slave_no)
    write_reg(CONFIG, cfg);
    clear_CE();
       
-   write_reg(SETUP_RETR, SETUP_RETR_ARC_10 | SETUP_RETR_ARD_1000); // auto retransmit 10 x 750us
+   write_reg(SETUP_RETR, SETUP_RETR_ARC_10 | SETUP_RETR_ARD_500); // auto retransmit 10 x 500us
    write_reg(SETUP_AW, SETUP_AW_4BYTES);  // 4 byte addresses
    write_reg(RF_SETUP, 0b00001110);  // 2Mbps data rate, 0dBm
    write_reg(RF_CH, ensemble::default_channel); // use channel 2
@@ -364,11 +365,6 @@ void nrf_set_slave(int slave_no)
    write_reg(TX_ADDR, ensemble::slave_addr[slave_no], ensemble::addr_len);
    write_reg(RX_ADDR_P0, ensemble::slave_addr[slave_no], ensemble::addr_len);
 
-   buff[0] = FLUSH_RX;
-   bcm2835_spi_transfern((char*)&buff, 1);
-   buff[0] =FLUSH_TX;
-   bcm2835_spi_transfern((char*)&buff, 1);
-      
    write_reg(CONFIG, cfg | CONFIG_PWR_UP);
 }
 
@@ -379,8 +375,17 @@ bool nrf_tx(uint8_t* data, size_t len, const unsigned max_retry, unsigned &loss_
 
    for (int j=0; j<max_retry; j++)
    {
+      // a 22 byte payload + 4 byte addr + 2 byte crc + 17 bits framing = 241 bits
+      // at 2 MHz data rate = 120 uS
+      // with ARD=500uS and ARC=10, MAX_RT should be asserted within 
+      // (130 + 120 + 500 + 130) x 10 = 8.8 mS
+      // after transmission.
+
       if (debug>1)
-         cout << "T";
+         cout << "T" << j;
+
+      iobuff[0] = FLUSH_TX;
+      bcm2835_spi_transfern((char*)&iobuff, 1);
 
       iobuff[0] = W_TX_PAYLOAD;
       memcpy(iobuff+1, data, len);
@@ -389,28 +394,35 @@ bool nrf_tx(uint8_t* data, size_t len, const unsigned max_retry, unsigned &loss_
       bcm2835_delayMicroseconds(10);
       clear_CE();
 
-      for (int i=0; i < 1000; i++)
+      int i;
+      const unsigned tx_to = 90; // 8.8 mS / 100 uS plus a little slop
+      for (i=0; i < tx_to; i++)
       {
          uint8_t status = read_reg(STATUS);
          if (status & STATUS_TX_DS)
          {
+            if (debug>1)
+               cout << "!" << flush;
             write_reg(STATUS, STATUS_TX_DS); //Clear the data sent notice
+            loss_count += read_reg(OBSERVE_TX) & 0x0f;
             return true;
          }
          else if (status & STATUS_MAX_RT)
          {
-            cout << "x" << flush;
+            if (debug>1)
+               cout << "x";
             loss_count += read_reg(OBSERVE_TX) & 0x0f;
             write_reg(STATUS, STATUS_MAX_RT);  // clear IRQ
-            iobuff[0] = FLUSH_TX;
-            bcm2835_spi_transfern((char*)&iobuff, 1);
             break;
          }
-         bcm2835_delayMicroseconds(50);
+         bcm2835_delayMicroseconds(100);
       }
+      if (debug>1 && i>=tx_to)
+         cout << endl << timestamp() << " Missed MAX_RT" << endl;
    }
 
-   cout << "X" << endl;
+   if (debug>1) 
+      cout << "X" << flush;
    return false;
 }
 
