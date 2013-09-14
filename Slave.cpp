@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
@@ -26,12 +27,11 @@ const int WARN_LEVEL = 50;
 const int ERROR_LEVEL = 30;
 const bool DEBUG_OUTPUT = false;
 
-
 Slave::Slave()
 {
 }
 
-Slave::Slave(uint16_t slave, int hatNumber, char* drillId, char *studentName)
+Slave::Slave(uint16_t slave, int hatNumber, const char* drillId, const char *studentName)
 {
 	slave_no = slave;
 	hat_no = hatNumber;
@@ -46,6 +46,7 @@ int Slave::operator==(const Slave &slave) const
 	if(this->slave_no == slave.slave_no) return 1; 
 	return 0; 
 } 
+
 
 void Slave::checkBattStatus()
 {
@@ -108,6 +109,8 @@ bool Slave::tx()
 		std::cout << "Skipped slave " << slave_no << std::endl;
 		return validRead;
 	}
+        else
+           std::cout << "Slave: " << slave_no << std::endl;
 
 	t_tx = runtime.msec();
 	tx_cnt++;
@@ -266,3 +269,13 @@ std::string Slave::status() const
 	//		sprintf(buff+80, "%5d", vlevel);
 	return std::string(buff);
 }
+
+std::ostream& operator<<(std::ostream& s, const Slave& slave)
+{
+   s << std::left << std::setw(3) << slave.slave_no
+     << " " << std::setw(3) << slave.drill_id
+     << " " << std::right << std::setw(3) << slave.stateOfCharge << "%"
+     << " " << std::left << slave.student_name;
+   return s;
+}
+

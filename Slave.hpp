@@ -41,7 +41,7 @@ class Slave
 		uint8_t buff[ensemble::message_size];
 
 		Slave();
-		Slave(uint16_t slave, int hatNumber, char* drillId, char *studentName);
+		Slave(uint16_t slave, int hatNumber, const char* drillId, const char *studentName);
 		int operator==(const Slave &) const;
 		void checkBattStatus();
 		void readMissedMsgCnt();
@@ -55,5 +55,7 @@ class Slave
 		void rxStop();
 		std::string status() const;
 };
+
+std::ostream& operator<<(std::ostream& s, const Slave& slave);
 
 #endif

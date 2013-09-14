@@ -33,16 +33,60 @@ ostream& operator<<(std::ostream& strm, const list<Slave> sv)
 			<< left << i->student_name << endl;
 }
 
-int main ()
+nameList::NameHatInfo testNameList[] =
 {
+   "Hingle McCringleberry", 207, 7, "F19",
+   "Ebreham Moisesus", 208, 8, "F8",
+   "Bob Mellon",    202, 2, "F1",
+   "Rob Burgundy",  205, 5, "F5",
+   "006",           206, 6, "F10",
+   "OneThirtyNine", 239, 139, "F6",
+   "OneThirty",     230, 130, "F2",
+   "EightyThree",   283, 83, "F3",
+   "TwentyNine",    229, 29,  "F4",
+   "OneTwentySix",  226, 126, "F7",
+   "OneThirtyFive", 235, 135, "F9",
+};
+
+
+int main (int argc, char* argv[])
+{
+   int debug=0;
+   bool test=false;
+   opterr = 0;
+   int c;
+   while ((c = getopt(argc, argv, "di:s:t")) != -1)
+      switch (c)
+      {
+         case 'd': debug++; break;
+         case 't': test=true; break;
+         default:
+            cout << "Usage " << argv[0] << "[-d] [-t]" << endl;
+            exit(-1);
+      }
+
 	list<Slave> slaveList;
-	for(int entry = 0; entry < nameList::numberEntries; entry++)
-	{
-		slaveList.push_back(Slave(nameList::nameList[entry].circuitBoardNumber,
+        if (test)
+        {
+           size_t ll = sizeof(testNameList)/sizeof(nameList::NameHatInfo);
+           for(int i = 0; i < ll; i++)
+              slaveList.push_back(Slave(testNameList[i].circuitBoardNumber,
+                                   testNameList[i].hatNumber,
+                                   testNameList[i].drillId,
+                                   testNameList[i].name));
+        }
+        else
+           for(int entry = 0; entry < nameList::numberEntries; entry++)
+           {
+              slaveList.push_back(Slave(nameList::nameList[entry].circuitBoardNumber,
 					nameList::nameList[entry].hatNumber,
 					nameList::nameList[entry].drillId,
 					nameList::nameList[entry].name));
-	}
+           }
+
+
+        if (debug)
+           cout << "slaveList:" << endl << slaveList;
 
 	nRF24L01::channel = 2;
 	memcpy(nRF24L01::master_addr,    ensemble::master_addr,   nRF24L01::addr_len);
