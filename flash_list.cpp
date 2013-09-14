@@ -27,11 +27,16 @@ This program is used to program all slaves defined in nameList.hpp
 
 nameList::NameHatInfo testNameList[] =
 {
-   "Bob Mellon", 214, 2, "F1",
-   "Ebreham Moisesus", 206, 6, "F5",
-   "Hingle McCringleberry", 215, 7, "B19",
-   "Peter Gabriel", 239, 8, "T8",
-   "Rob Burgundy", 219, 5, "C10",
+   "Hingle McCringleberry", 207, 7, "F19",
+   "Ebreham Moisesus", 208, 8, "F8",
+   "Bob Mellon",    202, 2, "F1",
+   "Rob Burgundy",  205, 5, "F5",
+   "OneThirtyNine", 239, 139, "F6",
+   "OneThirty",     230, 130, "F2",
+   "OneTwentyEight",228, 128, "F3",
+   "TwentyNine",    229, 29,  "F4",
+   "OneTwentySix",  226, 126, "F7",
+   "OneThirtyFive", 235, 135, "F9",
 };
 
 std::ostream& operator<<(std::ostream& s, const Slave& slave)
@@ -171,20 +176,28 @@ int main(int argc, char **argv)
                               testNameList[i].name));
    }
 
-   for (int pass=0; todo.size() > 0; pass++)
+   for (int pass=1; todo.size() > 0; pass++)
    {
       cout << "Pass " << pass << endl;
       list<Slave>::iterator i;
       for (i = todo.begin(); i != todo.end(); )
       {
-         if (prog_slave(i->slave_no, image_buff, image_size))
+         if (i->drill_id[0] != 'F')
          {
             done.push_back(*i);
-            cout << "Programmed " << *i << endl;
+            i=todo.erase(i);
+         }
+         else if (prog_slave(i->slave_no, image_buff, image_size))
+         {
+            done.push_back(*i);
+            cout << timestamp() << " Programmed " << *i << endl;
             i = todo.erase(i);
          }
          else
+         {
+            cout << timestamp() << " Failed programming " << *i << endl;
             i++;
+         }
       }
       if (todo.size())
          cout << "Boards remaining: " << endl
@@ -235,10 +248,7 @@ bool prog_slave(const uint16_t slave_no, uint8_t* image_buff, size_t image_size)
 
    nrf_set_slave(slave_no);
 
-   if (!nrf_tx(buff, ensemble::message_size, 50, loss_count))
-      return false;
-
-   if (debug==1)
+   if (debug)
       printf("%s Writing pages ", timestamp().c_str());
 
    for (int page=0; page < num_pages; page++)
@@ -252,37 +262,28 @@ bool prog_slave(const uint16_t slave_no, uint8_t* image_buff, size_t image_size)
          buff[4] = page_addr>>8;
          buff[5] = 0xff & page_addr;
          memcpy(buff+6, image_buff + chunk_start, boot_chunk_size);
-         if (debug>1)
-            printf("%s load pg:%02x chunk:%02x ", timestamp().c_str(), page, chunk);
-         if (!nrf_tx(buff, ensemble::message_size, 50, loss_count))
+         if (debug>2)
+            printf("%s load pg:%02x chunk:%02x\n", timestamp().c_str(), page, chunk);
+         if (!nrf_tx(buff, ensemble::message_size, 10, loss_count))
             return false;
-         if (debug>1)
-            printf("!\n");
       }
       buff[2] = bl_write_flash_page;
       if (debug>1)
-         printf("%s write page at %04x ", timestamp().c_str(), page_addr);
-      if (debug==1)
-         printf(".");
+         printf("%s Write page at %04x\n", timestamp().c_str(), page_addr);
       if (!nrf_tx(buff, ensemble::message_size, 50, loss_count))
          return false;
-      if (debug>1)
-         printf("\n");
 
       buff[2] = bl_check_write_complete;
-      if (debug>2)
-         printf("%s write complete ", timestamp().c_str());
+      if (debug>1)
+         printf("%s Write page complete\n", timestamp().c_str());
       if (!nrf_tx(buff, ensemble::message_size, 50, loss_count))
          return false;
-      if (debug>2)
-         printf("\n");
    }
-   if (debug==1) printf("\n");
 
    buff[2] = bl_start_app;
    if (debug>2) 
       printf("%s Starting app\n", timestamp().c_str());
-   if (!nrf_tx(buff, ensemble::message_size, 50, loss_count))
+   if (!nrf_tx(buff, ensemble::message_size, 10, loss_count))
       return false;
 
    if (debug)
@@ -323,7 +324,7 @@ void nrf_setup(int slave_no)
    write_reg(CONFIG, cfg);
    clear_CE();
       
-   write_reg(SETUP_RETR, SETUP_RETR_ARC_10 | SETUP_RETR_ARD_750); // auto retransmit 10 x 750us
+   write_reg(SETUP_RETR, SETUP_RETR_ARC_10 | SETUP_RETR_ARD_1000); // auto retransmit 10 x 750us
    write_reg(SETUP_AW, SETUP_AW_4BYTES);  // 4 byte addresses
    write_reg(RF_SETUP, 0b00001110);  // 2Mbps data rate, 0dBm
    write_reg(RF_CH, ensemble::default_channel); // use channel 2
@@ -378,11 +379,14 @@ bool nrf_tx(uint8_t* data, size_t len, const unsigned max_retry, unsigned &loss_
 
    for (int j=0; j<max_retry; j++)
    {
+      if (debug>1)
+         cout << "T";
+
       iobuff[0] = W_TX_PAYLOAD;
       memcpy(iobuff+1, data, len);
       bcm2835_spi_transfern((char*)iobuff, len+1);
       set_CE();
-      bcm2835_delayMicroseconds(15);
+      bcm2835_delayMicroseconds(10);
       clear_CE();
 
       for (int i=0; i < 1000; i++)
@@ -395,6 +399,7 @@ bool nrf_tx(uint8_t* data, size_t len, const unsigned max_retry, unsigned &loss_
          }
          else if (status & STATUS_MAX_RT)
          {
+            cout << "x" << flush;
             loss_count += read_reg(OBSERVE_TX) & 0x0f;
             write_reg(STATUS, STATUS_MAX_RT);  // clear IRQ
             iobuff[0] = FLUSH_TX;
@@ -405,6 +410,7 @@ bool nrf_tx(uint8_t* data, size_t len, const unsigned max_retry, unsigned &loss_
       }
    }
 
+   cout << "X" << endl;
    return false;
 }
 
