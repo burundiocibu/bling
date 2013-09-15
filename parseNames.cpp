@@ -47,7 +47,7 @@ int parseCsvHatListFile()
 		 * Check for lines that don't include student
 		 * information and for empty lines
 		 */
-		if(line.find("Anderson") != string::npos)
+		if(line.find("Anderson Band") != string::npos)
 		{
 			// Skip Anderson Band headline
 			continue;
