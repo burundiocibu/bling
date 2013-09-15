@@ -30,7 +30,7 @@ nameList::NameHatInfo testNameList[] =
    "Hingle McCringleberry", 207, 7, "F19",
    "Ebreham Moisesus", 208, 8, "F8",
    "Bob Mellon",    202, 2, "F1",
-   "Rob Burgundy",  205, 5, "F5",
+   "Ron Burgundy",  205, 5, "F5",
    "006",           206, 6, "F10",
    "OneThirtyNine", 239, 139, "F6",
    "OneThirty",     230, 130, "F2",
@@ -39,15 +39,6 @@ nameList::NameHatInfo testNameList[] =
    "OneTwentySix",  226, 126, "F7",
    "OneThirtyFive", 235, 135, "F9",
 };
-
-std::ostream& operator<<(std::ostream& s, const Slave& slave)
-{
-   s << std::left << std::setw(3) << slave.slave_no
-     << " " << std::setw(3) << slave.drill_id
-     << " " << std::right << std::setw(3) << slave.stateOfCharge << "%"
-     << " " << std::left << slave.student_name;
-   return s;
-}
 
 std::ostream& operator<<(std::ostream& s, const std::list<Slave>& slave_list)
 {
@@ -208,6 +199,8 @@ int main(int argc, char **argv)
       }
       if (todo.size() && debug)
          cout << endl << "Boards remaining: " << endl << todo;
+      bcm2835_delayMicroseconds(100000);
+
    }
 
    cout << endl << "All boards programmed." << endl;
@@ -216,6 +209,7 @@ int main(int argc, char **argv)
    fclose(fp);
    return 0;
 }
+
 
 
 bool prog_slave(const uint16_t slave_no, uint8_t* image_buff, size_t image_size)
@@ -250,8 +244,67 @@ bool prog_slave(const uint16_t slave_no, uint8_t* image_buff, size_t image_size)
       cout << dec << setfill(' ') << "] lc=" << loss_count << " -- ";
    }
 
-   for (int page=0; page < num_pages; page++)
+   // Start off with writing a page to address 0x0000 that will jump 
+   // to the boot loader
+   uint8_t safe_page[] = {0xE0, 0xE0, 0xF0, 0xE7, 0x09, 0x95};
+   memset(buff, 0, sizeof(buff));
+   buff[2] = bl_load_flash_chunk;
+   buff[4] = 0x00; 
+   buff[5] = 0x00;
+   memcpy(buff+6, safe_page, sizeof(safe_page));
+   for (int chunk=0; chunk < chunks_per_page; chunk++)
    {
+      buff[3] = chunk;
+      if (!nrf_tx(buff, ensemble::message_size, 10, loss_count))
+         return false;
+      memset(buff+6, 0, sizeof(safe_page));
+   }
+
+   buff[2] = bl_write_flash_page;
+   if (debug>1)
+      cout << endl << timestamp() << " Write safe page " << " -- ";
+   if (!nrf_tx(buff, ensemble::message_size, 50, loss_count))
+      return false;
+
+   buff[2] = bl_check_write_complete;
+   if (debug>1)
+      cout << endl << timestamp() << " Write page complete " << " -- ";
+   if (!nrf_tx(buff, ensemble::message_size, 50, loss_count))
+      return false;
+
+   for (int page=1; page < num_pages; page++)
+   {
+      uint16_t page_addr=page*boot_page_size;
+      for (int chunk=0; chunk < chunks_per_page; chunk++)
+      {
+         uint16_t chunk_start=page*boot_page_size + chunk*boot_chunk_size;
+         buff[2] = bl_load_flash_chunk;
+         buff[3] = chunk;
+         buff[4] = page_addr>>8;
+         buff[5] = 0xff & page_addr;
+         memcpy(buff+6, image_buff + chunk_start, boot_chunk_size);
+         if (debug>2)
+            cout << endl << timestamp() << hex
+                 << " Load pg:" << setw(2) << page
+                 << " chunk:" << setw(2) << chunk << dec << " -- ";
+         if (!nrf_tx(buff, ensemble::message_size, 10, loss_count))
+            return false;
+      }
+      buff[2] = bl_write_flash_page;
+      if (debug>1)
+         cout << endl << timestamp() << " Write page " << hex << page_addr << dec << " -- ";
+      if (!nrf_tx(buff, ensemble::message_size, 50, loss_count))
+         return false;
+
+      buff[2] = bl_check_write_complete;
+      if (debug>1)
+         cout << endl << timestamp() << " Write page complete " << " -- ";
+      if (!nrf_tx(buff, ensemble::message_size, 50, loss_count))
+         return false;
+   }
+
+   {
+      int page=0;
       uint16_t page_addr=page*boot_page_size;
       for (int chunk=0; chunk < chunks_per_page; chunk++)
       {

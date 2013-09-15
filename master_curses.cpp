@@ -157,14 +157,22 @@ int main(int argc, char **argv)
          case 'S': hsv.s-=2; hsv2rgb(hsv, rgb); set_rgb(rgb); break;
          case '0':
             messages::encode_start_effect(buff, 0, t, 750);
-            nrf_tx(buff, sizeof(buff), slave);
+            for (int i=0; i<20; i++)
+            {
+               nrf_tx(buff, sizeof(buff), slave);
+               bcm2835_delayMicroseconds(5000);
+            }
             break;
          case '1':
             messages::encode_start_effect(buff, 1, t, 20000);
-            nrf_tx(buff, sizeof(buff), slave);
+            for (int i=0; i<20; i++)
+            {
+               nrf_tx(buff, sizeof(buff), slave);
+               bcm2835_delayMicroseconds(5000);
+            }
             break;
          case '2':
-            messages::encode_start_effect(buff, 2, t, 20000);
+            messages::encode_start_effect(buff, 2, t, 10000);
             nrf_tx(buff, sizeof(buff), slave);
             break;
          case '3':
@@ -176,8 +184,12 @@ int main(int argc, char **argv)
             }
             break;
          case '4':
-            messages::encode_start_effect(buff, 4, t, 3000);
-            nrf_tx(buff, sizeof(buff), slave);
+            messages::encode_start_effect(buff, 4, t, 10000);
+            for (int i=0; i<20; i++)
+            {
+               nrf_tx(buff, sizeof(buff), slave);
+               bcm2835_delayMicroseconds(5000);
+            }
             break;
             
          case 'x':

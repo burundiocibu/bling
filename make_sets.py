@@ -61,6 +61,18 @@ set4_count56 = [
     'C10', 'C9', 'C6', 'C13', 'C11', 'C7'
     ]
 
+set4_count56_left = [
+    'F10', 'F13', 'F7', 'F11', 'F2', 'F8', 'F17', 'F14', 'F12', 'F18', 'F9',
+    'F6', 'F19', 'F5', 'F20', 'F4', 'F16', 'F3', 'F15', 'F23', 'F22', 'F21']
+set4_count56_left.reverse();
+
+set4_count56_right = [
+    'S4', 'A1', 'A3', 'S2', 'A2', 'A12', 'S1', 'S3', 'A7', 'S7', 'A5', 'A6',
+    'S8', 'S6', 'A8', 'A10', 'A4', 'A9', 'S5', 'A11', 'C3', 'C1', 'C22', 'C4',
+    'C15', 'C16', 'C2', 'C17', 'C8', 'C23', 'C14', 'C12', 'C24', 'C5', 'C20',
+    'C10', 'C9', 'C6', 'C13', 'C11', 'C7'
+    ]
+
 # Brass set the hats down
 set4_count66 = [
     'B7', 'B25', 'B21', 'B15', 'B10', 'B9', 'B24', 'B20', 'B2',
@@ -71,7 +83,7 @@ set4_count66 = [
     ]
 
 
-def print_delays(mid_list, var_name):
+def print_lineardelay(mid_list, var_name):
     global did2sid
     global did2name
     lut=[0xff for i in range(150)]
@@ -87,11 +99,56 @@ def print_delays(mid_list, var_name):
                 print "No board: {:3s} {}".format(did, did2name[did])
         else:
             lut[sid] = i
+    print_lut(lut, var_name)
 
+
+def set_lut(lut, d, did):
+    global did2sid
+    global did2name
+    if did not in did2sid:
+        print "slave id not found for", did
+        return
+    sid = did2sid[did]
+    if sid == 999:
+        if args.missing:
+            print "No board: {:3s} {}".format(did, did2name[did])
+    else:
+        lut[sid] = i
+    
+
+def print_lut(lut, var_name):
     lut = [str(i) for i in lut]
     print "const uint8_t ",var_name,"[] PROGMEM = {"
     print ", ".join(lut), "};"
-    
 
-print_delays(set4_count56, "e3_delay")
-print_delays(set4_count66, "e4_delay")
+
+print_lineardelay(set4_count56, "e3_delay")
+print_lineardelay(set4_count66, "e4_delay")
+
+
+lut=[0xff for i in range(150)]
+d=0;
+for did in set4_count56_left:
+    set_lut(lut, d, did);
+    d += 1;
+
+d=0;
+for did in set4_count56_right:
+    set_lut(lut, d, did);
+    d += 1;
+
+print_lut(lut, "e5_delay");
+
+lut=[0xff for i in range(150)]
+lut[7]  = 0
+lut[6]  = 10
+lut[8]  = 10
+lut[29] = 20
+lut[5]  = 20
+lut[2]  = 30
+lut[135] = 30
+lut[130] = 40
+lut[83]  = 40
+lut[126] = 50
+lut[139] = 50
+print_lut(lut, "e2_delay")

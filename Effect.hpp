@@ -23,6 +23,7 @@ struct Effect
    void execute(void);
    void all_stop(uint8_t* buff);
    void reset();
+   uint16_t get_delay(const uint8_t lut[], size_t len);
 
    enum State
    {
