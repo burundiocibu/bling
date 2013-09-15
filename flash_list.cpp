@@ -214,15 +214,14 @@ int main(int argc, char **argv)
 
 bool prog_slave(const uint16_t slave_no, uint8_t* image_buff, size_t image_size)
 {
+   nrf_set_slave(slave_no);
+
+   unsigned loss_count=0;
    uint8_t buff[ensemble::message_size];
+   memset(buff, 0, sizeof(buff));
    buff[0] = boot_magic_word >> 8;
    buff[1] = 0xff & boot_magic_word;
    buff[2] = bl_no_op;
-
-   unsigned loss_count=0;
-   unsigned lc;
-
-   nrf_set_slave(slave_no);
 
    if (debug>1)
       cout << endl << timestamp() << " Looking for slave " << setw(3) << slave_no << " -- ";
@@ -247,7 +246,6 @@ bool prog_slave(const uint16_t slave_no, uint8_t* image_buff, size_t image_size)
    // Start off with writing a page to address 0x0000 that will jump 
    // to the boot loader
    uint8_t safe_page[] = {0xE0, 0xE0, 0xF0, 0xE7, 0x09, 0x95};
-   memset(buff, 0, sizeof(buff));
    buff[2] = bl_load_flash_chunk;
    buff[4] = 0x00; 
    buff[5] = 0x00;
@@ -437,9 +435,6 @@ bool nrf_tx(uint8_t* data, size_t len, const unsigned max_retry, unsigned &loss_
       if (debug>1)
          cout << "T" << j;
 
-      iobuff[0] = FLUSH_TX;
-      bcm2835_spi_transfern((char*)&iobuff, 1);
-
       iobuff[0] = W_TX_PAYLOAD;
       memcpy(iobuff+1, data, len);
       bcm2835_spi_transfern((char*)iobuff, len+1);
@@ -466,6 +461,8 @@ bool nrf_tx(uint8_t* data, size_t len, const unsigned max_retry, unsigned &loss_
                cout << "x";
             loss_count += read_reg(OBSERVE_TX) & 0x0f;
             write_reg(STATUS, STATUS_MAX_RT);  // clear IRQ
+            iobuff[0] = FLUSH_TX;
+            bcm2835_spi_transfern((char*)&iobuff, 1);
             break;
          }
          bcm2835_delayMicroseconds(100);
