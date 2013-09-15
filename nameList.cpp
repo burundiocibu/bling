@@ -4,13 +4,15 @@
 
 namespace nameList
 {
-const int numberEntries = 129;
+const int numberEntries = 131;
 NameHatInfo nameList[numberEntries] =
 {
     "Bridgette Abbott", 56, 14, "F20",
     "Caroline Acuna", 198, 106, "F5",
     "Emily Acuna", 177, 999, "B19",
     "James Anders", 39, 999, "T8",
+    "Cari Anderson", 9, 73, "C9",
+    "Margarete Anderson", 40, 999, "F18",
     "Ashia Deshu Arline", 19, 25, "C10",
     "Ashley Avalos", 217, 27, "B24",
     "Grace Bassett", 139, 123, "A7",

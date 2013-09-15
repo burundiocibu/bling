@@ -17,6 +17,9 @@ rx-test: rx-test.o rt_utils.o nrf24l01.o messages.o
 tx-test: LDLIBS+=-lbcm2835 -lstdc++
 tx-test: tx-test.o rt_utils.o nrf24l01.o messages.o
 
+parseNames:LDLIBS+=-lstdc++
+parseNames: parseNames.o
+
 master_curses: LDLIBS+=-lbcm2835 -lstdc++ -lncurses
 master_curses: master_curses.o rt_utils.o nrf24l01.o messages.o i2c.o lcd_plate.o
 
@@ -48,5 +51,3 @@ get_param: get_param.cpp ensemble.hpp nrf_boot.h
 	gcc -o $@ $?
 #=================================================================
 
-parseNames:LDLIBS+=-lstdc++
-parseNames: parseNames.o
