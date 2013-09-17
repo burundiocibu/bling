@@ -21,7 +21,7 @@ void outputList(std::string text, std::string fileName, list<Slave>& slaveList);
 
 
 const int MAX_RETRY_COUNT = 10;
-const int NUM_MMC_MSGS = 30;
+const int NUM_MMC_MSGS = 5;
 
 ostream& operator<<(std::ostream& strm, const list<Slave> sv)
 {
@@ -78,6 +78,8 @@ int main (int argc, char* argv[])
         else
            for(int entry = 0; entry < nameList::numberEntries; entry++)
            {
+              if (nameList::nameList[entry].drillId[0] != 'F')
+                 continue;
               slaveList.push_back(Slave(nameList::nameList[entry].circuitBoardNumber,
 					nameList::nameList[entry].hatNumber,
 					nameList::nameList[entry].drillId,
@@ -113,6 +115,7 @@ int main (int argc, char* argv[])
 	list<Slave> unreachableList;
 
 	// Do Initial read of all Slaves
+        cout << "Start initial read of Slaves" << endl;
 	list<Slave>::iterator i;
 	for(i=slaveList.begin(); i != slaveList.end(); i++)
 	{
@@ -155,17 +158,10 @@ int main (int argc, char* argv[])
 	bool lastRead = false;
 	while((unreachableList.size() > 0) && (retry < MAX_RETRY_COUNT))
 	{
-
-		// Make copy of unreachable list so not editing the list that am iterating
-		list<Slave> copyUnreachable;
-		list<Slave>::iterator i; 
-		for(i=unreachableList.begin(); i != unreachableList.end(); ++i)
-		{
-			copyUnreachable.push_back(*i);
-		}
+           cout << "Retry of unsuccessful. Retry #" << retry+1 << ", num slaves = " << unreachableList.size() << endl;
 
 		// Cycle through all unreachable slaves querying for battery
-		for(i=copyUnreachable.begin(); i != copyUnreachable.end(); ++i)
+		for(i=unreachableList.begin(); i != unreachableList.end();)
 		{
 			Slave& slave(*i);
 			slave.checkBattStatus();
@@ -182,21 +178,25 @@ int main (int argc, char* argv[])
 					 */
 					if((slave.stateOfCharge != 0) || (lastRead == true))
 					{
-						unreachableList.remove(slave);
 						errorList.push_back(slave);
+						i = unreachableList.erase(i);
 					}
 				}
 				else if(slave.isWarnNow())
 				{
-					unreachableList.remove(slave);
 					warnList.push_back(slave);
+					i = unreachableList.erase(i);
 				}
 				else
 				{
-					unreachableList.remove(slave);
 					okList.push_back(slave);
+					i = unreachableList.erase(i);
 				}
 			}
+                        else
+                        {
+                           i++;
+                        }
 		}
 		lastRead = (retry == (MAX_RETRY_COUNT-1));
 		retry++;
@@ -207,7 +207,7 @@ int main (int argc, char* argv[])
 	for(int i=0; i<NUM_MMC_MSGS; i++)
 	{
 		bcm2835_delay(5); // delay 5mS	
-		for(iter=slaveList.begin(); iter != slaveList.end(); iter++)
+		for(iter=okList.begin(); iter != okList.end(); iter++)
 		{
 			Slave& slave(*iter);
 			if (slave.slave_no == 999)
@@ -215,7 +215,7 @@ int main (int argc, char* argv[])
 			slave.sendAllStop();
 		}
 	}
-	for(iter=slaveList.begin(); iter != slaveList.end(); iter++)
+	for(iter=okList.begin(); iter != okList.end(); iter++)
 	{
 		Slave& slave(*iter);
 		if (slave.slave_no == 999)

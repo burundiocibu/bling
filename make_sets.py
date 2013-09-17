@@ -113,7 +113,7 @@ def set_lut(lut, d, did):
         if args.missing:
             print "No board: {:3s} {}".format(did, did2name[did])
     else:
-        lut[sid] = i
+        lut[sid] = d
     
 
 def print_lut(lut, var_name):
@@ -130,12 +130,12 @@ lut=[0xff for i in range(150)]
 d=0;
 for did in set4_count56_left:
     set_lut(lut, d, did);
-    d += 1;
+    d += 4;
 
 d=0;
 for did in set4_count56_right:
     set_lut(lut, d, did);
-    d += 1;
+    d += 4;
 
 print_lut(lut, "e5_delay");
 

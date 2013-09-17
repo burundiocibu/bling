@@ -186,6 +186,13 @@ void Slave::rxBatt(ReadType type)
 	write_reg(CONFIG, config); // should still be powered on
 	clear_CE();
 
+        if (i==100)
+        {
+           validRead = false;
+           return;
+        }
+
+
 	if(DEBUG_OUTPUT)
 	{
 		for (int i = 0; i <ensemble::message_size; i++)
@@ -246,6 +253,12 @@ void Slave::rxStop()
 	config &= ~CONFIG_PRIM_RX;
 	write_reg(CONFIG, config); // should still be powered on
 	clear_CE();
+
+        if (i==100)
+        {
+           validRead = false;
+           return;
+        }
 
 	if(DEBUG_OUTPUT)
 	{

@@ -179,7 +179,7 @@ int main(int argc, char **argv)
          }
       }
       if (todo.size() && debug)
-         cout << "Boards remaining: " << endl << todo;
+         cout << "Boards remaining, " << todo.size() << endl << todo;
       sleep(1);
 
    }

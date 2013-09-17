@@ -191,6 +191,14 @@ int main(int argc, char **argv)
                bcm2835_delayMicroseconds(5000);
             }
             break;
+         case '5':
+            messages::encode_start_effect(buff, 5, t, 10000);
+            for (int i=0; i<20; i++)
+            {
+               nrf_tx(buff, sizeof(buff), slave);
+               bcm2835_delayMicroseconds(5000);
+            }
+            break;
             
          case 'x':
             messages::encode_all_stop(buff);
