@@ -33,62 +33,90 @@ ostream& operator<<(std::ostream& strm, const list<Slave> sv)
 			<< left << i->student_name << endl;
 }
 
-nameList::NameHatInfo testNameList[] =
+nameList::NameHatInfo testJonNameList[] =
 {
-   "Hingle McCringleberry", 207, 7, "F19",
-   "Ebreham Moisesus", 208, 8, "F8",
-   "Bob Mellon",    202, 2, "F1",
-   "Rob Burgundy",  205, 5, "F5",
-   "006",           206, 6, "F10",
-   "OneThirtyNine", 239, 139, "F6",
-   "OneThirty",     230, 130, "F2",
-   "EightyThree",   283, 83, "F3",
-   "TwentyNine",    229, 29,  "F4",
-   "OneTwentySix",  226, 126, "F7",
-   "OneThirtyFive", 235, 135, "F9",
+	"Hingle McCringleberry", 207, 7, "F19",
+	"Ebreham Moisesus", 208, 8, "F8",
+	"Bob Mellon",    202, 2, "F1",
+	"Rob Burgundy",  205, 5, "F5",
+	"006",           206, 6, "F10",
+	"OneThirtyNine", 239, 139, "F6",
+	"OneThirty",     230, 130, "F2",
+	"EightyThree",   283, 83, "F3",
+	"TwentyNine",    229, 29,  "F4",
+	"OneTwentySix",  226, 126, "F7",
+	"OneThirtyFive", 235, 135, "F9",
 };
 
+nameList::NameHatInfo testPattiNameList[] =
+{
+	"Bridgette Abbott", 56, 4, "F20",
+	"Caroline Acuna", 198, 106, "F5",
+	"Fake Name", 345, 999, "B55",
+	"Emily Acuna", 177, 3, "B19",
+	"Another Fake", 444, 8, "B44",
+};
 
 int main (int argc, char* argv[])
 {
-   int debug=0;
-   bool test=false;
-   opterr = 0;
-   int c;
-   while ((c = getopt(argc, argv, "di:s:t")) != -1)
-      switch (c)
-      {
-         case 'd': debug++; break;
-         case 't': test=true; break;
-         default:
-            cout << "Usage " << argv[0] << "[-d] [-t]" << endl;
-            exit(-1);
-      }
+	int debug=0;
+	bool testJon=false;
+	bool testPatti=false;
+	opterr = 0;
+	int c;
+	string lvalue = "";
+
+	while ((c = getopt(argc, argv, "di:s:tpl:")) != -1)
+		switch (c)
+		{
+			case 'd': debug++; break;
+			case 't': testJon=true; break;
+			case 'p': testPatti=true; break;
+			case 'l':
+				  lvalue = optarg;
+				  break;
+			default:
+				  cout << "Usage " << argv[0] << "[-d] [-t] [-p] [-l'C']" << endl;
+				  cout << "      where 'C' is a character limiting the section to check ex. F=Flute, T=Tuba" << endl;
+				  exit(-1);
+		}
 
 	list<Slave> slaveList;
-        if (test)
-        {
-           size_t ll = sizeof(testNameList)/sizeof(nameList::NameHatInfo);
-           for(int i = 0; i < ll; i++)
-              slaveList.push_back(Slave(testNameList[i].circuitBoardNumber,
-                                   testNameList[i].hatNumber,
-                                   testNameList[i].drillId,
-                                   testNameList[i].name));
-        }
-        else
-           for(int entry = 0; entry < nameList::numberEntries; entry++)
-           {
-              if (nameList::nameList[entry].drillId[0] != 'F')
-                 continue;
-              slaveList.push_back(Slave(nameList::nameList[entry].circuitBoardNumber,
-					nameList::nameList[entry].hatNumber,
-					nameList::nameList[entry].drillId,
-					nameList::nameList[entry].name));
-           }
+	if (testJon)
+	{
+		size_t ll = sizeof(testJonNameList)/sizeof(nameList::NameHatInfo);
+		for(int i = 0; i < ll; i++)
+			slaveList.push_back(Slave(testJonNameList[i].circuitBoardNumber,
+						testJonNameList[i].hatNumber,
+						testJonNameList[i].drillId,
+						testJonNameList[i].name));
+	}
+	else if (testPatti)
+	{
+		size_t ll = sizeof(testPattiNameList)/sizeof(nameList::NameHatInfo);
+		for(int i = 0; i < ll; i++)
+			slaveList.push_back(Slave(testPattiNameList[i].circuitBoardNumber,
+						testPattiNameList[i].hatNumber,
+						testPattiNameList[i].drillId,
+						testPattiNameList[i].name));
+	}
+	else
+		for(int entry = 0; entry < nameList::numberEntries; entry++)
+		{
+			if(lvalue.size() > 0)
+			{
+				if (nameList::nameList[entry].drillId[0] != lvalue.at(0))
+					continue;
+			}
+			slaveList.push_back(Slave(nameList::nameList[entry].circuitBoardNumber,
+						nameList::nameList[entry].hatNumber,
+						nameList::nameList[entry].drillId,
+						nameList::nameList[entry].name));
+		}
 
 
-        if (debug)
-           cout << "slaveList:" << endl << slaveList;
+	if (debug)
+		cout << "slaveList:" << endl << slaveList;
 
 	nRF24L01::channel = 2;
 	memcpy(nRF24L01::master_addr,    ensemble::master_addr,   nRF24L01::addr_len);
@@ -115,7 +143,7 @@ int main (int argc, char* argv[])
 	list<Slave> unreachableList;
 
 	// Do Initial read of all Slaves
-        cout << "Start initial read of Slaves" << endl;
+	cout << "Start initial read of Slaves" << endl;
 	list<Slave>::iterator i;
 	for(i=slaveList.begin(); i != slaveList.end(); i++)
 	{
@@ -158,7 +186,7 @@ int main (int argc, char* argv[])
 	bool lastRead = false;
 	while((unreachableList.size() > 0) && (retry < MAX_RETRY_COUNT))
 	{
-           cout << "Retry of unsuccessful. Retry #" << retry+1 << ", num slaves = " << unreachableList.size() << endl;
+		cout << "Retry of unsuccessful. Retry #" << retry+1 << ", num slaves = " << unreachableList.size() << endl;
 
 		// Cycle through all unreachable slaves querying for battery
 		for(i=unreachableList.begin(); i != unreachableList.end();)
@@ -193,10 +221,10 @@ int main (int argc, char* argv[])
 					i = unreachableList.erase(i);
 				}
 			}
-                        else
-                        {
-                           i++;
-                        }
+			else
+			{
+				i++;
+			}
 		}
 		lastRead = (retry == (MAX_RETRY_COUNT-1));
 		retry++;
