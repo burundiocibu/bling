@@ -46,6 +46,7 @@ class Slave
 		void checkBattStatus();
 		void readMissedMsgCnt();
 		void sendAllStop();
+		void sendReboot();
 		bool readStatusSuccess();
 		bool isActNow();
 		bool isWarnNow();

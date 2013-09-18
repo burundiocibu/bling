@@ -118,6 +118,8 @@ int main (int argc, char* argv[])
 	if (debug)
 		cout << "slaveList:" << endl << slaveList;
 
+	Slave broadCastSlave(0, 888, "xx", "Bcast");
+
 	nRF24L01::channel = 2;
 	memcpy(nRF24L01::master_addr,    ensemble::master_addr,   nRF24L01::addr_len);
 	memcpy(nRF24L01::broadcast_addr, ensemble::slave_addr[0], nRF24L01::addr_len);
@@ -231,18 +233,17 @@ int main (int argc, char* argv[])
 	}
 
 	// Now test for missed messages
-	list<Slave>::iterator iter;
+	for(int i=0; i<20; i++)
+	{
+		broadCastSlave.sendReboot();
+		bcm2835_delay(5); // delay 5mS	
+	}
 	for(int i=0; i<NUM_MMC_MSGS; i++)
 	{
+		broadCastSlave.sendAllStop();
 		bcm2835_delay(5); // delay 5mS	
-		for(iter=okList.begin(); iter != okList.end(); iter++)
-		{
-			Slave& slave(*iter);
-			if (slave.slave_no == 999)
-				continue;
-			slave.sendAllStop();
-		}
 	}
+	list<Slave>::iterator iter;
 	for(iter=okList.begin(); iter != okList.end(); iter++)
 	{
 		Slave& slave(*iter);

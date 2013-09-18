@@ -85,6 +85,12 @@ void Slave::sendAllStop()
 	}
 }
 
+void Slave::sendReboot()
+{
+	messages::encode_reboot(buff);
+	tx();
+}
+
 bool Slave::isActNow()
 {
 	return stateOfCharge < ERROR_LEVEL;
@@ -110,7 +116,9 @@ bool Slave::tx()
 		return validRead;
 	}
         else
-           std::cout << "Slave: " << slave_no << std::endl;
+	{
+		if(DEBUG_OUTPUT) std::cout << "Slave: " << slave_no << std::endl;
+	}
 
 	t_tx = runtime.msec();
 	tx_cnt++;
