@@ -292,6 +292,10 @@ void nrf_rx(void)
    write_reg(CONFIG, config); // should still be powered on
    clear_CE();
 
+   if (i==100)
+      return;
+
+
    uint32_t t_rx;
    uint16_t slave_id, soc, vcell, missed_message_count;
    uint8_t msg_id, freshness_count;
