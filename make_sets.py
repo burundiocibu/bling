@@ -13,6 +13,8 @@ args = parser.parse_args()
 
 # Find slave id from drill id
 did2sid={}
+# drill id from slave id
+sid2did = {}
 # Find marcher name from drill id
 did2name = {}
 # Find hat number from drill id
@@ -30,14 +32,20 @@ with open("hatList.csv", "rU") as fh:
             if args.debug>1:
                 print row['First Name'], row['Last Name'], did, sid
             did2sid[did] = sid
+            sid2did[sid] = did
             did2name[did] = row['First Name'] + " " + row['Last Name']
             did2hid[did] = row['Hat #']
         except:
             pass    
 
-if args.list:
-    for did,sid in did2sid.iteritems():
-        print "{:3s} {:3d} {}".format(did, sid, did2name[did])
+if args.list==1:
+    for did in sorted(did2sid.keys()):
+        print "{:3s} {:3d} {}".format(did, did2sid[did], did2name[did])
+    exit()
+elif args.list==2:
+    for sid in sorted(did2sid.values()):
+        if sid == 999: continue
+        print "{:3s} {:3d} {}".format(sid2did[sid], sid, did2name[sid2did[sid]])
     exit()
     
 
