@@ -8,6 +8,7 @@ from argparse import ArgumentParser
 parser = ArgumentParser()
 parser.add_argument('-d', dest="debug", action='count', help='Increase debug level.')
 parser.add_argument('-m', dest="missing", action='count', help='Print out missing boards.')
+parser.add_argument('-l', dest="list", action='count', help='Just list marchers.')
 args = parser.parse_args()
 
 # Find slave id from drill id
@@ -34,21 +35,18 @@ with open("hatList.csv", "rU") as fh:
         except:
             pass    
 
-
-if args.debug:
-    print "Record for {} marchers".format(len(did2sid))
-    print "Missing Flute Boards:"
+if args.list:
     for did,sid in did2sid.iteritems():
-        if did[0] == 'F' and sid==999:
-            print "{:3s} {:3s} {}".format(did, did2hid[did], did2name[did])
+        print "{:3s} {:3d} {}".format(did, sid, did2name[did])
+    exit()
+    
 
-
-if args.missing>1:
-    print "Marcher IDs with missing boards:"
+if args.missing:
     for did,sid in did2sid.iteritems():
         if sid==999:
-            print "{:3s} {}".format(did, did2name[did])
+            print "{:3s} {:3d} {}".format(did, sid, did2name[did])
     exit()
+
 
 
 # Woodwinds set the hats down
@@ -95,8 +93,7 @@ def print_lineardelay(mid_list, var_name):
             continue
         sid = did2sid[did]
         if sid == 999:
-            if args.missing:
-                print "No board: {:3s} {}".format(did, did2name[did])
+            print "No board: {:3s} {}".format(did, did2name[did])
         else:
             lut[sid] = i
     print_lut(lut, var_name)
@@ -110,8 +107,7 @@ def set_lut(lut, d, did):
         return
     sid = did2sid[did]
     if sid == 999:
-        if args.missing:
-            print "No board: {:3s} {}".format(did, did2name[did])
+        print "No board: {:3s} {}".format(did, did2name[did])
     else:
         lut[sid] = d
     
