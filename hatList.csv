@@ -32,7 +32,7 @@ Cannary,Grayson,9,Baritone,CO,11,S,,,,Alternate
 Capps,Katy,10,Saxophone,CO,100,M,61,S6,JL,
 Carbajel,Giovanni,9,,,,M,,,,Absent
 Carmouche,Natalie,10,Clarinet,CO,62,XS,69,C2,PA,
-Chan,Ernest,11,Percussion,WE,226,M,xxx,SN5,,Needs to have board
+Chan,Ernest,11,Percussion,WE,226,M,150,SN5,,
 Chapman,Emily,9,Clarinet,,42,M,,,,
 Chapman ,Emily,9,Clarinet,,42,M,94,C14,PA,
 Churchett,Johnathan,9,Percussion,,N/A,N/A,N/A,N/A,,Pit
@@ -46,10 +46,10 @@ Last Name,First Name,Grade,Marching Section,Concert Band,Hat #,Hat Size,Circuit 
 Dodson,Sabine,10,Flutes,CO,131,S,108,F15,,
 Dollen,Claire,12,Flute,SYM,67,M,67,F3,PA,
 Doran,Marguerite,12,Saxophone,WE,219,M,111,A2,PA,
-Doran,Stephen,10,Mellophone,SYM,183,M,xxx,M3,,Needs to have board
+Doran,Stephen,10,Mellophone,SYM,183,M,71,M3,,
 Dougal,Ross,12,Percussion,CO,803,3,81,Q3,PA,Battery
 Dubiel,Claire,11,Flute,WE,46,XS,38,F12,PA,
-Duncan,Michael,10,Saxophone,CO,157,S,142,A6,,Needs to have board
+Duncan,Michael,10,Saxophone,CO,157,S,142,A6,,
 DuPlessis,Carl,12,Saxophone,SYM,73,M,57,A10,,
 Erengil,Haven,9,Flute,,101,S,133,F14,,
 Erlich,Dasya,10,Clarinet,CO,244,L,,,,Alternate
@@ -82,7 +82,7 @@ Hackett,Gabriel,9,Trumpet,,201,M,85,T19,PA,
 Haecker,Katherine,11,Baritone,CO,125,S,84,B21,PA,
 Hammond,Kyle,12,Clarinet,SYM,77,M,54,C24,PA,
 Hariton,Bear,10,Clarinet,CO,213,L,87,C22,PA,
-Harris,Zoe,11,Baritone,CO,63,S,144,B22,,
+Harris,Zoe,11,Baritone,CO,63,S,144,B20,,
 Anderson Band 2013-12014 Hat List,,,,,,,,,,
 Last Name,First Name,Grade,Marching Section,Concert Band,Hat #,Hat Size,Circuit Board #,Drill ID #,Confirm Done ,Marching Comments
 Hartwell,Aaron,12,Percussion,SYM,114,S,107,SN3,PA,Battery
@@ -95,7 +95,7 @@ Hendren,Kayla,11,Flute,CO,21,XS,,,,Alternate
 Hernandez,David,9,Flute,,,M,,,,Alternate
 Hernandez,John ,9,Clarinet,,242,L,63,C17,PA,
 Hewa,Gayathre,9,,,,S,,,,Alternate
-Hill,Jonathon,10,Trumpet,CO,159,S,xxx,T10,,Needs to have board
+Hill,Jonathon,10,Trumpet,CO,159,S,10,T10,,
 Ho,Aaron,12,Trumpet,SYM,115,M,120,T18,PA,
 Hresko,Andrew,12,Saxophone,WE,178,M,79,A1,PA,
 Humphrey,Lauren,11,Mellophone,WE,4,S,92,M2,PA,
@@ -120,7 +120,7 @@ McAlister,Steven,12,Flute,CO,246,L,22,F9,PA,
 McAuliffe,Madison,9,Clarinet,,71,M,,,,Alternate
 McDermott,Matthew,12,Baritone,WE,181,M,70,B1,PA,
 McDermott,Sean,11,Percussion,WE,74,M,xxx,Q2,,Needs to have board
-McLean,Chris,10,Baritone,SYM,221,M,32,B5,PA,
+McLean,Chris,10,Baritone,SYM,221,M,157,B5,PA,
 McPherson,Amy,9,Flute,,129,M,132,F8,,
 Meitz,Julia,12,Flute,WE,124,S,59,F7,PA,
 Mendez,Ezekiel,9,Saxaphone,,,,,,,Alternate
@@ -135,18 +135,18 @@ Nather-Weber,Miranda,9,Clarinet,,31,S,,,,Alternate
 Nealon,Sophia,9,Clarinet,,119,S,,,,Alternate
 Neel-Hernandez,Riley,12,Bari Saxophone,SYM,184,L,51,S4,PA,
 Newton,Zach,11,Alto Sax,CO,196,M,90,A4,PA,
-Nguyen,Sid,12,Baritone,SYM,170,S,xxx,B10,,Needs to have board
+Nguyen,Sid,12,Baritone,SYM,170,S,xxx,B8,,Needs to have board
 Nicholson,Sam,10,Trumpet,SYM,49,M,36,T12,,
 Nolen,Nic,10,Baritone,CO,48,M,124,B11,PA,
-Nolen,Zach,10,Baritone,CO,190,M,47,B12,PA,
+Nolen,Zach,10,Baritone,CO,190,M,47,B17,PA,
 Nunis,Jacob,9,Saxaphone,,199,M,74,S5,,
 Olalde,Christian,10,Tuba,Co,N/A,N/A,,,,Tuba-alternate
 Olalde,Erick,12,Flute,SYM,223,L,122,F13,PA,
 Phan,Michael,10,Percussion,SYM,43,M,20,Q1,PA,Battery
 Phillips,Hannah,10,Clarinet,SYM,228,S,137,C6,PA,
-Phillips,Isaac,10,Baritone,co,232,M,xxx,B8,,Needs to have board
+Phillips,Isaac,10,Baritone,co,232,M,155,B10,,
 Poor,David,9,Tuba,,N/A,N/A,,U2,,Tuba
-Pope,Elise,11,Mellophone,Co,162,S,xxx,M9,,Needs to have board
+Pope,Elise,11,Mellophone,Co,162,S,156,M9,,
 Price ,Aubrey,9,Clarinet,,162,S,,,,???
 Price ,Zachary,10,Baritone,CO,78,L,53,B25,PA,
 Pydyn,Joey,10,Bass Clarinet,SYM,86,S,42,C20,PA,
@@ -158,10 +158,10 @@ Ringgenberg,Nichole,9,Pit,,N/A,N/A,N/A,N/A,,Pit
 Roach,Luke,11,Bairtone,SYM,197,M,46,B16,PA,
 Robson,Alexis,9,Flute,,58,S,64,F16,PA,
 Ross,Chris,11,Percussion,CO,214,M,130,O3,PA,Battery
-Saegert,Dylan,12,Tuba,WE,N/A,N/A,xxx,U4,,Tuba
+Saegert,Dylan,12,Tuba,WE,N/A,N/A,,U4,,Tuba
 Saldana,Delilah,9,Clarinet,CO,138,M,,,,Alternate
 Saldana,Vincente,10,Saxophone,CO,193,M,30,A11,PA,
-Santori,Brandon,12,Mellophone,WE,229,M,xxx,M5,,Needs to have board
+Santori,Brandon,12,Mellophone,WE,229,M,86,M5,,
 Sands,Madeline,10,Pit,CO,N/A,N/A,N/A,N/A,,Pit 
 Scruggs,Emily,10,Flute,CO,66,M,58,F21,PA,
 Searcy,Jacob,11,Bari Saxophone,SYM,164,M,16,S3,PA,
@@ -184,20 +184,20 @@ Suarez,Amanda,9,Flute,,53,S,,,,Alternate
 Teng,Sarah,10,Percussion,SYM,144,S,136,SN4,PA,Battery
 Tesmer,Emily,10,Clarinet,We,127,M,102,C11,PA,
 Townsend,Maddie,9,Flute,,37,S,,,,Alternate
-Trevino,Benjamin,12,Trumpet,CO,52,M,xxx,M8,,Needs to have board
+Trevino,Benjamin,12,Trumpet,CO,52,M,141,M8,,
 Trevino,Catherine,10,Clarinet,SYM,151,M,104,C13,PA,
 Trusdale,Sam,9,,,,,,,,???
 Urban,Caleb,9,Clarinet,,299,M,125,C8,PA,
 Urrutia,Alban,12,Tuba,CO,N/A,N/A,,U9,,Tuba
-Vines,Valerie,11,Percussion,WE,234,M,xxx,SN2,,Needs to have board
+Vines,Valerie,11,Percussion,WE,234,M,138,SN2,,
 Wagner,Janet,11,Mellophone,WE,140,M,13,M6,PA,
 White,Thomas,11,Mellophone,,122,M,60,M4,PA,
 Wilkes,Lauren,11,Flute,,161,M,134,F17,,
-Williams,Jake,10,Mellophone,CO,227,M,xxx,M7,,Needs to have board
-Winn,Emily,9,Trumpet,,108,S,xxx,T7,,Needs to have board
+Williams,Jake,10,Mellophone,CO,227,M,154,M7,,
+Winn,Emily,9,Trumpet,,108,S,148,T7,,
 Young,Brandon,9,Bartione,,169,S,,,,Alternate
 Young,Cameron,11,Baritone,SYM,156,S,24,B14,PA,
-Young,Caroline,11,Clarinet,WE,98,S,109,C1,PA,
+Young,Caroline,11,Clarinet,WE,98,S,158,C1,PA,
 Young,McKenzie,10,Flute,SYM,47,S,43,F22,PA,
 Zukauckas,Catherine,11,Baritone,SYM,135,M,101,B6,PA,
 ,,,,,,,,,,
