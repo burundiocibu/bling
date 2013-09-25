@@ -73,22 +73,22 @@ namespace messages
    }
 
    // ========================================
-   void encode_start_effect(uint8_t* p, uint8_t effect_id, uint32_t start_time, uint16_t duration)
+   void encode_start_effect(uint8_t* p, uint8_t effect_id, uint32_t start_time, uint32_t duration)
    {
       *p++ = start_effect_id;
       *p++ = ++freshness_count;
       p = encode_var<uint8_t>(p, effect_id);
       p = encode_var<uint32_t>(p, start_time);
-      p = encode_var<uint16_t>(p, duration);
+      p = encode_var<uint32_t>(p, duration);
    }
 
-   void decode_start_effect(uint8_t* p, uint8_t &effect_id, uint32_t &start_time, uint16_t &duration)
+   void decode_start_effect(uint8_t* p, uint8_t &effect_id, uint32_t &start_time, uint32_t &duration)
    {
       p++; // skip ID
       p = check_fc(p);
       p = decode_var<uint8_t>(p, effect_id);
       p = decode_var<uint32_t>(p, start_time);
-      p = decode_var<uint16_t>(p, duration);
+      p = decode_var<uint32_t>(p, duration);
    }
 
    // ========================================

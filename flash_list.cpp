@@ -33,17 +33,14 @@
 
 nameList::NameHatInfo testNameList[] =
 {
-   "Hingle McCringleberry", 207, 7, "F19",
-   "Ebreham Moisesus", 208, 8, "F8",
-   "Bob Mellon",    202, 2, "F1",
-   "Ron Burgundy",  205, 5, "F5",
-   "006",           206, 6, "F10",
-   "OneThirtyNine", 239, 139, "F6",
-   "OneThirty",     230, 130, "F2",
-   "EightyThree",   283, 83, "F3",
-   "TwentyNine",    229, 29,  "F4",
-   "OneTwentySix",  226, 126, "F7",
-   "OneThirtyFive", 235, 135, "F9",
+   "002",   2,  2, "F1",
+   "029",  29, 29,  "F3",
+   "006",   6,  6, "F5",
+   "007",   7,  7, "F7",
+   "008",   8,  8, "F9",
+   "005",   5,  5, "F11",
+   "083",  83, 83, "F13",
+   "017",  17, 17, "F15"
 };
 
 
@@ -63,6 +60,7 @@ int main(int argc, char **argv)
    int debug=0;
    char *input_fn;
    bool test=false;
+   bool ignore_battery=true;
    unsigned slave_no=0;
    opterr = 0;
    int c;
@@ -73,21 +71,23 @@ int main(int argc, char **argv)
          case 'i': input_fn = optarg; break;
          case 't': test=true; break;
          case 's': slave_no=atoi(optarg); break;
+         case 'b': ignore_battery=false; break;
          default:
-            printf("Usage %s -i fn [-d] [-s slave_no] [-t]\n", argv[0]);
+            cout << "Usage " << argv[0] << " -i fn [-d] [-s slave_no] [-t] [-b]" << endl
+                 << " -b  Don't skip programming battery " << endl;
             exit(-1);
       }
 
    if (input_fn==NULL)
    {
-      printf("Please specify slave image hex file.\n");
+      cout << "Please specify slave image hex file. Exiting." << endl;
       exit(-1);
    }
 
    FILE* fp = fopen(input_fn, "r");
    if (fp == NULL)
    {
-      printf("Could not open %s. Terminating.\n", input_fn);
+      cout << "Could not open " << input_fn << ". Terminating." << endl;
       exit(-1);
    }
 
@@ -160,10 +160,10 @@ int main(int argc, char **argv)
       list<Slave>::iterator i;
       for (i = todo.begin(); i != todo.end(); )
       {
-         if (i->drill_id[0] != 'F')
+         if (ignore_battery && 
+             (i->drill_id[0] == 'O' || i->drill_id[0] == 'Q' || i->drill_id[1] == 'N'))
          {
             done.push_back(*i);
-            i=todo.erase(i);
          }
          else if (flasher.prog_slave(i->slave_no, image_buff, image_size))
          {

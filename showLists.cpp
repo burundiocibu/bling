@@ -5,15 +5,16 @@
 
 namespace showlist
 {
-const int maxNumberEffects = 6;
-ShowEffect showList[maxNumberEffects] = 
-{
-	"Effect 0", 1000,
-	"Effect 1", 30000,
-	"Effect 2", 5000,
-	"Effect 3", 20000,
-	"Effect 4", 5000,
-	"Effect 5", 5000
-};
+   const int maxNumberEffects = 7;
+   ShowEffect showList[maxNumberEffects] = 
+   {
+      "Flash      ", 1000,
+      "LED test   ", 30000,
+      "ramp up    ", 3000,
+      "ww intro   ", 2000,
+      "brass intro", 2000,
+      "sparkle    ", 30000,
+      "red fade   ", 4000
+   };
 }
 

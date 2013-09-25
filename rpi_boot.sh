@@ -1,3 +1,3 @@
 #!/bin/bash
 
-/home/abkowitz/bling/show
+/home/littlej/bling-master/show

@@ -46,7 +46,7 @@ typedef struct RGB {
 } rgb_t;
 
 unsigned slave=0;
-void nrf_tx(uint8_t *buff, size_t len, unsigned slave);
+void nrf_tx(uint8_t *buff, size_t len, unsigned slave, unsigned repeat);
 void nrf_rx();
 void hexdump(uint8_t* buff, size_t len);
 void set_rgb(rgb_t rgb);
@@ -122,7 +122,7 @@ int main(int argc, char **argv)
       if (t - last_hb > 990)
       {
          messages::encode_heartbeat(buff, t);
-         nrf_tx(buff, sizeof(buff), slave);
+         nrf_tx(buff, sizeof(buff), slave, 1);
          hb_count++;
          last_hb = t;
          mvprintw(1, 0, "%02x", messages::freshness_count);
@@ -157,62 +157,51 @@ int main(int argc, char **argv)
          case 'S': hsv.s-=2; hsv2rgb(hsv, rgb); set_rgb(rgb); break;
          case '0':
             messages::encode_start_effect(buff, 0, t, 750);
-            for (int i=0; i<20; i++)
-            {
-               nrf_tx(buff, sizeof(buff), slave);
-               bcm2835_delayMicroseconds(5000);
-            }
+            nrf_tx(buff, sizeof(buff), slave, 5);
+            mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
          case '1':
             messages::encode_start_effect(buff, 1, t, 20000);
-            for (int i=0; i<20; i++)
-            {
-               nrf_tx(buff, sizeof(buff), slave);
-               bcm2835_delayMicroseconds(5000);
-            }
+            nrf_tx(buff, sizeof(buff), slave, 5);
+            mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
          case '2':
-            messages::encode_start_effect(buff, 2, t, 10000);
-            nrf_tx(buff, sizeof(buff), slave);
+            messages::encode_start_effect(buff, 2, t, 3000);
+            nrf_tx(buff, sizeof(buff), slave, 5);
+            mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
          case '3':
-            messages::encode_start_effect(buff, 3, t, 10000);
-            for (int i=0; i<20; i++)
-            {
-               nrf_tx(buff, sizeof(buff), slave);
-               bcm2835_delayMicroseconds(5000);
-            }
+            messages::encode_start_effect(buff, 3, t, 1750);
+            nrf_tx(buff, sizeof(buff), slave, 5);
+            mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
          case '4':
-            messages::encode_start_effect(buff, 4, t, 10000);
-            for (int i=0; i<20; i++)
-            {
-               nrf_tx(buff, sizeof(buff), slave);
-               bcm2835_delayMicroseconds(5000);
-            }
+            messages::encode_start_effect(buff, 4, t, 1750);
+            nrf_tx(buff, sizeof(buff), slave, 5);
+            mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
          case '5':
-            messages::encode_start_effect(buff, 5, t, 10000);
-            for (int i=0; i<20; i++)
-            {
-               nrf_tx(buff, sizeof(buff), slave);
-               bcm2835_delayMicroseconds(5000);
-            }
+            messages::encode_start_effect(buff, 5, t, 45000);
+            nrf_tx(buff, sizeof(buff), slave, 5);
+            mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
             
          case 'x':
             messages::encode_all_stop(buff);
-            nrf_tx(buff, sizeof(buff), slave);
+            nrf_tx(buff, sizeof(buff), slave, 5);
+            mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             hsv.v=0; hsv2rgb(hsv, rgb);
             break;
          case 'p':
             messages::encode_ping(buff);
-            nrf_tx(buff, sizeof(buff), slave);
+            nrf_tx(buff, sizeof(buff), slave, 1);
+            mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             nrf_rx();
             break;
          case 'z':
             messages::encode_reboot(buff);
-            nrf_tx(buff, sizeof(buff), slave);
+            nrf_tx(buff, sizeof(buff), slave, 1);
+            mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
       }
       mvprintw(1, 6, "%3d   %03x %03x %03x", slave, rgb.r, rgb.g, rgb.b);
@@ -227,40 +216,49 @@ int main(int argc, char **argv)
 
 
 
-void nrf_tx(uint8_t *buff, size_t len, unsigned slave)
+void nrf_tx(uint8_t *buff, size_t len, unsigned slave, unsigned repeat)
 {
    using namespace nRF24L01;
 
    static unsigned ack_err=0;
    static unsigned tx_err=0;
    bool ack = slave != 0;
+   int i,j;
 
-   write_tx_payload(buff, len, (const char*)ensemble::slave_addr[slave], ack);
-
-   uint8_t status;
-   int j;
-   for(j=0; j<100; j++)
+   for (i=0; i<repeat; i++)
    {
-      status = read_reg(STATUS);
-      if (status & STATUS_TX_DS)
+      write_tx_payload(buff, len, (const char*)ensemble::slave_addr[slave], ack);
+
+      uint8_t status;
+      for(j=0; j<100; j++)
+      {
+         status = read_reg(STATUS);
+         if (status & STATUS_TX_DS)
+            break;
+         delay_us(5);
+      }
+      
+      if (status & STATUS_MAX_RT)
+      {
+         ack_err++;
+         write_reg(STATUS, STATUS_MAX_RT);
+         // data doesn't automatically removed...
+         flush_tx();
+      }
+      else if (status & STATUS_TX_DS)
+      {
+         write_reg(STATUS, STATUS_TX_DS); //Clear the data sent notice
          break;
-      delay_us(5);
+      }
+      else
+         tx_err++;
+      
+      if (i<repeat)
+         delay_us(2500);
    }
-
-   if (status & STATUS_MAX_RT)
-   {
-      ack_err++;
-      write_reg(STATUS, STATUS_MAX_RT);
-      // data doesn't automatically removed...
-      flush_tx();
-   }
-   else if (status & STATUS_TX_DS)
-      write_reg(STATUS, STATUS_TX_DS); //Clear the data sent notice
-   else
-      tx_err++;
 
    uint8_t obs_tx = read_reg(OBSERVE_TX);
-   mvprintw(1, 27, "%3d  %3d       %02x    %3d", j, tx_err, obs_tx, ack_err);
+   mvprintw(1, 27, "%3d  %3d       %02x    %3d   %3d", j, tx_err, obs_tx, ack_err, i);
 }
 
 
@@ -375,18 +373,18 @@ void set_rgb(rgb_t rgb)
    for (int i=0; i<sizeof(buff); i++) buff[i]=0;
 
    messages::encode_set_tlc_ch(buff, 2, rgb.g);
-   nrf_tx(buff, sizeof(buff), slave);
+   nrf_tx(buff, sizeof(buff), slave,1);
    messages::encode_set_tlc_ch(buff, 1, rgb.r);
-   nrf_tx(buff, sizeof(buff), slave);
+   nrf_tx(buff, sizeof(buff), slave, 1);
    messages::encode_set_tlc_ch(buff, 0, rgb.b);
-   nrf_tx(buff, sizeof(buff), slave);
+   nrf_tx(buff, sizeof(buff), slave, 1);
 
    messages::encode_set_tlc_ch(buff, 5, rgb.g);
-   nrf_tx(buff, sizeof(buff), slave);
+   nrf_tx(buff, sizeof(buff), slave, 1);
    messages::encode_set_tlc_ch(buff, 4, rgb.r);
-   nrf_tx(buff, sizeof(buff), slave);
+   nrf_tx(buff, sizeof(buff), slave, 1);
    messages::encode_set_tlc_ch(buff, 3, rgb.b);
-   nrf_tx(buff, sizeof(buff), slave);
+   nrf_tx(buff, sizeof(buff), slave, 1);
 }
 
 
@@ -440,9 +438,9 @@ void hsv_float(uint8_t h, uint8_t s, uint8_t v)
    for (int i=0; i<sizeof(buff); i++) buff[i]=0;
 
    messages::encode_set_tlc_ch(buff, 2, green);
-   nrf_tx(buff, sizeof(buff), slave);
+   nrf_tx(buff, sizeof(buff), slave, 1);
    messages::encode_set_tlc_ch(buff, 1, red);
-   nrf_tx(buff, sizeof(buff), slave);
+   nrf_tx(buff, sizeof(buff), slave, 1);
    messages::encode_set_tlc_ch(buff, 0, blue);
-   nrf_tx(buff, sizeof(buff), slave);
+   nrf_tx(buff, sizeof(buff), slave, 1);
 }
