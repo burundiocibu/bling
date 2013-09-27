@@ -204,22 +204,6 @@ void Effect::e3()
 }
 
 
-void Effect::e4()
-{
-   const long rise_time = 2000;
-   const long vmax = 512; // intensity at peak
-
-   int v;
-   if (dt > rise_time)
-      v = vmax;
-   else
-      v = (vmax * dt) / rise_time;
-
-   // red starts at ch 1, green starts at ch 0
-   for (unsigned ch=1; ch<12; ch+=3)  // red
-      avr_tlc5940::set_channel(ch, v);
-}
-
 
 /*
 red sparkle
@@ -233,7 +217,7 @@ _________/       |_______/
     t t  t t     t
     0 1  2 3     4
  */
-void Effect::e5()
+void Effect::e4()
 {
    // my rand = [0..7fff];
    const long t0 = (my_rand >> 8) * 2; // length of cycle in ms 0 ... 127*5 
@@ -268,7 +252,7 @@ void Effect::e5()
 
 
 // Same as 5 but fades out 
-void Effect::e6()
+void Effect::e5()
 {
    // my rand = [0..7fff];
    const long t0 = (my_rand >> 8) * 2; // length of cycle in ms 0 ... 127*5 
@@ -300,6 +284,23 @@ void Effect::e6()
    for (unsigned ch=0; ch<12; ch+=3)  // blue
       avr_tlc5940::set_channel(ch, b);
 }
+
+void Effect::e6()
+{
+   const long rise_time = 2000;
+   const long vmax = 512; // intensity at peak
+
+   int v;
+   if (dt > rise_time)
+      v = vmax;
+   else
+      v = (vmax * dt) / rise_time;
+
+   // red starts at ch 1, green starts at ch 0
+   for (unsigned ch=1; ch<12; ch+=3)  // red
+      avr_tlc5940::set_channel(ch, v);
+}
+
 
 void Effect::e7()
 {

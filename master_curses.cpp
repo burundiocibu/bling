@@ -176,17 +176,17 @@ int main(int argc, char **argv)
             mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
          case '4':
-            messages::encode_start_effect(buff, 4, t, 15000);
+            messages::encode_start_effect(buff, 4, t, 30000);
             nrf_tx(buff, sizeof(buff), slave, 25);
             mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
          case '5':
-            messages::encode_start_effect(buff, 5, t, 30000);
+            messages::encode_start_effect(buff, 5, t, 4000);
             nrf_tx(buff, sizeof(buff), slave, 25);
             mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
          case '6':
-            messages::encode_start_effect(buff, 6, t, 8000);
+            messages::encode_start_effect(buff, 6, t, 15000);
             nrf_tx(buff, sizeof(buff), slave, 25);
             mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
