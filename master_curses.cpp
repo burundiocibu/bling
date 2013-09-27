@@ -157,32 +157,37 @@ int main(int argc, char **argv)
          case 'S': hsv.s-=2; hsv2rgb(hsv, rgb); set_rgb(rgb); break;
          case '0':
             messages::encode_start_effect(buff, 0, t, 750);
-            nrf_tx(buff, sizeof(buff), slave, 5);
+            nrf_tx(buff, sizeof(buff), slave, 25);
             mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
          case '1':
             messages::encode_start_effect(buff, 1, t, 20000);
-            nrf_tx(buff, sizeof(buff), slave, 5);
+            nrf_tx(buff, sizeof(buff), slave, 25);
             mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
          case '2':
             messages::encode_start_effect(buff, 2, t, 3000);
-            nrf_tx(buff, sizeof(buff), slave, 5);
+            nrf_tx(buff, sizeof(buff), slave, 25);
             mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
          case '3':
-            messages::encode_start_effect(buff, 3, t, 1750);
-            nrf_tx(buff, sizeof(buff), slave, 5);
+            messages::encode_start_effect(buff, 3, t, 10000);
+            nrf_tx(buff, sizeof(buff), slave, 25);
             mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
          case '4':
-            messages::encode_start_effect(buff, 4, t, 1750);
-            nrf_tx(buff, sizeof(buff), slave, 5);
+            messages::encode_start_effect(buff, 4, t, 15000);
+            nrf_tx(buff, sizeof(buff), slave, 25);
             mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
          case '5':
-            messages::encode_start_effect(buff, 5, t, 45000);
-            nrf_tx(buff, sizeof(buff), slave, 5);
+            messages::encode_start_effect(buff, 5, t, 30000);
+            nrf_tx(buff, sizeof(buff), slave, 25);
+            mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
+            break;
+         case '6':
+            messages::encode_start_effect(buff, 6, t, 8000);
+            nrf_tx(buff, sizeof(buff), slave, 25);
             mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
             
@@ -248,7 +253,8 @@ void nrf_tx(uint8_t *buff, size_t len, unsigned slave, unsigned repeat)
       else if (status & STATUS_TX_DS)
       {
          write_reg(STATUS, STATUS_TX_DS); //Clear the data sent notice
-         break;
+         if (ack) 
+            break;
       }
       else
          tx_err++;

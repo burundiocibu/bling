@@ -104,25 +104,32 @@ lut=[0xff for i in range(max_sid)]
 d=0;
 for did in woodwind1:
     set_lut(lut, d, did);
-print_lut(lut, "woodwind1");
+lut[2]  = d
+lut[167] = d
+lut[6]  = d
+lut[7]  = d
+print_lut(lut, "ww_pres");
 
-
-lut=[0xff for i in range(max_sid)]
-d=0;
+d=1
 for did in brass1:
     set_lut(lut, d, did);
-print_lut(lut, "brass1");
+lut[8]  = d
+lut[5]  = d
+lut[83] = d
+lut[17] = d
+print_lut(lut, "wwb_pres");
 
 
+# These are the bench units
 lut=[0xff for i in range(max_sid)]
-lut[2]  = 2
-lut[29] = 4
-lut[6]  = 6
-lut[7]  = 8
-lut[8]  = 10
-lut[5]  = 12
-lut[83] = 14
-lut[17] = 16
+lut[2]  = 1
+lut[167] = 2
+lut[6]  = 3
+lut[7]  = 4
+lut[8]  = 5
+lut[5]  = 6
+lut[83] = 7
+lut[17] = 8
 print_lut(lut, "bench_delay")
 
 

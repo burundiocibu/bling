@@ -11,10 +11,10 @@ namespace showlist
       "Flash      ", 1000,
       "LED test   ", 30000,
       "ramp up    ", 3000,
-      "ww intro   ", 2000,
-      "brass intro", 2000,
-      "sparkle    ", 30000,
-      "red fade   ", 4000
+      "ww intro   ", 10000,
+      "brass intro", 10000,
+      "sparkle    ", 18000,
+      "sparklefade", 4000
    };
 }
 

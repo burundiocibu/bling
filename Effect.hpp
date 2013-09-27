@@ -18,7 +18,7 @@ struct Effect
 
    // slave/effect specific delay, indexed by effect number
    static const unsigned max_effect = 10;
-   uint16_t se_delay[max_effect];
+   uint16_t se_delay;
 
    void init(uint8_t* buff);
    void execute(void);
@@ -35,10 +35,10 @@ struct Effect
    void e0(); // Fast on white, fades out over duration
    void e1(); // The LED test pattern
    void e2(); // Fade up to full white over duration
-   void e3(); // Fade woodwinds up to full red over duration then off
-   void e4(); // above except for brass
-   void e5(); // Sparkle red/purple brass & woodwinds for duration, fade out over last 4 seconds
-   void e6(); // fade brass&woodwinds up to red, turn off in a wave
+   void e3(); // Fade woodwinds up to full red over duration 
+   void e4(); // Fade brass up, ww at full red
+   void e5(); // Sparkle red/purple brass & woodwinds for duration
+   void e6(); // Sparkle red/purple brass & ww fade out 
 };
 
 #endif

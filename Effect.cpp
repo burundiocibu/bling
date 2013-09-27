@@ -6,15 +6,11 @@
 #include "avr_tlc5940.hpp"
 #include "avr_rtc.hpp"
 
-const uint8_t  woodwind1 [] PROGMEM = {
-255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 255, 0, 255, 0, 255, 255, 0, 255, 255, 0, 255, 255, 0, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 0, 0, 255, 255, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 0, 255, 255, 0, 255, 255, 0, 0, 0, 255, 0, 255, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 0, 0, 255, 255, 0, 0, 0, 255, 255, 0, 255, 255, 255, 255, 0, 255, 255, 0, 0, 255, 255, 0, 255, 255, 0, 0, 0, 0, 255, 0, 255, 0, 255, 0, 255, 0, 255, 0, 0, 255, 0, 255, 255, 255, 255, 0, 255, 255, 0, 0, 0, 255, 0, 0, 255, 255, 255, 255, 255, 0, 0, 0, 255, 255, 0, 255, 0, 255, 255, 0, 0, 255, 255, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 };
+const uint8_t  ww_pres [] PROGMEM = {
+255, 255, 0, 255, 255, 255, 0, 0, 255, 255, 255, 255, 0, 255, 0, 255, 0, 255, 255, 0, 255, 255, 0, 255, 255, 0, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 0, 0, 255, 255, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 0, 255, 255, 0, 255, 255, 0, 0, 0, 255, 0, 255, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 0, 0, 255, 255, 0, 0, 0, 255, 255, 0, 255, 255, 255, 255, 0, 255, 255, 0, 0, 255, 255, 0, 255, 255, 0, 0, 0, 0, 255, 0, 255, 0, 255, 0, 255, 0, 255, 0, 0, 255, 0, 255, 255, 255, 255, 0, 255, 255, 0, 0, 0, 255, 0, 0, 255, 255, 255, 255, 255, 0, 0, 0, 255, 255, 0, 255, 0, 255, 255, 0, 0, 255, 255, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 255, 255, 255, 255, 255, 255, 255, 255, 0, 255, 255, 255, 255, 255, 255, 255 };
 
-const uint8_t  brass1 [] PROGMEM = {
-255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 0, 255, 0, 255, 0, 255, 255, 0, 255, 255, 255, 255, 0, 0, 255, 255, 0, 255, 255, 255, 255, 255, 0, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 0, 255, 0, 0, 0, 0, 255, 255, 0, 255, 0, 0, 255, 255, 255, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 0, 255, 255, 255, 255, 255, 255, 255, 0, 255, 255, 255, 0, 0, 0, 255, 0, 0, 255, 255, 0, 0, 255, 255, 255, 255, 255, 255, 255, 0, 255, 0, 255, 255, 255, 255, 255, 255, 255, 255, 0, 255, 0, 0, 0, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 255, 255, 255, 255, 0, 0, 255, 255, 0, 0, 255, 0, 0, 255, 255, 255, 255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 };
-
-const uint8_t  bench_delay [] PROGMEM = {
-255, 255, 2, 255, 255, 12, 6, 8, 10, 255, 255, 255, 255, 255, 255, 255, 255, 16, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 4, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 14, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 };
-
+const uint8_t  wwb_pres [] PROGMEM = {
+255, 255, 0, 255, 255, 1, 0, 0, 1, 255, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 255, 255, 0, 1, 1, 0, 0, 1, 255, 255, 0, 255, 255, 1, 0, 255, 1, 0, 0, 255, 1, 0, 0, 0, 1, 1, 255, 1, 1, 1, 1, 0, 255, 1, 0, 1, 1, 0, 0, 0, 1, 0, 255, 0, 0, 0, 0, 0, 0, 0, 255, 1, 1, 0, 0, 255, 255, 0, 0, 0, 1, 255, 0, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 255, 255, 0, 0, 0, 0, 1, 0, 1, 0, 255, 0, 255, 0, 255, 0, 0, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0, 255, 0, 0, 255, 255, 255, 255, 255, 0, 0, 0, 1, 255, 0, 255, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 255, 255, 255, 255, 255, 1, 1, 1, 1, 0, 255, 255, 255, 255, 255, 255, 255, 255, 0, 255, 255, 255, 255, 255, 255, 255 };
 
 uint16_t Effect::get_delay(const uint8_t lut[], size_t len)
 {
@@ -34,16 +30,6 @@ Effect::Effect(uint16_t slave)
    srand(slave);
    my_rand = rand();
    reset();
-
-   for (size_t i=0; i<max_effect; i++)
-      se_delay[i] = 0;
-
-   se_delay[2] = get_delay(bench_delay, sizeof(bench_delay));
-   se_delay[3] = get_delay(woodwind1,   sizeof(woodwind1));
-   se_delay[3] = se_delay[2];
-   se_delay[4] = get_delay(brass1,      sizeof(brass1));
-   se_delay[5] = 0; // Everyone sparkles
-   se_delay[6] = 0; // Everyone fades out...
 };
 
 
@@ -64,14 +50,19 @@ void Effect::init(uint8_t* buff)
    if (new_id !=0 && new_id == id && new_start_time == start_time && new_duration == duration)
       return;
 
+   se_delay = 0;
+   switch(new_id)
+   {
+      //case 3: se_delay = get_delay(ww_pres,  sizeof(ww_pres));     break;
+      case 4: se_delay = get_delay(wwb_pres, sizeof(wwb_pres));    break;
+   }
+
    // If our effect/slave specific delay is 0xffff, don't execute this effect
-   if (se_delay[new_id] == 0xffff)
+   if (se_delay == 0xffff)
       return;
 
-   reset();
-
    id = new_id;
-   start_time = new_start_time + se_delay[id];
+   start_time = new_start_time + se_delay;
    duration = new_duration;
    state = pending;
 }
@@ -95,6 +86,7 @@ void Effect::execute()
    
    if (state==pending)
       state=running;
+
 //   else if (prev_dt>0 && dt - prev_dt < 20)
       // Don't really need to update the LEDs more often than 50 Hz
 //      return;
@@ -107,6 +99,7 @@ void Effect::execute()
       case 3: e3(); break;
       case 4: e4(); break;
       case 5: e5(); break;
+      case 6: e6(); break;
    }
    prev_dt = dt;
 }
@@ -176,7 +169,7 @@ ______/           |_____________
  */
 void Effect::e2()
 {
-   const long dwell = 250; // time at full intensity
+   const long dwell = 500; // time at full intensity
    const long t1 = duration - dwell; // time to ramp light
    const long vmax = 4095; // intensity at peak
 
@@ -199,13 +192,12 @@ void Effect::e2()
 // Same as e2 but red
 void Effect::e3()
 {
-   const long dwell = 250; // time at full intensity
-   const long t1 = duration - dwell; // time to ramp light
+   const long rise_time = 5000;
    const long vmax = 4095; // intensity at peak
 
    int v;
-   if (dt < t1)
-      v = (vmax * dt) / t1;
+   if (dt < rise_time)
+      v = (vmax * dt) / rise_time;
    else
       v = vmax;
 
@@ -215,13 +207,35 @@ void Effect::e3()
 }
 
 
-// same as e3
+// same as e3 but if se_delay==0 then just rutn them full on
 void Effect::e4()
 {
-   e3();
+   const long rise_time = 2000;
+   const long vmax = 4095; // intensity at peak
+
+   int v;
+   if (dt > rise_time || se_delay==0)
+      v = vmax;
+   else
+      v = (vmax * dt) / rise_time;
+
+   // red starts at ch 1, green starts at ch 0
+   for (unsigned ch=1; ch<12; ch+=3)  // red
+      avr_tlc5940::set_channel(ch, v);
 }
 
-
+/*
+red sparkle
+Red:  ____________________________
+     /
+____/
+Blue:      ______          ______
+          /      |        /
+_________/       |_______/
+    | |  | |     |
+    t t  t t     t
+    0 1  2 3     4
+ */
 void Effect::e5()
 {
    // my rand = [0..7fff];
@@ -231,25 +245,60 @@ void Effect::e5()
    const long rise_time = 100; // time to ramp light
    const long vmax = 4095; // intensity at peak
 
-   unsigned v=0;
-   v = vmax;
-   long cldt = dt<=0 ? 0 : dt % cl;
+   unsigned r=0;
+
+   if (dt < rise_time)
+      r = (vmax * dt) / rise_time;
+   else
+      r = vmax;
 
    for (unsigned ch=1; ch<12; ch+=3)  // red
-      avr_tlc5940::set_channel(ch, v);
+      avr_tlc5940::set_channel(ch, r);
+
+   unsigned b=0;
+   long cldt = dt<=0 ? 0 : dt % cl;
 
    if (t0 < cldt && cldt < t0+dwell )
    {
-      for (unsigned ch=0; ch<12; ch+=3)  // blue
-         avr_tlc5940::set_channel(ch, v);
+      if (cldt < rise_time)
+         b = (vmax * cldt) / rise_time;
+      else
+         b = vmax;
    }
-   else
-   {
-      for (unsigned ch=0; ch<12; ch+=3)  // blue
-         avr_tlc5940::set_channel(ch, 0);
-   }
+   for (unsigned ch=0; ch<12; ch+=3)  // blue
+      avr_tlc5940::set_channel(ch, b);
 }
 
+// Same as 5 but fades out 
 void Effect::e6()
 {
+   // my rand = [0..7fff];
+   const long t0 = (my_rand >> 8) * 2; // length of cycle in ms 0 ... 127*5 
+   const long cl = (my_rand & 0xff) * 4 + 512; // 
+   const long dwell = 400; // time at full intensity
+   const long rise_time = 100; // time to ramp light
+   long vmax = 4095; // intensity at peak
+   const long fade_time=1500;
+
+   vmax = dt < fade_time ? vmax * ( fade_time - dt) / fade_time : 0;
+
+   unsigned r=0;
+
+   r = vmax;
+
+   for (unsigned ch=1; ch<12; ch+=3)  // red
+      avr_tlc5940::set_channel(ch, r);
+
+   unsigned b=0;
+   long cldt = dt<=0 ? 0 : dt % cl;
+
+   if (t0 < cldt && cldt < t0+dwell )
+   {
+      if (cldt < rise_time)
+         b = (vmax * cldt) / rise_time;
+      else
+         b = vmax;
+   }
+   for (unsigned ch=0; ch<12; ch+=3)  // blue
+      avr_tlc5940::set_channel(ch, b);
 }
