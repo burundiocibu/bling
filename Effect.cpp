@@ -6,11 +6,8 @@
 #include "avr_tlc5940.hpp"
 #include "avr_rtc.hpp"
 
-const uint8_t  ww_pres [] PROGMEM = {
-255, 255, 0, 255, 255, 255, 0, 0, 255, 255, 255, 255, 0, 255, 0, 255, 0, 255, 255, 0, 255, 255, 0, 255, 255, 0, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 0, 0, 255, 255, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 0, 255, 255, 0, 255, 255, 0, 0, 0, 255, 0, 255, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 0, 0, 255, 255, 0, 0, 0, 255, 255, 0, 255, 255, 255, 255, 0, 255, 255, 0, 0, 255, 255, 0, 255, 255, 0, 0, 0, 0, 255, 0, 255, 0, 255, 0, 255, 0, 255, 0, 0, 255, 0, 255, 255, 255, 255, 0, 255, 255, 0, 0, 0, 255, 0, 0, 255, 255, 255, 255, 255, 0, 0, 0, 255, 255, 0, 255, 0, 255, 255, 0, 0, 255, 255, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 255, 255, 255, 255, 255, 255, 255, 255, 0, 255, 255, 255, 255, 255, 255, 255 };
-
-const uint8_t  wwb_pres [] PROGMEM = {
-255, 255, 0, 255, 255, 1, 0, 0, 1, 255, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 255, 255, 0, 1, 1, 0, 0, 1, 255, 255, 0, 255, 255, 1, 0, 255, 1, 0, 0, 255, 1, 0, 0, 0, 1, 1, 255, 1, 1, 1, 1, 0, 255, 1, 0, 1, 1, 0, 0, 0, 1, 0, 255, 0, 0, 0, 0, 0, 0, 0, 255, 1, 1, 0, 0, 255, 255, 0, 0, 0, 1, 255, 0, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 255, 255, 0, 0, 0, 0, 1, 0, 1, 0, 255, 0, 255, 0, 255, 0, 0, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0, 255, 0, 0, 255, 255, 255, 255, 255, 0, 0, 0, 1, 255, 0, 255, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 255, 255, 255, 255, 255, 1, 1, 1, 1, 0, 255, 255, 255, 255, 255, 255, 255, 255, 0, 255, 255, 255, 255, 255, 255, 255 };
+const uint8_t  all_l2r [] PROGMEM = {
+255, 255, 36, 255, 255, 74, 12, 0, 86, 255, 29, 105, 20, 67, 48, 41, 33, 50, 35, 34, 255, 255, 52, 69, 113, 5, 51, 119, 255, 255, 21, 255, 255, 45, 7, 255, 37, 26, 54, 255, 121, 0, 6, 42, 55, 93, 255, 99, 47, 53, 131, 40, 255, 129, 8, 61, 63, 25, 41, 60, 81, 27, 255, 13, 46, 35, 17, 45, 28, 14, 255, 71, 97, 4, 22, 255, 255, 47, 58, 39, 101, 255, 11, 62, 127, 33, 73, 18, 115, 59, 24, 43, 75, 125, 10, 255, 255, 62, 53, 31, 37, 111, 1, 57, 2, 255, 49, 255, 44, 255, 50, 36, 31, 30, 87, 107, 51, 95, 15, 65, 25, 9, 61, 32, 255, 12, 59, 255, 255, 255, 255, 255, 57, 55, 56, 27, 255, 3, 255, 38, 89, 79, 29, 23, 117, 103, 16, 49, 39, 255, 255, 255, 255, 255, 83, 123, 85, 109, 19, 255, 255, 255, 255, 255, 255, 255, 255, 24, 255, 255, 255, 255, 255, 255, 255 };
 
 uint16_t Effect::get_delay(const uint8_t lut[], size_t len)
 {
@@ -18,7 +15,7 @@ uint16_t Effect::get_delay(const uint8_t lut[], size_t len)
    {
       uint8_t d = pgm_read_byte( &(lut[slave_id]));
       if  (d!=0xff)
-         return d * 20;
+         return d * 40;
    }
    return 0xffff;
 }
@@ -53,8 +50,7 @@ void Effect::init(uint8_t* buff)
    se_delay = 0;
    switch(new_id)
    {
-      //case 3: se_delay = get_delay(ww_pres,  sizeof(ww_pres));     break;
-      case 4: se_delay = get_delay(wwb_pres, sizeof(wwb_pres));    break;
+      case 7: se_delay = get_delay(all_l2r, sizeof(all_l2r));    break;
    }
 
    // If our effect/slave specific delay is 0xffff, don't execute this effect
@@ -100,6 +96,7 @@ void Effect::execute()
       case 4: e4(); break;
       case 5: e5(); break;
       case 6: e6(); break;
+      case 7: e7(); break;
    }
    prev_dt = dt;
 }
@@ -207,14 +204,13 @@ void Effect::e3()
 }
 
 
-// same as e3 but if se_delay==0 then just rutn them full on
 void Effect::e4()
 {
    const long rise_time = 2000;
-   const long vmax = 4095; // intensity at peak
+   const long vmax = 512; // intensity at peak
 
    int v;
-   if (dt > rise_time || se_delay==0)
+   if (dt > rise_time)
       v = vmax;
    else
       v = (vmax * dt) / rise_time;
@@ -223,6 +219,7 @@ void Effect::e4()
    for (unsigned ch=1; ch<12; ch+=3)  // red
       avr_tlc5940::set_channel(ch, v);
 }
+
 
 /*
 red sparkle
@@ -269,6 +266,7 @@ void Effect::e5()
       avr_tlc5940::set_channel(ch, b);
 }
 
+
 // Same as 5 but fades out 
 void Effect::e6()
 {
@@ -301,4 +299,13 @@ void Effect::e6()
    }
    for (unsigned ch=0; ch<12; ch+=3)  // blue
       avr_tlc5940::set_channel(ch, b);
+}
+
+void Effect::e7()
+{
+   int v = 0;
+
+   // red starts at ch 1, green starts at ch 0
+   for (unsigned ch=1; ch<12; ch+=3)  // red
+      avr_tlc5940::set_channel(ch, v);
 }

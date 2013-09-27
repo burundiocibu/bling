@@ -35,17 +35,14 @@ ostream& operator<<(std::ostream& strm, const list<Slave> sv)
 
 nameList::NameHatInfo testJonNameList[] =
 {
-	"Hingle McCringleberry", 207, 7, "F19",
-	"Ebreham Moisesus", 208, 8, "F8",
-	"Bob Mellon",    202, 2, "F1",
-	"Rob Burgundy",  205, 5, "F5",
-	"006",           206, 6, "F10",
-	"OneThirtyNine", 239, 139, "F6",
-	"OneThirty",     230, 130, "F2",
-	"EightyThree",   283, 83, "F3",
-	"TwentyNine",    229, 29,  "F4",
-	"OneTwentySix",  226, 126, "F7",
-	"OneThirtyFive", 235, 135, "F9",
+   "S002",   2,   2, "X1",
+   "S167", 167, 167, "X3",
+   "S006",   6,   6, "X5",
+   "S007",   7,   7, "X7",
+   "S008",   8,   8, "X9",
+   "S005",   5,   5, "X11",
+   "S083",  83,  83, "X13",
+   "S017",  17,  17, "X15"
 };
 
 nameList::NameHatInfo testPattiNameList[] =

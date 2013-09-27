@@ -35,10 +35,11 @@ struct Effect
    void e0(); // Fast on white, fades out over duration
    void e1(); // The LED test pattern
    void e2(); // Fade up to full white over duration
-   void e3(); // Fade woodwinds up to full red over duration 
-   void e4(); // Fade brass up, ww at full red
+   void e3(); // Fade all up to full red over duration 
+   void e4(); // Fade all up to 20% RED
    void e5(); // Sparkle red/purple brass & woodwinds for duration
    void e6(); // Sparkle red/purple brass & ww fade out 
+   void e7(); // Fade 20% red to 0% from R to L in two groups
 };
 
 #endif

@@ -4,6 +4,26 @@ import csv
 
 from sys import exit
 
+def set_lut(lut, d, did):
+    global did2sid
+    global did2name
+    if did not in did2sid:
+        print "slave id not found for", did
+        return
+    sid = did2sid[did]
+    if sid == 999:
+        print "No board: {:3s} {}".format(did, did2name[did])
+    else:
+        lut[sid] = d
+
+        
+def print_lut(lut, var_name):
+    lut = [str(i) for i in lut]
+    print "const uint8_t ",var_name,"[] PROGMEM = {"
+    print ", ".join(lut), "};"
+
+
+
 from argparse import ArgumentParser
 parser = ArgumentParser()
 parser.add_argument('-d', dest="debug", action='count', help='Increase debug level.')
@@ -38,6 +58,24 @@ with open("hatList.csv", "rU") as fh:
         except:
             pass    
 
+bench=[["S002",   2,   2, "X1",],
+       ["S167", 167, 167, "X3"],
+       ["S006",   6,   6, "X5"],
+       ["S007",   7,   7, "X7"],
+       ["S008",   8,   8, "X9"],
+       ["S005",   5,   5, "X11"],
+       ["S083",  83,  83, "X13"],
+       ["S017",  17,  17, "X15"]
+       ]
+
+for h in bench:
+    sid = int(h[2])
+    did = h[3]
+    did2sid[did] = sid
+    sid2did[sid] = did
+    did2name[did] = h[0]
+    did2hid[did] = int(h[1])
+        
 if args.list==1:
     for did in sorted(did2sid.keys()):
         print "{:3s} {:3d} {}".format(did, did2sid[did], did2name[did])
@@ -54,6 +92,10 @@ if args.missing:
         if sid==999:
             print "{:3s} {:3d} {}".format(did, sid, did2name[did])
     exit()
+
+    
+bench_ww = ['X1', 'X3', 'X5', 'X7']
+bench_brass = ['X9', 'X11', 'X13', 'X15']
 
 # Woodwinds set the hats down set 4 count 56
 woodwind1 = [
@@ -79,57 +121,52 @@ ww1_left.reverse();
 ww1_right = woodwind1[22:]
 
 
-def set_lut(lut, d, did):
-    global did2sid
-    global did2name
-    if did not in did2sid:
-        print "slave id not found for", did
-        return
-    sid = did2sid[did]
-    if sid == 999:
-        print "No board: {:3s} {}".format(did, did2name[did])
-    else:
-        lut[sid] = d
-
-        
-def print_lut(lut, var_name):
-    lut = [str(i) for i in lut]
-    print "const uint8_t ",var_name,"[] PROGMEM = {"
-    print ", ".join(lut), "};"
-
-
 max_sid=175
 
 lut=[0xff for i in range(max_sid)]
 d=0;
-for did in woodwind1:
+for did in woodwind1+bench_ww:
     set_lut(lut, d, did);
-lut[2]  = d
-lut[167] = d
-lut[6]  = d
-lut[7]  = d
 print_lut(lut, "ww_pres");
 
 d=1
-for did in brass1:
+for did in brass1+bench_brass:
     set_lut(lut, d, did);
-lut[8]  = d
-lut[5]  = d
-lut[83] = d
-lut[17] = d
 print_lut(lut, "wwb_pres");
 
 
-# These are the bench units
+# everyone L->R 
+# woodwinds take 5 seconds  
+# brass take 5 seconds delayed by 2 seconds (100) counts
 lut=[0xff for i in range(max_sid)]
-lut[2]  = 1
-lut[167] = 2
-lut[6]  = 3
-lut[7]  = 4
-lut[8]  = 5
-lut[5]  = 6
-lut[83] = 7
-lut[17] = 8
-print_lut(lut, "bench_delay")
+delay_lsb = 40 # ms per count of delay
+
+inc = 5000 / 40 / len(woodwind1)
+d=0;
+for did in reversed(woodwind1):
+    set_lut(lut, d, did);
+    d+=inc
+
+inc = 5000 / 40 / len(brass1)
+d=1000/delay_lsb;
+for did in reversed(brass1):
+    set_lut(lut, d, did);
+    d+=inc
+
+inc = 2000 / 40 / len(bench_ww)
+d=0;
+for did in reversed(bench_ww):
+    set_lut(lut, d, did);
+    d+=inc
+
+inc = 2000 / 40 / len(bench_brass)
+d=2000/delay_lsb;
+d=2000/delay_lsb
+for did in reversed(bench_brass):
+    set_lut(lut, d, did);
+    d+=inc
+
+print_lut(lut, "all_l2r");
+
 
 
