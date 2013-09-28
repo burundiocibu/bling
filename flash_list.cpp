@@ -164,6 +164,7 @@ int main(int argc, char **argv)
              (i->drill_id[0] == 'O' || i->drill_id[0] == 'Q' || i->drill_id[1] == 'N'))
          {
             done.push_back(*i);
+            i = todo.erase(i);
          }
          else if (flasher.prog_slave(i->slave_no, image_buff, image_size))
          {
