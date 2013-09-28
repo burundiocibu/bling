@@ -26,7 +26,7 @@ NameHatInfo nameList[numberEntries] =
     "Lexi Bruner", 189, 48, "T2",
     "Queen Alex Bruner", 204, 112, "T11",
     "Katie Butler", 195, 65, "A12",
-    "Jonathan Camarillo", 203, 999, "M10",
+    "Jonathan Camarillo", 203, 163, "M10",
     "Katy Capps", 100, 61, "S6",
     "Natalie Carmouche", 62, 69, "C2",
     "Ernest Chan", 226, 150, "SN5",
