@@ -15,7 +15,7 @@ namespace showlist
       "sparkle     ", 30000,
       "fade sparkle", 4000,
       "dim red     ", 10000,
-      "L-R fade    ", 10000
+      "R->L fade   ", 10000
    };
 }
 
