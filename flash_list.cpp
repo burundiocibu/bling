@@ -186,7 +186,10 @@ int main(int argc, char **argv)
          sleep(2);
    }
 
-   cout << "All boards programmed." << endl;
+   if (todo.size()==0)
+      cout << "All boards programmed." << endl;
+   else
+      cout << "Giving up." << endl;
 
    return 0;
 }
