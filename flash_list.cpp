@@ -62,15 +62,17 @@ int main(int argc, char **argv)
    bool test=false;
    bool ignore_battery=true;
    unsigned slave_no=0;
+   string version;
    opterr = 0;
    int c;
-   while ((c = getopt(argc, argv, "di:s:t")) != -1)
+   while ((c = getopt(argc, argv, "di:s:tv:")) != -1)
       switch (c)
       {
          case 'd': debug++; break;
          case 'i': input_fn = optarg; break;
          case 't': test=true; break;
          case 's': slave_no=atoi(optarg); break;
+         case 'v': version=string(optarg); break;
          case 'b': ignore_battery=false; break;
          default:
             cout << "Usage " << argv[0] << " -i fn [-d] [-s slave_no] [-t] [-b]" << endl
@@ -121,7 +123,8 @@ int main(int argc, char **argv)
       else if (id==1)
          got_image = true;
    }
-
+   fclose(fp);
+   
    if (debug)
       printf("Image length is %d bytes\n", image_size);
 
@@ -154,7 +157,7 @@ int main(int argc, char **argv)
                               testNameList[i].name));
    }
 
-   for (int pass=1; todo.size() > 0; pass++)
+   for (int pass=1; todo.size() > 0 && pass < 10; pass++)
    {
       cout << "Pass " << pass << " remaining boards:" << todo.size() << endl;
       list<Slave>::iterator i;
@@ -165,7 +168,7 @@ int main(int argc, char **argv)
          {
             done.push_back(*i);
          }
-         else if (flasher.prog_slave(i->slave_no, image_buff, image_size))
+         else if (flasher.prog_slave(i->slave_no, image_buff, image_size, version))
          {
             done.push_back(*i);
             cout <<  *i  << " Programmed." << endl;
@@ -173,19 +176,16 @@ int main(int argc, char **argv)
          }
          else
          {
-            if (debug)
-               cout << *i << " Failed programming." << endl;
+            cout << *i << " Failed programming." << endl;
             i++;
          }
       }
-      if (todo.size() && debug)
-         cout << "Boards remaining, " << todo.size() << endl << todo;
-      sleep(1);
 
+      if (todo.size())
+         sleep(2);
    }
 
    cout << "All boards programmed." << endl;
 
-   fclose(fp);
    return 0;
 }

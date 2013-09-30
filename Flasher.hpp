@@ -21,6 +21,7 @@
 #define _FLASHER_HPP
 
 #include <fstream>
+#include <string>
 
 class Flasher
 {
@@ -28,11 +29,12 @@ public:
    Flasher(int debug_level);
 
    // returns true for a successfull programming
-   bool prog_slave(uint16_t slave_no, uint8_t* image_buff, size_t image_size);
+   bool prog_slave(uint16_t slave_no, uint8_t* image_buff, size_t image_size, std::string version=std::string());
    std::string timestamp(void);
 
 private:
    bool nrf_tx(uint8_t* buff, size_t len, const unsigned max_retry, unsigned &loss_count);
+   bool nrf_rx(void);
    void write_reg(uint8_t reg, const uint8_t* data, const size_t len);
    void write_reg(uint8_t reg, uint8_t data);
    uint8_t read_reg(uint8_t reg);
@@ -44,6 +46,10 @@ private:
 
    std::ofstream log;
    int debug;
+
+   std::string rx_version;
+   double rx_vbatt;
+   int rx_soc;
 };
 
 #endif

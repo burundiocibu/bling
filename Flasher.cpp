@@ -35,12 +35,14 @@
 #include "ensemble.hpp"
 #include "nrf_boot.h"
 #include "Flasher.hpp"
+#include "messages.hpp"
 
+namespace msg=messages;
 using namespace std;
 using namespace nRF24L01;
 
 Flasher::Flasher(int debug_level)
-   :log("flasher.log", std::ofstream::app),
+   :log("flasher.log"),
     debug(debug_level)
 {
    if (!bcm2835_init())
@@ -49,13 +51,11 @@ Flasher::Flasher(int debug_level)
       exit(-1);
    }
 
-   log << endl
-       << "--------------------------------------------------------------------" << endl
-       << timestamp() << " Initializing nRF  " << endl;
+   log << timestamp() << " Initializing nRF";
 
    // This sets up P1-15 as the CE for the n24L01
    bcm2835_gpio_fsel(RPI_GPIO_P1_15, BCM2835_GPIO_FSEL_OUTP);
-   clear_CE(); // Make sure the chip is quiet until told otherwise
+   clear_CE(); // Make sure the radio is quiet until told otherwise
 
    bcm2835_spi_begin();
    bcm2835_spi_setBitOrder(BCM2835_SPI_BIT_ORDER_MSBFIRST);      // The default
@@ -81,14 +81,16 @@ Flasher::Flasher(int debug_level)
    write_reg(RF_SETUP, 0b00001110);  // 2Mbps data rate, 0dBm
    write_reg(RF_CH, ensemble::default_channel); // use channel 2
    write_reg(RX_PW_P0, ensemble::message_size);
+   write_reg(RX_PW_P1, ensemble::message_size);
 
    // Clear the various interrupt bits
    write_reg(STATUS, STATUS_TX_DS|STATUS_RX_DR|STATUS_MAX_RT);
    int slave_no = 0;
    write_reg(TX_ADDR, ensemble::slave_addr[slave_no], ensemble::addr_len);
    write_reg(RX_ADDR_P0, ensemble::slave_addr[slave_no], ensemble::addr_len);
+   write_reg(RX_ADDR_P1, ensemble::master_addr, ensemble::addr_len);
    write_reg(EN_AA, EN_AA_ENAA_P0); // don't know if this is needed on the PTX
-   write_reg(EN_RXADDR, EN_RXADDR_ERX_P0);
+   write_reg(EN_RXADDR, EN_RXADDR_ERX_P0 | EN_RXADDR_ERX_P1);
 
    buff[0] = FLUSH_RX;
    bcm2835_spi_transfern((char*)&buff, 1);
@@ -99,12 +101,38 @@ Flasher::Flasher(int debug_level)
 }
 
 
-bool Flasher::prog_slave(const uint16_t slave_no, uint8_t* image_buff, size_t image_size)
+bool Flasher::prog_slave(const uint16_t slave_no, uint8_t* image_buff, size_t image_size, string version)
 {
    nrf_set_slave(slave_no);
 
+   rx_version = "unk";
+   rx_vbatt = 0;
+   rx_soc = 0;
+
    unsigned loss_count=0;
    uint8_t buff[ensemble::message_size];
+
+   msg::encode_ping(buff);
+   if (debug>1)
+      log << endl << timestamp() << " Sending ping    ";
+   if (nrf_tx(buff, sizeof(buff), 1, loss_count))
+   {
+      if (debug>1)
+         log << endl << timestamp() << " Got ACK from ping of slave " << slave_no << "   ";
+      nrf_rx();
+      if (rx_version == version)
+      {
+         if (debug)
+            log << endl << timestamp() << " Slave " << slave_no << " already has version " 
+                << version << " - no programming needed   ";
+         return true;
+      }  
+   }
+   else
+   {
+      log << endl << timestamp() << " No ACK to ping of slave " << slave_no << "   ";
+   }
+
    memset(buff, 0, sizeof(buff));
    buff[0] = boot_magic_word >> 8;
    buff[1] = 0xff & boot_magic_word;
@@ -302,12 +330,72 @@ bool Flasher::nrf_tx(uint8_t* data, size_t len, const unsigned max_retry, unsign
          bcm2835_delayMicroseconds(100);
       }
       if (debug>1 && i>=tx_to)
-         log << endl << timestamp() << " Missed MAX_RT" << endl;
+         log << endl << timestamp() << " Missed MAX_RT    ";
    }
 
    if (debug>1) 
       log << "X" << flush;
    return false;
+}
+
+
+bool Flasher::nrf_rx(void)
+{
+   uint8_t buff[ensemble::message_size+1];
+   uint8_t pipe;
+   char config = read_reg(CONFIG);
+   write_reg(CONFIG, config | CONFIG_PRIM_RX); // should still be powered on
+   set_CE();
+
+   int i;
+   for (i=0; i<100; i++)
+   {
+      if (read_reg(STATUS) & STATUS_RX_DR)
+      {
+         buff[0]=R_RX_PAYLOAD;
+         clear_CE();
+         bcm2835_spi_transfern((char*)buff, sizeof(buff));
+         set_CE();
+         write_reg(STATUS, STATUS_RX_DR); // clear data received bit
+         break;
+      }
+      bcm2835_delayMicroseconds(200);
+   }
+
+   write_reg(CONFIG, config); // should still be powered on
+   clear_CE();
+   bcm2835_delayMicroseconds(200);
+   buff[0] = FLUSH_RX;
+   bcm2835_spi_transfern((char*)&buff, 1);
+   buff[0] = FLUSH_TX;
+   bcm2835_spi_transfern((char*)&buff, 1);
+
+
+   if (i==100)
+   {
+      log << endl << timestamp() << " Ping response not received.   ";
+      return false;
+   }
+
+
+   uint32_t t_rx;
+   uint16_t slave_id, soc, vcell, missed_message_count;
+   uint8_t msg_id, freshness_count;
+   int8_t major_version, minor_version;
+
+   msg::decode_status(buff+1, slave_id, t_rx, major_version, minor_version,
+                      vcell, soc, missed_message_count, freshness_count);
+
+   rx_soc = 0xff & (soc >> 8);
+   rx_vbatt = 1e-3*vcell;
+
+   rx_version = to_string((int)major_version) + "." + to_string((int)minor_version);
+   log << endl << timestamp() << " Ping response: version="
+       << rx_version
+       << ", Vbatt=" << rx_vbatt
+       << ", SOC=" << rx_soc << "%"
+       << ", i=" << i;
+   return true;
 }
 
 
