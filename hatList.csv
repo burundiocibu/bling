@@ -27,7 +27,7 @@ Bruner,Lexi,11,Trumpet,WE,189,M,48,T2,PA,
 Bruner,Queen Alex,9,Trumpet,SYM,204,M,112,T11,,
 Bushong,Geoffrey,9,Pit,CO,N/A,N/A,N/A,N/A,,Pit
 Butler,Katie,10,Saxophone,CO,195,M,65,A12,PA,
-Camarillo,Jonathan,12,Mellophone,CO,203,M,163,M10,,
+Camarillo,Jonathan,12,Mellophone,CO,203,M,163,M10,,Needs to have board
 Cannary,Grayson,9,Baritone,CO,11,S,,,,Alternate
 Capps,Katy,10,Saxophone,CO,100,M,61,S6,JL,
 Carbajel,Giovanni,9,,,,M,,,,Absent
@@ -51,7 +51,7 @@ Dougal,Ross,12,Percussion,CO,803,3,81,Q3,PA,Battery
 Dubiel,Claire,11,Flute,WE,46,XS,38,F12,PA,
 Duncan,Michael,10,Saxophone,CO,157,S,142,A6,,
 DuPlessis,Carl,12,Saxophone,SYM,73,M,57,A10,,
-Erengil,Haven,9,Flute,,101,S,133,F14,,
+Erengil,Haven,9,Flute,,119,S,133,F14,,
 Erlich,Dasya,10,Clarinet,CO,244,L,,,,Alternate
 Escobar,Julia,11,Flute,WE,20,XS,96,F1,PA,
 Evans,Kendall,12,Saxophone,we,94,M,113,A5,PA,
@@ -69,7 +69,7 @@ Garcia,Ben,10,Trumpet,SYM,88,L,116,T6,PA,
 Garcia,Victoria,12,Pit,CO,N/A,N/A,N/A,N/A,,Pit 
 George,Hannah,9,Clarinet,,343,M,82,C23,PA,
 Geyer,Catherine,9,Flute,,134,S,110,F19,PA,
-Gil,Brandyn,12,Percussion,CO,216,M,131,O4,JL,Battery
+Gil,Brandyn,12,Percussion,CO,216,M,166,O4,JL,Battery
 Gindler,Emily,9,Tuba,CO,N/A,N/A,,U3,,Tuba
 Gindler,Sam,12,Tuba,CO,N/A,N/A,,U6,,Tuba
 Gomez,Fernando,10,Pit,CO,N/A,N/A,N/A,N/A,,Pit 
@@ -90,12 +90,12 @@ Harvey,Claire,12,Flute/Bassoon,WE,210,M,78,F2,PA,
 Heffler,Marisa,11,Clarinet,WE,136,S,34,C5,PA,
 Heighway,Jessica,11,Trumpet,CO,185,M,56,T13,PA,
 Hendren,Alec,12,Saxophone,CO,116,M,143,A9,,
-Hendren,Emma,11,Trumpet,CO,25,XS,15,T9,PA,
+Hendren,Emma,11,Trumpet,CO,25,XS,160,T9,PA,
 Hendren,Kayla,11,Flute,CO,21,XS,,,,Alternate
 Hernandez,David,9,Flute,,,M,,,,Alternate
 Hernandez,John ,9,Clarinet,,242,L,63,C17,PA,
 Hewa,Gayathre,9,,,,S,,,,Alternate
-Hill,Jonathon,10,Trumpet,CO,159,S,10,T10,,
+Hill,Jonathon,10,Trumpet,CO,159,S,158,T10,,
 Ho,Aaron,12,Trumpet,SYM,115,M,120,T18,PA,
 Hresko,Andrew,12,Saxophone,WE,178,M,79,A1,PA,
 Humphrey,Lauren,11,Mellophone,WE,4,S,92,M2,PA,
@@ -132,7 +132,7 @@ Minford,Mara,11,Clarinet,WE,65,M,118,C16,PA,
 Moncure,John,11,Trumpet,CO,188,M,135,T20,JL,
 Morales,Julie,9,Flute,,,M,,,,Alternate
 Nather-Weber,Miranda,9,Clarinet,,31,S,,,,Alternate
-Nealon,Sophia,9,Clarinet,,119,S,,,,Alternate
+Nealon,Sophia,9,Clarinet,,101,S,,,,Alternate
 Neel-Hernandez,Riley,12,Bari Saxophone,SYM,184,L,51,S4,PA,
 Newton,Zach,11,Alto Sax,CO,196,M,90,A4,PA,
 Nguyen,Sid,12,Baritone,SYM,170,S,145,B8,,
@@ -196,7 +196,7 @@ Wilkes,Lauren,11,Flute,,161,M,134,F17,,
 Williams,Jake,10,Mellophone,CO,227,M,154,M7,,
 Winn,Emily,9,Trumpet,,108,S,148,T7,,
 Young,Brandon,9,Bartione,,169,S,,,,Alternate
-Young,Cameron,11,Baritone,SYM,156,S,24,B14,PA,
+Young,Cameron,11,Baritone,SYM,156,S,10,B14,PA,
 Young,Caroline,11,Clarinet,WE,98,S,158,C1,PA,
 Young,McKenzie,10,Flute,SYM,47,S,43,F22,PA,
 Zukauckas,Catherine,11,Baritone,SYM,135,M,101,B6,PA,
