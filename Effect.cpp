@@ -288,7 +288,7 @@ void Effect::e5()
 void Effect::e6()
 {
    const long rise_time = 2000;
-   const long vmax = 512; // intensity at peak
+   const long vmax = 2047; // intensity at peak
 
    int v;
    if (dt > rise_time)
