@@ -23,7 +23,7 @@
 //
 namespace avr_tlc5940
 {
-   uint8_t gsdata[24];
+   uint8_t gsdata[24 * NUMBER_OF_TLC5940];
    bool pending_gsdata;
    bool need_xlat;
 
