@@ -12,7 +12,6 @@
 #include "avr_rtc.hpp"
 #include "avr_dbg.hpp"
 #include "nrf24l01.hpp"
-#include "avr_max1704x.hpp"
 #include "messages.hpp"
 #include "slave_eeprom.h"
 #include "nrf_boot.h"
@@ -35,7 +34,6 @@ int main (void)
 {
    avr_tlc5940::setup();
    avr_rtc::setup();
-   avr_max1704x::setup();
 
    slave_id = eeprom_read_word(EE_SLAVE_ID);
    nRF24L01::channel  = eeprom_read_byte((const uint8_t*)EE_CHANNEL);
@@ -48,14 +46,6 @@ int main (void)
       avr_dbg::die(1, 1000);
    nRF24L01::configure_PRX();
    uint8_t buff[ensemble::message_size];
-
-   // Turn on 12V supply
-   DDRB |= _BV(PB1);
-   PORTB |= _BV(PB1);
-   // Things to wake us up:
-   // nRF IRQ,              random
-   // TLC5940 BLANK needed  1.024 kHz
-   // rtc:      1 kHz
 
    uint32_t t_hb=0;
    Effect effect(slave_id);
@@ -140,9 +130,9 @@ void do_ping(uint8_t* buff, uint8_t pipe)
    flush_tx();
    write_reg(CONFIG, config | CONFIG_PWR_UP); // power back up
 
-   // Gather some data to send back...
-   uint16_t vcell = avr_max1704x::read_vcell();
-   uint16_t soc = avr_max1704x::read_soc();
+   // Zero fill this since we don't have a battery...
+   uint16_t vcell = 0;
+   uint16_t soc = 0;
 
    // delay_us(150);
    // above delay not required because the I2C reads will take much longer than that.

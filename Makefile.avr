@@ -11,10 +11,14 @@ F_CPU=8000000
 
 AVRDUDE=sudo avrdude -F -p $(PROGRAMMER_MCU) $(AVRDUDE_PROGRAMMERID) $(AVRDUDE_PORT)
 
+NUMBER_OF_TLC5940=1
+slave216_main.o: NUMBER_OF_TLC5940=14
+
 CFLAGS=-I. $(INC) -g -mmcu=$(MCU) -O$(OPTLEVEL) \
 	-fpack-struct -fshort-enums             \
 	-DF_CPU=$(F_CPU)UL -DAVR=1              \
 	-DBOOTADDR=$(BOOTADDR)                  \
+	-DNUMBER_OF_TLC5940=$(NUMBER_OF_TLC5940)\
 	-funsigned-bitfields -funsigned-char    \
 	-Wall -Wstrict-prototypes               \
 	-Wa,-ahlms=$(firstword                  \
@@ -25,6 +29,7 @@ CPPFLAGS=-fno-exceptions -Wall                   \
 	-fpack-struct -fshort-enums              \
 	-DF_CPU=$(F_CPU)UL -DAVR=1               \
 	-DBOOTADDR=$(BOOTADDR)                   \
+	-DNUMBER_OF_TLC5940=$(NUMBER_OF_TLC5940) \
 	-funsigned-bitfields -funsigned-char     \
 	-Wa,-ahlms=$(firstword                   \
 	$(filter %.lst, $(<:.cpp=.lst)))
@@ -38,7 +43,7 @@ CPP=avr-gcc
 .PHONY: clean %.flash
 .PRECIOUS: %.hex
 
-all: slave_main.hex nrf_boot.hex
+all: slave_main.hex slave216_main.hex nrf_boot.hex
 
 clean:
 	rm -f *.hex *.o *.elf *.map *.lst
@@ -64,6 +69,9 @@ rtc-test.o: rtc-test.cpp
 
 slave_main.elf: slave_main.o avr_rtc.o avr_spi.o i2c.o lcd_plate.o avr_tlc5940.o avr_mike.o nrf24l01.o messages.o avr_dbg.o \
 	avr_max1704x.o Effect.o
+
+slave216_main.elf: slave216_main.o avr_rtc.o avr_spi.o avr_tlc5940.o nrf24l01.o messages.o avr_dbg.o Effect.o
+
 
 slave_flasher.elf: slave_flasher.o avr_rtc.o avr_tlc5940.o avr_mike.o
 
