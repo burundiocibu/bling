@@ -8,18 +8,18 @@
 
 const uint8_t  all_l2r [] PROGMEM = {
 255, 255, 60, 255, 255, 120, 20, 0, 140, 255, 172, 160, 60, 103, 144, 255, 99, 80, 55, 102, 255, 255, 156, 106, 255, 15, 153, 181, 255, 255, 63, 255, 255, 70, 21, 255, 58, 78, 162, 255, 184, 0, 18, 126, 85, 142, 255, 151, 73, 82, 199, 120, 255, 196, 24, 94, 97, 75, 123, 180, 124, 81, 255, 39, 138, 105, 51, 135, 84, 42, 255, 109, 148, 12, 66, 255, 255, 141, 174, 117, 154, 255, 33, 100, 193, 52, 112, 54, 175, 91, 72, 129, 115, 190, 30, 255, 255, 186, 159, 93, 111, 169, 3, 88, 6, 255, 147, 255, 132, 255, 150, 108, 49, 90, 133, 163, 79, 145, 45, 100, 40, 27, 183, 96, 255, 36, 177, 255, 255, 255, 255, 255, 171, 165, 168, 43, 255, 9, 255, 114, 136, 121, 87, 69, 178, 157, 48, 76, 61, 255, 255, 255, 255, 255, 127, 187, 130, 166, 46, 255, 64, 255, 255, 118, 255, 255, 255, 40, 255, 255, 255, 255, 255, 255, 255 };
+
 const uint8_t  set13 [] PROGMEM = {
 255, 255, 0, 255, 255, 20, 8, 12, 16, 255, 10, 8, 14, 26, 30, 255, 8, 28, 18, 8, 255, 12, 22, 30, 255, 16, 28, 6, 255, 255, 6, 255, 255, 24, 20, 255, 18, 2, 22, 255, 8, 16, 12, 12, 20, 4, 255, 10, 22, 18, 16, 6, 255, 6, 10, 18, 14, 4, 10, 26, 28, 2, 255, 12, 30, 6, 14, 28, 0, 14, 255, 28, 6, 16, 4, 255, 255, 30, 26, 8, 14, 255, 10, 24, 4, 26, 26, 10, 255, 22, 2, 12, 30, 12, 20, 255, 24, 22, 26, 0, 8, 14, 18, 20, 20, 255, 30, 255, 28, 255, 28, 6, 20, 0, 12, 4, 22, 8, 18, 16, 24, 20, 24, 2, 10, 16, 22, 255, 255, 255, 255, 255, 24, 26, 24, 26, 255, 18, 255, 4, 16, 30, 0, 4, 10, 14, 18, 24, 20, 255, 255, 255, 255, 255, 28, 12, 28, 16, 22, 255, 24, 255, 255, 30, 255, 255, 255, 4, 255, 255, 255, 255, 255, 255, 255 };
 
-uint16_t Effect::get_delay(const uint8_t lut[], size_t len)
+uint8_t Effect::get_delay(const uint8_t lut[], size_t len)
 {
    if (slave_id < len)
    {
       uint8_t d = pgm_read_byte( &(lut[slave_id]));
-      if  (d!=0xff)
-         return d * 25; // needs to match delay_lsb in make_sets.py
+      return d;
    }
-   return 0xffff;
+   return 0xff;
 }
 
 
@@ -49,19 +49,8 @@ void Effect::init(uint8_t* buff)
    if (new_id !=0 && new_id == id && new_start_time == start_time && new_duration == duration)
       return;
 
-   se_delay = 0;
-   switch(new_id)
-   {
-      case 7: se_delay = get_delay(all_l2r, sizeof(all_l2r));  break;
-      case 8: se_delay = get_delay(set13,   sizeof(set13));      break;
-   }
-
-   // If our effect/slave specific delay is 0xffff, don't execute this effect
-   if (se_delay == 0xffff)
-      return;
-
    id = new_id;
-   start_time = new_start_time + se_delay;
+   start_time = new_start_time;
    duration = new_duration;
    state = pending;
 }
@@ -312,6 +301,12 @@ void Effect::e6()
 /* just turns all off */
 void Effect::e7()
 {
+   const uint8_t d = get_delay(all_l2r, sizeof(all_l2r));
+   if (d==0xff)
+      return;
+   const uint16_t delay = d*25;
+   if (dt <= delay)
+      return;
    int v = 0;
 
    // red starts at ch 1, green starts at ch 0
@@ -328,6 +323,11 @@ T:    0 1       2 3      4...
  */
 void Effect::e8()
 {
+   const uint8_t d = get_delay(set13, sizeof(set13));
+   if (d==0xff)
+      return;
+   const uint16_t delay = d*25;
+
    const long t1 = 150;
    const long t2 = 675;
    const long t3 = 825;
@@ -335,7 +335,7 @@ void Effect::e8()
    const long vmax = 2047; // intensity at peak
 
    unsigned v=0;
-   long cldt = dt<=0 ? 0 : dt % t4;
+   long cldt = dt<=delay ? 0 : (dt-delay) % t4;
 
    if (cldt < t1)
       v = (vmax * cldt) / t1;
