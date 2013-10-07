@@ -40,6 +40,7 @@ struct Effect
    void e5(); // Sparkle red/purple brass & woodwinds for duration
    void e6(); // Sparkle red/purple brass & ww fade out 
    void e7(); // Fade 20% red to 0% from R to L in two groups
+   void e8(); // white wave back to front set13
 };
 
 #endif
