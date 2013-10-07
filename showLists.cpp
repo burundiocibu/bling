@@ -5,7 +5,7 @@
 
 namespace showlist
 {
-   const int maxNumberEffects = 8;
+   const int maxNumberEffects = 9;
    ShowEffect showList[maxNumberEffects] = 
    {
       "Flash       ", 1000,
@@ -15,7 +15,8 @@ namespace showlist
       "sparkle     ", 30000,
       "fade sparkle", 4000,
       "dim red     ", 10000,
-      "R->L fade   ", 10000
+      "R->L fade   ", 10000,
+      "B->F flash  ", 4500
    };
 }
 

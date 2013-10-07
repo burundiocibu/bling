@@ -224,7 +224,7 @@ void heartbeat(int slave)
 
 void process_ui(void)
 {
-   static int effect=3;
+   static int effect=8;
    static uint8_t button=0;
 
    static bool first_time = true;
@@ -262,7 +262,7 @@ void process_ui(void)
       {
          effect++;
          if (effect>=showlist::maxNumberEffects)
-            effect=0;
+            effect=3;
          //lcd_plate::puts(showlist::showList[effect].effectName);
          print_effect_name(effect);
          //TODO: see if need to do anything else
@@ -288,7 +288,7 @@ void process_ui(void)
             logfile << 1e-3*runtime.msec() << " effect " << 0 << endl;
             effect++;
             if (effect>=showlist::maxNumberEffects)
-               effect=0;
+               effect=3;
             print_effect_name(effect);
          }
       }

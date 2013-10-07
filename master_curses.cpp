@@ -195,6 +195,11 @@ int main(int argc, char **argv)
             nrf_tx(buff, sizeof(buff), slave, 25);
             mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
+         case '8':
+            messages::encode_start_effect(buff, 8, t, 4500);
+            nrf_tx(buff, sizeof(buff), slave, 25);
+            mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
+            break;
             
          case 'x':
             messages::encode_all_stop(buff);

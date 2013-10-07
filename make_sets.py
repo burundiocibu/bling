@@ -11,6 +11,9 @@ def set_lut(lut, d, did):
         if did[0] != 'U': # Tubas don't have hats yet
             print "slave id not found for", did
         return
+    if d>=255:
+        print "delay constant too large:", d
+        return
     sid = did2sid[did]
     if sid == 999:
         print "No board: {:3s} {}".format(did, did2name[did])
@@ -191,9 +194,8 @@ for did in reversed(bench_brass):
 print_lut(lut, "all_l2r")
 
 
-
-# two cycles in 4.5 seconds with .5 sec dead time between = 2 sec/cycle
-dt = 2 * 1000 / len(set13) / delay_lsb
+# For effect 8
+dt = 1125 / len(set13) / delay_lsb
 lut=[0xff for i in range(max_sid)]
 d=0
 for line in set13:
