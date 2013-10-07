@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <string>
 #include <vector>
+#include <list>
 #include <map>
 #include <iostream>
 #include <iomanip>
@@ -18,7 +19,6 @@
 
 #include "messages.hpp"
 #include "ensemble.hpp"
-#include "showLists.hpp"
 
 void nrf_tx(unsigned slave, uint8_t *buff, size_t len, bool updateDisplay, int resendCount);
 void slider(unsigned slave, uint8_t ch, uint16_t &v, int dir);
@@ -65,7 +65,6 @@ int main(int argc, char **argv)
    strftime (now, 80, "%b %d %02H:%02M:%02S", timeinfo);
 
    logfile.open(log_fn, std::ofstream::app);
-   logfile << now << " 2013 Halftime start " << endl;
 
    lcd_plate::setup(0x20);
    lcd_plate::clear();
@@ -169,8 +168,8 @@ void nrf_tx(unsigned slave, uint8_t *buff, size_t len, bool updateDisplay, int s
          //lcd_plate::puts(to_string(ack_err).c_str());
          if(updateDisplay)
          {
-            lcd_plate::set_cursor(0,13);
-            lcd_plate::puts("-- ");
+            lcd_plate::set_cursor(0,14);
+            lcd_plate::puts("--");
          }
       }
       else if (status & STATUS_TX_DS)
@@ -178,8 +177,8 @@ void nrf_tx(unsigned slave, uint8_t *buff, size_t len, bool updateDisplay, int s
          write_reg(STATUS, STATUS_TX_DS); //Clear the data sent notice
          if(updateDisplay)
          {
-            lcd_plate::set_cursor(0,13);
-            lcd_plate::puts("++ ");
+            lcd_plate::set_cursor(0,14);
+            lcd_plate::puts("++");
          }
       }
       else
@@ -187,19 +186,19 @@ void nrf_tx(unsigned slave, uint8_t *buff, size_t len, bool updateDisplay, int s
          logfile << 1e-3*runtime.msec() << " tx_err " << ++tx_err << endl;
          if(updateDisplay)
          {
-            lcd_plate::set_cursor(0,13);
-            lcd_plate::puts("---");
+            lcd_plate::set_cursor(0,14);
+            lcd_plate::puts("--");
          }
       }
    }
 }
 
 
-void print_effect_name(int effect)
+void print_effect_name(string name)
 {
    lcd_plate::clear();
    lcd_plate::set_cursor(0,0);
-   lcd_plate::puts(showlist::showList[effect].effectName);
+   lcd_plate::puts(name.c_str());
 }
 
 
@@ -224,51 +223,55 @@ void heartbeat(int slave)
 
 void process_ui(void)
 {
-   static int effect=8;
-   static uint8_t button=0;
+   struct Event
+   {
+      Event(string n, unsigned i, unsigned d) :
+         name(n), id(i), duration(d)
+      {};
+      string name;        // Should be under 12 characters
+      uint8_t id;         // effect id from Effect.cpp
+      uint16_t duration;  // duration in ms
+   };
+   
+   static list<Event> event_list;
+   static list<Event>::const_iterator current_event;
+   static uint8_t prev_button=0;
 
    static bool first_time = true;
    if (first_time)
    {
-      print_effect_name(effect);
+      event_list.push_back(Event("set13",        8, 4500));
+      event_list.push_back(Event("flash",        0, 900));
+      event_list.push_back(Event("pre hit",      3, 10000));
+      event_list.push_back(Event("sparkle",      4, 30000));
+      event_list.push_back(Event("sparkle fade", 5, 4000));
+      event_list.push_back(Event("dim red",      6, 1000));
+      event_list.push_back(Event("R->L fade",    7, 4500));
+
+      current_event = event_list.begin();
+      print_effect_name(current_event->name);
       first_time=false;
    }
 
-   /*
-    * React to RIGHT, LEFT and select buttons
-    * RIGHT = previous effect
-    * LEFT = next effect
-    * SELECT = start selected effect
-    *
-    * at this point, just igmroe UP and DOWN buttons
-    * */
    uint8_t b = 0x1f & ~lcd_plate::read_buttons();
-   if (b!=button)
+   if (b!=prev_button)
    {
-      button = b;
+      prev_button = b;
       logfile << 1e-3*runtime.msec() << " lcd keypress: " << hex << int(b) << endl;
       if (b & lcd_plate::LEFT)
       {
-         effect--;
-         if (effect<0)
-            effect=showlist::maxNumberEffects - 1;
-         //lcd_plate::puts(showlist::showList[effect].effectName);
-         //TODO: see if need to do anything else
-         //eff.start();
-         print_effect_name(effect);
-         logfile << 1e-3*runtime.msec() << " effect  " << effect << endl;
+         if (current_event==event_list.begin())
+            --(current_event=event_list.end());
+         else
+            current_event--;
+         print_effect_name(current_event->name);
       }
       else if (b & lcd_plate::RIGHT)
       {
-         effect++;
-         if (effect>=showlist::maxNumberEffects)
-            effect=3;
-         //lcd_plate::puts(showlist::showList[effect].effectName);
-         print_effect_name(effect);
-         //TODO: see if need to do anything else
-         //eff.start();
-         //print_slave(slave);
-         logfile << 1e-3*runtime.msec() << " effect  " << effect << endl;
+         current_event++;
+         if (current_event==event_list.end())
+            current_event = event_list.begin();
+         print_effect_name(current_event->name);
       }
       else if (b & lcd_plate::UP)
       {
@@ -280,17 +283,13 @@ void process_ui(void)
       }
       else if (b & lcd_plate::SELECT)
       {
-         if(effect >= 0)
-         {
-            uint8_t buff[ensemble::message_size];
-            msg::encode_start_effect(buff, effect, runtime.msec(), showlist::showList[effect].effectDurationInMSec);
-            nrf_tx(BROADCAST_ADDRESS, buff, sizeof(buff), true, 200);
-            logfile << 1e-3*runtime.msec() << " effect " << 0 << endl;
-            effect++;
-            if (effect>=showlist::maxNumberEffects)
-               effect=3;
-            print_effect_name(effect);
-         }
+         uint8_t buff[ensemble::message_size];
+         msg::encode_start_effect(buff, current_event->id, runtime.msec(), current_event->duration);
+         nrf_tx(BROADCAST_ADDRESS, buff, sizeof(buff), true, 200);
+         current_event++;
+         if (current_event==event_list.end())
+            current_event = event_list.begin();
+         print_effect_name(current_event->name);
       }
    }
 }

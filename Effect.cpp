@@ -75,10 +75,6 @@ void Effect::execute()
    if (state==pending)
       state=running;
 
-//   else if (prev_dt>0 && dt - prev_dt < 20)
-      // Don't really need to update the LEDs more often than 50 Hz
-//      return;
-
    switch(id)
    {
       case 0: e0(); break;

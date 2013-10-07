@@ -42,7 +42,7 @@ using namespace std;
 using namespace nRF24L01;
 
 Flasher::Flasher(int debug_level)
-   :log("flasher.log"),
+   :log("flasher.log", std::ofstream::app),
     debug(debug_level)
 {
    if (!bcm2835_init())
@@ -51,7 +51,7 @@ Flasher::Flasher(int debug_level)
       exit(-1);
    }
 
-   log << timestamp() << " Initializing nRF";
+   log << endl << timestamp() << " Initializing nRF";
 
    // This sets up P1-15 as the CE for the n24L01
    bcm2835_gpio_fsel(RPI_GPIO_P1_15, BCM2835_GPIO_FSEL_OUTP);
@@ -457,7 +457,7 @@ std::string Flasher::timestamp(void)
    struct tm now_tm;
    localtime_r((const time_t*)&tv.tv_sec, &now_tm);
    char b1[32], b2[32];
-   strftime(b1, sizeof(b1), "%H:%M:%S", &now_tm);
+   strftime(b1, sizeof(b1), "%m/%d %H:%M:%S", &now_tm);
    snprintf(b2, sizeof(b2), "%s.%03d", b1, tv.tv_usec/1000);
    return string(b2);
 }
