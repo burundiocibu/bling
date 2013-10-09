@@ -5,12 +5,13 @@
 #include <cmath>
 
 #include <bcm2835.h>
-
+#include "Lock.hpp"
 #include "rt_utils.hpp"
 #include "nrf24l01.hpp"
 #include "messages.hpp"
 #include "ensemble.hpp"
 
+namespace msg=messages;
 using namespace std;
 
 RunTime runtime;
@@ -56,6 +57,8 @@ int debug;
 
 int main(int argc, char **argv)
 {
+   Lock lock;
+
    opterr = 0;
    int c;
    while ((c = getopt(argc, argv, "di:s:")) != -1)
@@ -121,11 +124,11 @@ int main(int argc, char **argv)
 
       if (t - last_hb > 990)
       {
-         messages::encode_heartbeat(buff, t);
+         msg::encode_heartbeat(buff, t);
          nrf_tx(buff, sizeof(buff), slave, 1);
          hb_count++;
          last_hb = t;
-         mvprintw(1, 0, "%02x", messages::freshness_count);
+         mvprintw(1, 0, "%02x", msg::freshness_count);
       }
 
       char key = getch();
@@ -156,65 +159,65 @@ int main(int argc, char **argv)
          case 's': hsv.s+=2; hsv2rgb(hsv, rgb); set_rgb(rgb); break;
          case 'S': hsv.s-=2; hsv2rgb(hsv, rgb); set_rgb(rgb); break;
          case '0':
-            messages::encode_start_effect(buff, 0, t, 750);
+            msg::encode_start_effect(buff, 0, t, 750);
             nrf_tx(buff, sizeof(buff), slave, 25);
             mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
          case '1':
-            messages::encode_start_effect(buff, 1, t, 20000);
+            msg::encode_start_effect(buff, 1, t, 20000);
             nrf_tx(buff, sizeof(buff), slave, 25);
             mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
          case '2':
-            messages::encode_start_effect(buff, 2, t, 3000);
+            msg::encode_start_effect(buff, 2, t, 3000);
             nrf_tx(buff, sizeof(buff), slave, 25);
             mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
          case '3':
-            messages::encode_start_effect(buff, 3, t, 10000);
+            msg::encode_start_effect(buff, 3, t, 10000);
             nrf_tx(buff, sizeof(buff), slave, 25);
             mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
          case '4':
-            messages::encode_start_effect(buff, 4, t, 30000);
+            msg::encode_start_effect(buff, 4, t, 30000);
             nrf_tx(buff, sizeof(buff), slave, 25);
             mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
          case '5':
-            messages::encode_start_effect(buff, 5, t, 4000);
+            msg::encode_start_effect(buff, 5, t, 4000);
             nrf_tx(buff, sizeof(buff), slave, 25);
             mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
          case '6':
-            messages::encode_start_effect(buff, 6, t, 15000);
+            msg::encode_start_effect(buff, 6, t, 15000);
             nrf_tx(buff, sizeof(buff), slave, 25);
             mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
          case '7':
-            messages::encode_start_effect(buff, 7, t, 10000);
+            msg::encode_start_effect(buff, 7, t, 10000);
             nrf_tx(buff, sizeof(buff), slave, 25);
             mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
          case '8':
-            messages::encode_start_effect(buff, 8, t, 4500);
+            msg::encode_start_effect(buff, 8, t, 4500);
             nrf_tx(buff, sizeof(buff), slave, 25);
             mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
             
          case 'x':
-            messages::encode_all_stop(buff);
+            msg::encode_all_stop(buff);
             nrf_tx(buff, sizeof(buff), slave, 5);
             mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             hsv.v=0; hsv2rgb(hsv, rgb);
             break;
          case 'p':
-            messages::encode_ping(buff);
+            msg::encode_ping(buff);
             nrf_tx(buff, sizeof(buff), slave, 1);
             mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             nrf_rx();
             break;
          case 'z':
-            messages::encode_reboot(buff);
+            msg::encode_reboot(buff);
             nrf_tx(buff, sizeof(buff), slave, 1);
             mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
@@ -315,7 +318,7 @@ void nrf_rx(void)
    uint8_t msg_id, freshness_count;
    int8_t major_version, minor_version;
 
-   messages::decode_status(buff, slave_id, t_rx, major_version, minor_version,
+   msg::decode_status(buff, slave_id, t_rx, major_version, minor_version,
                            vcell, soc, missed_message_count, freshness_count);
 
    mvprintw(10, 0, "%8.3f ", 0.001*t_rx);
@@ -388,18 +391,18 @@ void set_rgb(rgb_t rgb)
    uint8_t buff[ensemble::message_size];
    for (int i=0; i<sizeof(buff); i++) buff[i]=0;
 
-   messages::encode_set_tlc_ch(buff, 2, rgb.g);
+   msg::encode_set_tlc_ch(buff, 2, rgb.g);
    nrf_tx(buff, sizeof(buff), slave,1);
-   messages::encode_set_tlc_ch(buff, 1, rgb.r);
+   msg::encode_set_tlc_ch(buff, 1, rgb.r);
    nrf_tx(buff, sizeof(buff), slave, 1);
-   messages::encode_set_tlc_ch(buff, 0, rgb.b);
+   msg::encode_set_tlc_ch(buff, 0, rgb.b);
    nrf_tx(buff, sizeof(buff), slave, 1);
 
-   messages::encode_set_tlc_ch(buff, 5, rgb.g);
+   msg::encode_set_tlc_ch(buff, 5, rgb.g);
    nrf_tx(buff, sizeof(buff), slave, 1);
-   messages::encode_set_tlc_ch(buff, 4, rgb.r);
+   msg::encode_set_tlc_ch(buff, 4, rgb.r);
    nrf_tx(buff, sizeof(buff), slave, 1);
-   messages::encode_set_tlc_ch(buff, 3, rgb.b);
+   msg::encode_set_tlc_ch(buff, 3, rgb.b);
    nrf_tx(buff, sizeof(buff), slave, 1);
 }
 
@@ -453,10 +456,10 @@ void hsv_float(uint8_t h, uint8_t s, uint8_t v)
    uint8_t buff[ensemble::message_size];
    for (int i=0; i<sizeof(buff); i++) buff[i]=0;
 
-   messages::encode_set_tlc_ch(buff, 2, green);
+   msg::encode_set_tlc_ch(buff, 2, green);
    nrf_tx(buff, sizeof(buff), slave, 1);
-   messages::encode_set_tlc_ch(buff, 1, red);
+   msg::encode_set_tlc_ch(buff, 1, red);
    nrf_tx(buff, sizeof(buff), slave, 1);
-   messages::encode_set_tlc_ch(buff, 0, blue);
+   msg::encode_set_tlc_ch(buff, 0, blue);
    nrf_tx(buff, sizeof(buff), slave, 1);
 }

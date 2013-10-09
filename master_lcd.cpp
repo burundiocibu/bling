@@ -10,7 +10,6 @@
 #include <time.h>
 #include <sys/mman.h> // for settuing up no page swapping
 #include <bcm2835.h>
-#include <chrono>
 
 #include "rt_utils.hpp"
 #include "nrf24l01.hpp"
@@ -18,6 +17,7 @@
 
 #include "messages.hpp"
 #include "ensemble.hpp"
+#include "Lock.hpp"
 
 void nrf_tx(unsigned slave, uint8_t *buff, size_t len);
 void slider(unsigned slave, uint8_t ch, uint16_t &v, int dir);
@@ -33,11 +33,13 @@ using namespace std;
 RunTime runtime;
 ofstream logfile;
 
+bool time_to_die=false;
 
 int main(int argc, char **argv)
 {
+   Lock lock;
    string log_fn="master_lcd.log";
-
+   
    signal(SIGTERM, shutdown);
    signal(SIGINT, shutdown);
 
@@ -57,15 +59,10 @@ int main(int argc, char **argv)
    timeinfo = localtime (&rawtime);
    strftime (now, 80, "%b %d %02H:%02M:%02S", timeinfo);
 
-   logfile.open(log_fn, std::ofstream::app);
-   logfile << now << " master_lcd start " << endl;
-
    lcd_plate::setup(0x20);
    lcd_plate::clear();
    lcd_plate::set_cursor(0,0);
    lcd_plate::set_backlight(lcd_plate::VIOLET);
-
-   logfile << fixed << setprecision(3) << 1e-3*runtime.msec() << hex << endl;
 
    nRF24L01::channel = 2;
    memcpy(nRF24L01::master_addr,    ensemble::master_addr,   nRF24L01::addr_len);
@@ -75,32 +72,30 @@ int main(int argc, char **argv)
    nRF24L01::setup();
    if (!nRF24L01::configure_base())
    {
-      logfile << "Failed to find nRF24L01. Exiting." << endl;
+       << "Failed to find nRF24L01. Exiting." << endl;
       return -1;
    }
    nRF24L01::configure_PTX();
    nRF24L01::flush_tx();
 
-   while(true)
+   while(!time_to_die)
    {
       heartbeat(0);
       process_ui();
       bcm2835_delayMicroseconds(5000);
    }
 
-}
-
-
-void shutdown(int param)
-{
    nRF24L01::shutdown();
    lcd_plate::clear();
    lcd_plate::set_backlight(lcd_plate::OFF);
    lcd_plate::shutdown();
    bcm2835_close();
-   logfile << 1e-3*runtime.msec() << " master_lcd stop" << endl;
-   logfile.close();
-   exit(0);
+}
+
+
+void shutdown(int param)
+{
+   time_to_die=true;
 }
 
 

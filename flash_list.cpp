@@ -26,10 +26,15 @@
 #include <time.h>
 #include <unistd.h>
 #include <list>
+#include <sys/file.h>
+#include <fcntl.h>
+#include <errno.h>
+
 
 #include "Slave.hpp"
 #include "nameList.hpp"
 #include "Flasher.hpp"
+#include "Lock.hpp"
 
 nameList::NameHatInfo testNameList[] =
 {
@@ -57,6 +62,8 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
+   Lock lock; // If this fails, we can't get the hardware
+
    int debug=0;
    char *input_fn;
    bool test=false;

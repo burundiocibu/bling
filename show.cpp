@@ -10,14 +10,13 @@
 #include <fstream>
 #include <time.h>
 #include <sys/mman.h> // for settuing up no page swapping
-#include <fcntl.h>
-#include <errno.h>
 
 #include <bcm2835.h>
 
 #include "rt_utils.hpp"
 #include "nrf24l01.hpp"
 #include "lcd_plate.hpp"
+#include "Lock.hpp"
 
 #include "messages.hpp"
 #include "ensemble.hpp"
@@ -40,22 +39,13 @@ const int NUMBER_5MS_PER_SECOND = 200;
 
 // Two global objects. sorry
 RunTime runtime;
-int lock_fd=0;
-
+bool time_to_die=false;
 
 int main(int argc, char **argv)
 {
-   string log_fn="show.log";
-
+   Lock lock;
    signal(SIGTERM, shutdown);
    signal(SIGINT, shutdown);
-   lock_fd = open("/tmp/nRF.lock", O_CREAT | O_EXLOCK | O_NONBLOCK, 0644);
-   if (lock_fd<0)
-   {
-      cout << "Could not acquire lock. "
-                << strerror(errno) << endl;
-      shutdown(0);
-   }
 
    // lock this process into memory
    if (true)
@@ -72,8 +62,6 @@ int main(int argc, char **argv)
    lcd_plate::set_cursor(0,0);
    lcd_plate::set_backlight(lcd_plate::YELLOW);
 
-   cout << fixed << setprecision(3) << 1e-3*runtime.msec() << hex << endl;
-
    nRF24L01::channel = 2;
    memcpy(nRF24L01::master_addr,    ensemble::master_addr,   nRF24L01::addr_len);
    memcpy(nRF24L01::broadcast_addr, ensemble::slave_addr[0], nRF24L01::addr_len);
@@ -88,24 +76,24 @@ int main(int argc, char **argv)
    nRF24L01::configure_PTX();
    nRF24L01::flush_tx();
 
-   while(true)
+   while(!time_to_die)
    {
       heartbeat(0);
       process_ui();
       bcm2835_delayMicroseconds(5000);
    }
-}
 
-
-void shutdown(int param)
-{
    nRF24L01::shutdown();
    lcd_plate::clear();
    lcd_plate::set_backlight(lcd_plate::OFF);
    lcd_plate::shutdown();
    bcm2835_close();
-   close(lock_fd);
-   exit(0);
+}
+
+
+void shutdown(int param)
+{
+   time_to_die=true;
 }
 
 /*
@@ -276,6 +264,7 @@ void process_ui(void)
       }
       else if (b & lcd_plate::UP)
       {
+         uint8_t buff[ensemble::message_size];
          print_effect_name(test_event->name);
          msg::encode_start_effect(buff, test_event->id, runtime.msec(), test_event->duration);
          nrf_tx(BROADCAST_ADDRESS, buff, sizeof(buff), true, 200);
@@ -287,10 +276,11 @@ void process_ui(void)
       }
       else if (b & lcd_plate::DOWN)
       {
+         print_effect_name("All Stop");
          uint8_t buff[ensemble::message_size];
          msg::encode_all_stop(buff);
          nrf_tx(BROADCAST_ADDRESS, buff, sizeof(buff), true, 200);
-         print_effect_name("All Stop");
+         print_effect_name(current_event->name);
       }
       else if (b & lcd_plate::SELECT)
       {

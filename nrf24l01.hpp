@@ -43,5 +43,6 @@ namespace nRF24L01
    extern uint32_t t_rx;
    void clear_IRQ(void);
 #endif
+
 }
 #endif
