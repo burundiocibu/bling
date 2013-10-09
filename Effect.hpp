@@ -16,10 +16,6 @@ struct Effect
    long prev_dt;
    int my_rand;
 
-   // slave/effect specific delay, indexed by effect number
-   static const unsigned max_effect = 10;
-   uint16_t se_delay;
-
    void init(uint8_t* buff);
    void execute(void);
    void all_stop(uint8_t* buff);
@@ -31,6 +27,9 @@ struct Effect
       stopped, pending, running
    } state;
    
+
+   // slave/effect specific delay, indexed by effect number
+   static const unsigned max_effect = 10;
 
    void e0(); // Fast on white, fades out over duration
    void e1(); // The LED test pattern

@@ -10,8 +10,10 @@
 #include <fstream>
 #include <time.h>
 #include <sys/mman.h> // for settuing up no page swapping
+#include <fcntl.h>
+#include <errno.h>
+
 #include <bcm2835.h>
-#include <chrono>
 
 #include "rt_utils.hpp"
 #include "nrf24l01.hpp"
@@ -38,7 +40,7 @@ const int NUMBER_5MS_PER_SECOND = 200;
 
 // Two global objects. sorry
 RunTime runtime;
-ofstream logfile;
+int lock_fd=0;
 
 
 int main(int argc, char **argv)
@@ -47,7 +49,15 @@ int main(int argc, char **argv)
 
    signal(SIGTERM, shutdown);
    signal(SIGINT, shutdown);
+   lock_fd = open("/tmp/nRF.lock", O_CREAT | O_EXLOCK | O_NONBLOCK, 0644);
+   if (lock_fd<0)
+   {
+      cout << "Could not acquire lock. "
+                << strerror(errno) << endl;
+      shutdown(0);
+   }
 
+   // lock this process into memory
    if (true)
    {
       struct sched_param sp;
@@ -57,31 +67,22 @@ int main(int argc, char **argv)
       mlockall(MCL_CURRENT | MCL_FUTURE);
    }
 
-   time_t rawtime;
-   struct tm * timeinfo;
-   char now [80];
-   time(&rawtime);
-   timeinfo = localtime (&rawtime);
-   strftime (now, 80, "%b %d %02H:%02M:%02S", timeinfo);
-
-   logfile.open(log_fn, std::ofstream::app);
-
    lcd_plate::setup(0x20);
    lcd_plate::clear();
    lcd_plate::set_cursor(0,0);
    lcd_plate::set_backlight(lcd_plate::YELLOW);
 
-   logfile << fixed << setprecision(3) << 1e-3*runtime.msec() << hex << endl;
+   cout << fixed << setprecision(3) << 1e-3*runtime.msec() << hex << endl;
 
    nRF24L01::channel = 2;
    memcpy(nRF24L01::master_addr,    ensemble::master_addr,   nRF24L01::addr_len);
    memcpy(nRF24L01::broadcast_addr, ensemble::slave_addr[0], nRF24L01::addr_len);
-   memcpy(nRF24L01::slave_addr,     ensemble::slave_addr[2], nRF24L01::addr_len);
+   memcpy(nRF24L01::slave_addr,     ensemble::slave_addr[0], nRF24L01::addr_len);
 
    nRF24L01::setup();
    if (!nRF24L01::configure_base())
    {
-      logfile << "Failed to find nRF24L01. Exiting." << endl;
+      cout << "Failed to find nRF24L01. Exiting." << endl;
       return -1;
    }
    nRF24L01::configure_PTX();
@@ -93,7 +94,6 @@ int main(int argc, char **argv)
       process_ui();
       bcm2835_delayMicroseconds(5000);
    }
-
 }
 
 
@@ -104,8 +104,7 @@ void shutdown(int param)
    lcd_plate::set_backlight(lcd_plate::OFF);
    lcd_plate::shutdown();
    bcm2835_close();
-   logfile << 1e-3*runtime.msec() << " master_lcd stop" << endl;
-   logfile.close();
+   close(lock_fd);
    exit(0);
 }
 
@@ -164,7 +163,6 @@ void nrf_tx(unsigned slave, uint8_t *buff, size_t len, bool updateDisplay, int s
          write_reg(STATUS, STATUS_MAX_RT);
          // Must clear to enable further communcation
          flush_tx();
-         logfile << 1e-3*runtime.msec() << " ack_err " << ack_err << endl;
          //lcd_plate::puts(to_string(ack_err).c_str());
          if(updateDisplay)
          {
@@ -183,7 +181,6 @@ void nrf_tx(unsigned slave, uint8_t *buff, size_t len, bool updateDisplay, int s
       }
       else
       {
-         logfile << 1e-3*runtime.msec() << " tx_err " << ++tx_err << endl;
          if(updateDisplay)
          {
             lcd_plate::set_cursor(0,14);
@@ -233,8 +230,8 @@ void process_ui(void)
       uint16_t duration;  // duration in ms
    };
    
-   static list<Event> event_list;
-   static list<Event>::const_iterator current_event;
+   static list<Event> event_list, test_list;
+   static list<Event>::const_iterator current_event,test_event;
    static uint8_t prev_button=0;
 
    static bool first_time = true;
@@ -248,7 +245,12 @@ void process_ui(void)
       event_list.push_back(Event("dim red",      6, 1000));
       event_list.push_back(Event("R->L fade",    7, 4500));
 
+      test_list.push_back(Event("Flash",    0,  1500));
+      test_list.push_back(Event("RGB Test", 1, 20000));
+
       current_event = event_list.begin();
+      test_event = test_list.begin();
+
       print_effect_name(current_event->name);
       first_time=false;
    }
@@ -257,7 +259,6 @@ void process_ui(void)
    if (b!=prev_button)
    {
       prev_button = b;
-      logfile << 1e-3*runtime.msec() << " lcd keypress: " << hex << int(b) << endl;
       if (b & lcd_plate::LEFT)
       {
          if (current_event==event_list.begin())
@@ -275,11 +276,21 @@ void process_ui(void)
       }
       else if (b & lcd_plate::UP)
       {
-         //TODO: for now, nothing
+         print_effect_name(test_event->name);
+         msg::encode_start_effect(buff, test_event->id, runtime.msec(), test_event->duration);
+         nrf_tx(BROADCAST_ADDRESS, buff, sizeof(buff), true, 200);
+         test_event++;
+         if (test_event==test_list.end())
+            test_event = test_list.begin();
+         // reprint the event that pressing select will execute
+         print_effect_name(current_event->name);
       }
       else if (b & lcd_plate::DOWN)
       {
-         //TODO: for now, nothing
+         uint8_t buff[ensemble::message_size];
+         msg::encode_all_stop(buff);
+         nrf_tx(BROADCAST_ADDRESS, buff, sizeof(buff), true, 200);
+         print_effect_name("All Stop");
       }
       else if (b & lcd_plate::SELECT)
       {
