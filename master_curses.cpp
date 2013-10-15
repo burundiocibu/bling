@@ -221,6 +221,16 @@ int main(int argc, char **argv)
             nrf_tx(buff, sizeof(buff), slave, 1);
             mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
+         case 'n':
+            msg::encode_sleep(buff);
+            nrf_tx(buff, sizeof(buff), slave, 1);
+            mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
+            break;
+         case 'N':
+            msg::encode_wake(buff);
+            nrf_tx(buff, sizeof(buff), slave, 1);
+            mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
+            break;
       }
       mvprintw(1, 6, "%3d   %03x %03x %03x", slave, rgb.r, rgb.g, rgb.b);
       mvprintw(2, 12, "%03x %03x %03x", hsv.h, hsv.s, hsv.v);
