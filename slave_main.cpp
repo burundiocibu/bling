@@ -29,7 +29,7 @@ uint16_t slave_id;
 
 // 0.1 was original app load to slaves
 const int8_t major_version = 0;
-const int8_t minor_version = 4;
+const int8_t minor_version = 5;
 
 int main (void)
 {

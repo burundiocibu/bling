@@ -27,8 +27,8 @@ Bruner,Lexi,11,Trumpet,WE,189,M,48,T2,PA,
 Bruner,Queen Alex,9,Trumpet,SYM,204,M,112,T11,,
 Bushong,Geoffrey,9,Pit,CO,N/A,N/A,N/A,N/A,,Pit
 Butler,Katie,10,Saxophone,CO,195,M,65,A12,PA,
-Camarillo,Jonathan,12,Mellophone,CO,203,M,163,M10,,Needs to have board
-Cannary,Grayson,9,Baritone,CO,11,S,,,,Alternate
+Camarillo,Jonathan,12,Mellophone,CO,203,M,,,,
+Cannary,Grayson,9,Baritone,CO,11,S,55,T15,,Alternate
 Capps,Katy,10,Saxophone,CO,100,M,61,S6,JL,
 Carbajel,Giovanni,9,,,,M,,,,Absent
 Carmouche,Natalie,10,Clarinet,CO,62,XS,69,C2,PA,
@@ -39,7 +39,7 @@ Churchett,Johnathan,9,Percussion,,N/A,N/A,N/A,N/A,,Pit
 Crank ,Olivia,10,Clarinet,WE,5,M,66,C4,PA,
 Crisara,Matthew,10,Trumpet,SYM,804,M,44,T3,PA,
 Davis,Desare ,9,flute,,1,XS,,,,Alternate
-Davis,Lonnell,10,Mellophone,CO,113,L,89,T17,PA,
+Davis,Lonnell,10,Mellophone,CO,113,L,,,PA,
 Denton,Ruby Ann,9,Clarinet,,107,S,,,,Alternate
 Anderson Band 2013-12014 Hat List,,,,,,,,,,
 Last Name,First Name,Grade,Marching Section,Concert Band,Hat #,Hat Size,Circuit Board #,Drill ID #,Confirm Done ,Marching Comments
@@ -55,12 +55,12 @@ Erengil,Haven,9,Flute,,119,S,133,F14,,
 Erlich,Dasya,10,Clarinet,CO,244,L,,,,Alternate
 Escobar,Julia,11,Flute,WE,20,XS,96,F1,PA,
 Evans,Kendall,12,Saxophone,we,94,M,113,A5,PA,
-Farland,Scott,9,Baritone,,128,M,,,,Alternate
+Farland,Scott,9,Baritone,,128,M,11,B13,,Alternate
 Farrell,Parker,12,Tuba,SYM,N/A,N/A,,U10,,Tuba
 Ferreira,Thais,9,Percussion,,N/A,N/A,N/A,N/A,,Pit
 Findley,Brooke,11,Flute,SYM,26,XS,126,F11,PA,
-Fleming,Sean,11,Baritone,CO,248,L,11,B13,PA,
-Fleming,Travis,11,Baritone,CO,240,L,,,,Alternate
+Fleming,Sean,11,Baritone,CO,248,L,,,PA,
+Fleming,Travis,11,Baritone,CO,240,L,163,M10,,
 Forman,Micah,12,Pit,CO,N/A,N/A,N/A,N/A,,Pit
 Franz,Kristina,11,Baritone,CO,163,S,72,B26,PA,
 Frazier,Richard,10,Tuba,CO,N/A,N/A,,U5,,Tuba
@@ -95,11 +95,11 @@ Hendren,Kayla,11,Flute,CO,21,XS,,,,Alternate
 Hernandez,David,9,Flute,,,M,,,,Alternate
 Hernandez,John ,9,Clarinet,,242,L,63,C17,PA,
 Hewa,Gayathre,9,,,,S,,,,Alternate
-Hill,Jonathon,10,Trumpet,CO,159,S,158,T10,,
+Hill,Jonathon,10,Trumpet,CO,159,S,10,T10,,
 Ho,Aaron,12,Trumpet,SYM,115,M,120,T18,PA,
 Hresko,Andrew,12,Saxophone,WE,178,M,79,A1,PA,
 Humphrey,Lauren,11,Mellophone,WE,4,S,92,M2,PA,
-James,Jamel,9,Trumpet,,93,L,55,T15,PA,
+James,Jamel,9,Trumpet,,93,L,,,PA,
 Jeong,Haelim,11,Flute,CO,206,M,77,F4,PA,
 Jimenez,Jonathan,11,Trumpet,SYM,49,M,49,T4,PA,
 Jones ,Chris,9,Tuba,CO,N/A,N/A,,U7,,Tuba
@@ -108,7 +108,7 @@ Jurgens,Hannah,12,Percussion,SYM,121,XS,52,O1,PA,Battery
 Kilbury,Kayla,10,Clarinet,SYM,233,M,146,C15,,
 Kruger,Anthony ,9,Percussion,,N/A,N/A,N/A,N/A,,Pit
 Landaverde,Karen,9,Baritone,,10,M,,,,Alternate
-Landaverde,Samantha,10,Flute,CO,54,S,,,,Alternate
+Landaverde,Samantha,10,Flute,CO,54,S,122,F13,,Alternate
 Latson,Chase,9,Baritone,,75,L,117,B18,PA,
 Little ,Adam,9,Pit,,N/A,N/A,N/A,N/A,,Pit
 Little,Ryan,11,Baritone,WE,225,M,N/A,N/A,PA,Drum Major
@@ -120,7 +120,7 @@ McAlister,Steven,12,Flute,CO,246,L,22,F9,PA,
 McAuliffe,Madison,9,Clarinet,,71,M,,,,Alternate
 McDermott,Matthew,12,Baritone,WE,181,M,70,B1,PA,
 McDermott,Sean,11,Percussion,WE,74,M,62,Q2,,
-McLean,Chris,10,Baritone,SYM,221,M,157,B5,PA,
+McLean,Chris,10,Baritone,SYM,221,M,159,B5,PA,
 McPherson,Amy,9,Flute,,129,M,132,F8,,
 Meitz,Julia,12,Flute,WE,124,S,59,F7,PA,
 Mendez,Ezekiel,9,Saxaphone,,,,,,,Alternate
@@ -139,9 +139,9 @@ Nguyen,Sid,12,Baritone,SYM,170,S,145,B8,,
 Nicholson,Sam,10,Trumpet,SYM,49,M,36,T12,,
 Nolen,Nic,10,Baritone,CO,48,M,124,B11,PA,
 Nolen,Zach,10,Baritone,CO,190,M,47,B17,PA,
-Nunis,Jacob,9,Saxaphone,,199,M,74,S5,,
+Nunis,Jacob,9,Saxaphone,,199,M,,,,
 Olalde,Christian,10,Tuba,Co,N/A,N/A,,,,Tuba-alternate
-Olalde,Erick,12,Flute,SYM,223,L,122,F13,PA,
+Olalde,Erick,12,Flute,SYM,223,L,,,PA,
 Phan,Michael,10,Percussion,SYM,43,M,20,Q1,PA,Battery
 Phillips,Hannah,10,Clarinet,SYM,228,S,137,C6,PA,
 Phillips,Isaac,10,Baritone,co,232,M,155,B10,,
@@ -159,7 +159,7 @@ Roach,Luke,11,Bairtone,SYM,197,M,46,B16,PA,
 Robson,Alexis,9,Flute,,58,S,64,F16,PA,
 Ross,Chris,11,Percussion,CO,214,M,130,O3,PA,Battery
 Saegert,Dylan,12,Tuba,WE,N/A,N/A,,U4,,Tuba
-Saldana,Delilah,9,Clarinet,CO,138,M,,,,Alternate
+Saldana,Delilah,9,Clarinet,CO,138,M,162,S5,,
 Saldana,Vincente,10,Saxophone,CO,193,M,30,A11,PA,
 Santori,Brandon,12,Mellophone,WE,229,M,86,M5,,
 Sands,Madeline,10,Pit,CO,N/A,N/A,N/A,N/A,,Pit 
@@ -168,7 +168,7 @@ Searcy,Jacob,11,Bari Saxophone,SYM,164,M,16,S3,PA,
 Shannon,Cassie,10,Saxophone,CO,147,S,37,A8,PA,
 Anderson Band 2013-12014 Hat List,,,,,,,,,,
 Last Name,First Name,Grade,Marching Section,Concert Band,Hat #,Hat Size,Circuit Board #,Drill ID #,Confirm Done ,Marching Comments
-Shaver,Matthew,10,Trumpet,CO,245,L,,,,Alternate
+Shaver,Matthew,10,Trumpet,CO,245,L,28,T17,,Alternate
 Shu,Lone,10,Clarinet,CO,237,L,,,,Alternate
 Siebert,Kyla,9,Baritone,,155,M,80,B4,PA,
 Sladcik,Lila,9,Baritone,,64,S,93,B15,PA,
@@ -196,7 +196,7 @@ Wilkes,Lauren,11,Flute,,161,M,134,F17,,
 Williams,Jake,10,Mellophone,CO,227,M,154,M7,,
 Winn,Emily,9,Trumpet,,108,S,148,T7,,
 Young,Brandon,9,Bartione,,169,S,,,,Alternate
-Young,Cameron,11,Baritone,SYM,156,S,10,B14,PA,
+Young,Cameron,11,Baritone,SYM,156,S,158,B14,PA,
 Young,Caroline,11,Clarinet,WE,98,S,158,C1,PA,
 Young,McKenzie,10,Flute,SYM,47,S,43,F22,PA,
 Zukauckas,Catherine,11,Baritone,SYM,135,M,101,B6,PA,
