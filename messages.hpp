@@ -15,7 +15,9 @@ namespace messages
       start_effect_id = 4,
       set_rgb_id = 5,
       status_id = 6,
-      reboot_id = 7
+      reboot_id = 7,
+      sleep_id = 8,
+      wake_id = 9
    };
 
    extern uint16_t missed_message_count;
@@ -46,6 +48,12 @@ namespace messages
 
    void encode_reboot(uint8_t* p);
    void decode_reboot(uint8_t* p);
+
+   void encode_sleep(uint8_t* p);
+   void decode_sleep(uint8_t* p);
+
+   void encode_wake(uint8_t* p);
+   void decode_wake(uint8_t* p);
 
    template <class T>
    uint8_t* decode_var(uint8_t *p, T &v )

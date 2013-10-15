@@ -147,4 +147,30 @@ namespace messages
       p++; // skip ID
       p = check_fc(p);
    }
+
+   // ========================================
+   void encode_sleep(uint8_t* p)
+   {
+      *p++ = sleep_id;
+      *p++ = ++freshness_count;
+   }
+
+   void decode_sleep(uint8_t* p)
+   {
+      p++; // skip ID
+      p = check_fc(p);
+   }
+
+   // ========================================
+   void encode_wake(uint8_t* p)
+   {
+      *p++ = wake_id;
+      *p++ = ++freshness_count;
+   }
+
+   void decode_wake(uint8_t* p)
+   {
+      p++; // skip ID
+      p = check_fc(p);
+   }
 }
