@@ -16,10 +16,6 @@
 //  PC2 for the BLANK signal (to shut off output and to start the next PWM cycle)
 //  PD7 for the VPRG
 //
-// Note that it appears that the unit goes to 100% on at 1023, not 4095.
-// This is probably a bug in the way I am communicating to the. Everything
-// else looks good when I look at it on the scope but I just need to move
-// on...
 //
 namespace avr_tlc5940
 {
