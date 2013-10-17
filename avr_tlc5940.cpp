@@ -74,7 +74,7 @@ namespace avr_tlc5940
 
    void set_channel(int chan, int value)
    {
-      size_t lb = 23 - ((3*chan)>>1);
+      size_t lb = sizeof(gsdata) - 1 - ((3*chan)>>1);
       uint16_t pwm = (chan & 1) ? value<<4 : value;
       uint16_t mask = (chan & 1) ? ~0xfff0: ~0x0fff;
       uint8_t pwm_l = pwm;
@@ -91,7 +91,7 @@ namespace avr_tlc5940
 
    unsigned get_channel(int chan)
    {
-      size_t lb = 23 - ((3*chan)>>1);
+      size_t lb = sizeof(gsdata) - 1 - ((3*chan)>>1);
       uint16_t pwm;
       pwm = gsdata[lb];
       pwm |= gsdata[lb-1] << 8;
