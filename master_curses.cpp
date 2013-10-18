@@ -146,6 +146,7 @@ int main(int argc, char **argv)
       {
          case 'w': rgb.slide(0, 1);rgb.slide(1, 1);rgb.slide(2, 1);set_rgb(rgb); break;
          case 'W': rgb.slide(0,-1);rgb.slide(1,-1);rgb.slide(2,-1); set_rgb(rgb); break;
+            /*
          case 'r': rgb.slide(0, 1); set_rgb(rgb); break;
          case 'R': rgb.slide(0,-1); set_rgb(rgb); break;
          case 'g': rgb.slide(1, 1); set_rgb(rgb); break;
@@ -158,6 +159,7 @@ int main(int argc, char **argv)
          case 'H': hsv.h-=2; hsv2rgb(hsv, rgb); set_rgb(rgb); break;
          case 's': hsv.s+=2; hsv2rgb(hsv, rgb); set_rgb(rgb); break;
          case 'S': hsv.s-=2; hsv2rgb(hsv, rgb); set_rgb(rgb); break;
+            */
          case '0':
             msg::encode_start_effect(buff, 0, t, 750);
             nrf_tx(buff, sizeof(buff), slave, 25);
@@ -198,8 +200,29 @@ int main(int argc, char **argv)
             nrf_tx(buff, sizeof(buff), slave, 25);
             mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;
-         case '8':
-            msg::encode_start_effect(buff, 8, t, 4500);
+
+         case 't':
+            msg::encode_start_effect(buff, 14, t, 5000);
+            nrf_tx(buff, sizeof(buff), slave, 25);
+            mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
+            break;
+         case 'y':
+            msg::encode_start_effect(buff, 15, t, 5000);
+            nrf_tx(buff, sizeof(buff), slave, 25);
+            mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
+            break;
+         case 'u':
+            msg::encode_start_effect(buff, 16, t, 5000);
+            nrf_tx(buff, sizeof(buff), slave, 25);
+            mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
+            break;
+         case 'i':
+            msg::encode_start_effect(buff, 17, t, 5000);
+            nrf_tx(buff, sizeof(buff), slave, 25);
+            mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
+            break;
+         case 'o':
+            msg::encode_start_effect(buff, 18, t, 5000);
             nrf_tx(buff, sizeof(buff), slave, 25);
             mvprintw(3, 2, "%8.3f tx ", 0.001*runtime.msec());
             break;

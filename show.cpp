@@ -232,6 +232,28 @@ void process_ui(void)
       event_list.push_back(Event("sparkle fade", 5, 4000));
       event_list.push_back(Event("dim red",      6, 1000));
       event_list.push_back(Event("R->L fade",    7, 4500));
+      event_list.push_back(Event("M3 A1",        9, 1250));
+      event_list.push_back(Event("M3 A2",        9, 1250));
+      event_list.push_back(Event("M3 A3",        9, 1250));
+      event_list.push_back(Event("M3 A4",        9, 1250));
+      event_list.push_back(Event("M3 A5",        9, 1250));
+      event_list.push_back(Event("M3 A6",        9, 1250));
+      event_list.push_back(Event("M3 A7",        9, 1250));
+      event_list.push_back(Event("M3 A8",        9, 1250));
+      event_list.push_back(Event("M3 A9",        9, 1250));
+      event_list.push_back(Event("M3 B1",       10, 4250));
+
+      event_list.push_back(Event("M3 D1",       11, 3000));
+      event_list.push_back(Event("M3 D2",       12, 3000));
+      event_list.push_back(Event("M3 D3",       13, 4500));
+
+      event_list.push_back(Event("M3 F1",       14, 3000));
+      event_list.push_back(Event("M3 F2",       15, 3000));
+      event_list.push_back(Event("M3 F3",       16, 3000));
+      event_list.push_back(Event("M3 F4",       17, 3000));
+      event_list.push_back(Event("M3 F5",       18, 3000));
+      event_list.push_back(Event("M3 F6",       19, 3000));
+      event_list.push_back(Event("M3 F7",       20, 30000));
 
       test_list.push_back(Event("Flash",    0,  1500));
       test_list.push_back(Event("RGB Test", 1, 20000));

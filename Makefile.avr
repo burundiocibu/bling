@@ -12,7 +12,8 @@ F_CPU=8000000
 AVRDUDE=sudo avrdude -F -p $(PROGRAMMER_MCU) $(AVRDUDE_PROGRAMMERID) $(AVRDUDE_PORT)
 
 NUMBER_OF_TLC5940=1
-slave216_main.o: NUMBER_OF_TLC5940=14
+# This doesn't work!! Still have to do a clean build since
+#slave216_main.o: NUMBER_OF_TLC5940=14
 
 CFLAGS=-I. $(INC) -g -mmcu=$(MCU) -O$(OPTLEVEL) \
 	-fpack-struct -fshort-enums             \

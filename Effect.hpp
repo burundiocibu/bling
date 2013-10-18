@@ -29,7 +29,7 @@ struct Effect
    
 
    // slave/effect specific delay, indexed by effect number
-   static const unsigned max_effect = 10;
+   static const unsigned max_effect = 21;
 
    void e0(); // Fast on white, fades out over duration
    void e1(); // The LED test pattern
@@ -40,6 +40,18 @@ struct Effect
    void e6(); // Sparkle red/purple brass & ww fade out 
    void e7(); // Fade 20% red to 0% from R to L in two groups
    void e8(); // white wave back to front set13
+   void e9();
+   void e10();
+   void e11();
+   void e12();
+   void e13();
+   void e14();
+   void e15();
+   void e16();
+   void e17();
+   void e18();
+   void e19();
+   void e20();
 };
 
 #endif
