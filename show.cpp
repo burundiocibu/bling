@@ -34,8 +34,6 @@ namespace msg=messages;
 using namespace std;
 
 const int BROADCAST_ADDRESS  = 0;
-const int DELAY_BETWEEN_XMIT = 1000;
-const int NUMBER_5MS_PER_SECOND = 200;
 
 // Two global objects. sorry
 RunTime runtime;
@@ -105,7 +103,7 @@ void shutdown(int param)
  * updateDisplay - true to update send status on display, false otherwise
  * secondsToSendMsgFor   - How many seconds the command should be resent over (sends every 5 mSec).  0 to send once.
  */
-void nrf_tx(unsigned slave, uint8_t *buff, size_t len, bool updateDisplay, int secondsToSendMsgFor)
+void nrf_tx(unsigned slave, uint8_t *buff, size_t len, bool updateDisplay, int resendCount)
 {
    using namespace nRF24L01;
 
@@ -113,24 +111,13 @@ void nrf_tx(unsigned slave, uint8_t *buff, size_t len, bool updateDisplay, int s
    static unsigned tx_err=0;
    bool ack = slave != 0;
 
-   // determine number of times through loop for resend
-   int resendCount;
-   if(secondsToSendMsgFor == 0)
-   {
-      resendCount = 0;
-   }
-   else
-   {
-      resendCount = 1 * NUMBER_5MS_PER_SECOND;
-   }
-
    int numXmit;
    for (numXmit=0; numXmit <= resendCount; numXmit++)
    {
       if(numXmit != 0)
       {
          // except first time through loop, delay 5 mS
-         bcm2835_delay(5);
+         bcm2835_delay(2);
       }
 
       write_tx_payload(buff, len, (const char *) ensemble::slave_addr[slave], ack);
@@ -225,6 +212,8 @@ void process_ui(void)
    static bool first_time = true;
    if (first_time)
    {
+      int bpm=170; // beats per minute
+      int mpb = 1000 * 60 / bpm; // ms per beat
       event_list.push_back(Event("set13",        8, 4500));
       event_list.push_back(Event("flash",        0, 900));
       event_list.push_back(Event("pre hit",      3, 10000));
@@ -232,26 +221,26 @@ void process_ui(void)
       event_list.push_back(Event("sparkle fade", 5, 4000));
       event_list.push_back(Event("dim red",      6, 1000));
       event_list.push_back(Event("R->L fade",    7, 4500));
-      event_list.push_back(Event("M3 A1",        9, 1250));
-      event_list.push_back(Event("M3 A2",        9, 1250));
-      event_list.push_back(Event("M3 A3",        9, 1250));
-      event_list.push_back(Event("M3 A4",        9, 1250));
-      event_list.push_back(Event("M3 A5",        9, 1250));
-      event_list.push_back(Event("M3 A6",        9, 1250));
-      event_list.push_back(Event("M3 A7",        9, 1250));
-      event_list.push_back(Event("M3 A8",        9, 1250));
-      event_list.push_back(Event("M3 A9",        9, 1250));
-      event_list.push_back(Event("M3 B1",       10, 4250));
+      event_list.push_back(Event("M3 A1",        9, 5   * mpb));
+      event_list.push_back(Event("M3 A2",        9, 5   * mpb));
+      event_list.push_back(Event("M3 A3",        9, 1   * mpb));
+      event_list.push_back(Event("M3 A4",        9, 6   * mpb));
+      event_list.push_back(Event("M3 A5",        9, 4.5 * mpb));
+      event_list.push_back(Event("M3 A6",        9, 1   * mpb));
+      event_list.push_back(Event("M3 A7",        9, 4.5 * mpb));
+      event_list.push_back(Event("M3 A8",        9, 1   * mpb));
+      event_list.push_back(Event("M3 A9",        9, 4   * mpb));
+      event_list.push_back(Event("M3 B1",       10, 52  * mpb));
 
-      event_list.push_back(Event("M3 D1",       11, 3000));
-      event_list.push_back(Event("M3 D2",       12, 3000));
-      event_list.push_back(Event("M3 D3",       13, 4500));
+      event_list.push_back(Event("M3 D1",       11, 10 * mpb)); // this is intended to overlap the next
+      event_list.push_back(Event("M3 D2",       12, 10 * mpb)); // ditto
+      event_list.push_back(Event("M3 D3",       13, 12 * mpb));
 
-      event_list.push_back(Event("M3 F1",       14, 3000));
-      event_list.push_back(Event("M3 F2",       15, 3000));
-      event_list.push_back(Event("M3 F3",       16, 3000));
-      event_list.push_back(Event("M3 F4",       17, 3000));
-      event_list.push_back(Event("M3 F5",       18, 3000));
+      event_list.push_back(Event("M3 F1",       14, 8 *  mpb));
+      event_list.push_back(Event("M3 F2",       15, 10 * mpb));
+      event_list.push_back(Event("M3 F3",       16, 8 *  mpb));
+      event_list.push_back(Event("M3 F4",       17, 13 * mpb));
+      event_list.push_back(Event("M3 F5",       18, 6 * mpb));
       event_list.push_back(Event("M3 F6",       19, 3000));
       event_list.push_back(Event("M3 F7",       20, 30000));
 
@@ -289,7 +278,7 @@ void process_ui(void)
          uint8_t buff[ensemble::message_size];
          print_effect_name(test_event->name);
          msg::encode_start_effect(buff, test_event->id, runtime.msec(), test_event->duration);
-         nrf_tx(BROADCAST_ADDRESS, buff, sizeof(buff), true, 200);
+         nrf_tx(BROADCAST_ADDRESS, buff, sizeof(buff), true, 50);
          test_event++;
          if (test_event==test_list.end())
             test_event = test_list.begin();
@@ -301,14 +290,14 @@ void process_ui(void)
          print_effect_name("All Stop");
          uint8_t buff[ensemble::message_size];
          msg::encode_all_stop(buff);
-         nrf_tx(BROADCAST_ADDRESS, buff, sizeof(buff), true, 200);
+         nrf_tx(BROADCAST_ADDRESS, buff, sizeof(buff), true, 50);
          print_effect_name(current_event->name);
       }
       else if (b & lcd_plate::SELECT)
       {
          uint8_t buff[ensemble::message_size];
          msg::encode_start_effect(buff, current_event->id, runtime.msec(), current_event->duration);
-         nrf_tx(BROADCAST_ADDRESS, buff, sizeof(buff), true, 200);
+         nrf_tx(BROADCAST_ADDRESS, buff, sizeof(buff), true, 50);
          current_event++;
          if (current_event==event_list.end())
             current_event = event_list.begin();
