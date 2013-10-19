@@ -219,7 +219,7 @@ void process_ui(void)
       event_list.push_back(Event("pre hit",      3, 10000));
       event_list.push_back(Event("sparkle",      4, 30000));
       event_list.push_back(Event("sparkle fade", 5, 4000));
-      event_list.push_back(Event("dim red",      6, 1000));
+      event_list.push_back(Event("dim red",      6, 8000));
       event_list.push_back(Event("R->L fade",    7, 4500));
       event_list.push_back(Event("M3 A1",        9, 5   * mpb));
       event_list.push_back(Event("M3 A2",        9, 5   * mpb));
@@ -230,18 +230,18 @@ void process_ui(void)
       event_list.push_back(Event("M3 A7",        9, 4.5 * mpb));
       event_list.push_back(Event("M3 A8",        9, 1   * mpb));
       event_list.push_back(Event("M3 A9",        9, 4   * mpb));
-      event_list.push_back(Event("M3 B1",       10, 52  * mpb));
+      event_list.push_back(Event("M3 B1",       10, 4  * mpb));
 
       event_list.push_back(Event("M3 D1",       11, 10 * mpb)); // this is intended to overlap the next
       event_list.push_back(Event("M3 D2",       12, 10 * mpb)); // ditto
       event_list.push_back(Event("M3 D3",       13, 12 * mpb));
 
-      event_list.push_back(Event("M3 F1",       14, 8 *  mpb));
-      event_list.push_back(Event("M3 F2",       15, 10 * mpb));
-      event_list.push_back(Event("M3 F3",       16, 8 *  mpb));
-      event_list.push_back(Event("M3 F4",       17, 13 * mpb));
-      event_list.push_back(Event("M3 F5",       18, 6 * mpb));
-      event_list.push_back(Event("M3 F6",       19, 3000));
+      event_list.push_back(Event("M3 F1",       14, 10 *  mpb));
+      event_list.push_back(Event("M3 F2",       15, 12 * mpb));
+      event_list.push_back(Event("M3 F3",       16, 10 *  mpb));
+      event_list.push_back(Event("M3 F4",       17, 15 * mpb));
+      event_list.push_back(Event("M3 F5",       18, 21 * mpb));
+      event_list.push_back(Event("M3 F6",       19, 20 * mpb));
       event_list.push_back(Event("M3 F7",       20, 30000));
 
       test_list.push_back(Event("Flash",    0,  1500));

@@ -28,7 +28,7 @@ Bruner,Queen Alex,9,Trumpet,SYM,204,M,112,T11,,
 Bushong,Geoffrey,9,Pit,CO,N/A,N/A,N/A,N/A,,Pit
 Butler,Katie,10,Saxophone,CO,195,M,65,A12,PA,
 Camarillo,Jonathan,12,Mellophone,CO,203,M,,,,
-Cannary,Grayson,9,Baritone,CO,11,S,55,T15,,Alternate
+Cannary,Grayson,9,Baritone,CO,11,S,55,T15,,
 Capps,Katy,10,Saxophone,CO,100,M,61,S6,JL,
 Carbajel,Giovanni,9,,,,M,,,,Absent
 Carmouche,Natalie,10,Clarinet,CO,62,XS,69,C2,PA,
@@ -55,7 +55,7 @@ Erengil,Haven,9,Flute,,119,S,133,F14,,
 Erlich,Dasya,10,Clarinet,CO,244,L,,,,Alternate
 Escobar,Julia,11,Flute,WE,20,XS,96,F1,PA,
 Evans,Kendall,12,Saxophone,we,94,M,113,A5,PA,
-Farland,Scott,9,Baritone,,128,M,11,B13,,Alternate
+Farland,Scott,9,Baritone,,128,M,11,B13,,
 Farrell,Parker,12,Tuba,SYM,N/A,N/A,,U10,,Tuba
 Ferreira,Thais,9,Percussion,,N/A,N/A,N/A,N/A,,Pit
 Findley,Brooke,11,Flute,SYM,26,XS,126,F11,PA,
@@ -67,13 +67,13 @@ Frazier,Richard,10,Tuba,CO,N/A,N/A,,U5,,Tuba
 Fuka,Cornell,9,Trumpet,,143,L,119,T14,PA,
 Garcia,Ben,10,Trumpet,SYM,88,L,116,T6,PA,
 Garcia,Victoria,12,Pit,CO,N/A,N/A,N/A,N/A,,Pit 
-George,Hannah,9,Clarinet,,343,M,82,C23,PA,
+George,Hannah,9,Clarinet,,343,M,,,PA,
 Geyer,Catherine,9,Flute,,134,S,110,F19,PA,
 Gil,Brandyn,12,Percussion,CO,216,M,166,O4,JL,Battery
 Gindler,Emily,9,Tuba,CO,N/A,N/A,,U3,,Tuba
 Gindler,Sam,12,Tuba,CO,N/A,N/A,,U6,,Tuba
 Gomez,Fernando,10,Pit,CO,N/A,N/A,N/A,N/A,,Pit 
-Gomez Sandoval,Adriana,9,Clarinet,,95,S,,,,Alternate
+Gomez Sandoval,Adriana,9,Clarinet,,95,S,82,C23,,
 Gonzales,Brooks,12,Trumpet,SYM,91,S,147,T1,,
 Gonzales,Conrado,11,Alto Sax,WE,220,M,139,A3,JL,
 Green,Hallie,12,Trumpet,SYM,153,M,33,T5,PA,
@@ -108,7 +108,7 @@ Jurgens,Hannah,12,Percussion,SYM,121,XS,52,O1,PA,Battery
 Kilbury,Kayla,10,Clarinet,SYM,233,M,146,C15,,
 Kruger,Anthony ,9,Percussion,,N/A,N/A,N/A,N/A,,Pit
 Landaverde,Karen,9,Baritone,,10,M,,,,Alternate
-Landaverde,Samantha,10,Flute,CO,54,S,122,F13,,Alternate
+Landaverde,Samantha,10,Flute,CO,54,S,122,F13,,
 Latson,Chase,9,Baritone,,75,L,117,B18,PA,
 Little ,Adam,9,Pit,,N/A,N/A,N/A,N/A,,Pit
 Little,Ryan,11,Baritone,WE,225,M,N/A,N/A,PA,Drum Major
@@ -202,9 +202,9 @@ Young,McKenzie,10,Flute,SYM,47,S,43,F22,PA,
 Zukauckas,Catherine,11,Baritone,SYM,135,M,101,B6,PA,
 ,,,,,,,,,,
 ,,,,,,,,,,
-97 - Completed Hats,,,,,According to the records we will need 132 Hats with Lights,,,,,
+97 - Completed Hats,,,,,,,,,,
 ,,,,,,,,,,
-,3 - Drum Majors,,,,,34 - Needs Boards only,,,,
-,17 - Pit,,,,,1- Needs all done,,,,
-,10 - Tubas,,,,,26 - Alternates,,,,
+,3 - Drum Majors,,,,,,,,,
+,17 - Pit,,,,,,,,,
+,10 - Tubas,,,,,,,,,
 ,,,,,,,,,,
