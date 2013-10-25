@@ -258,10 +258,12 @@ print_lut(lut, "m3_set30_AB")
 lut=[0xff for i in range(max_sid)]
 for did in sorted(did2sid.keys()):
     if did[0] == 'O' or did[0:1] == 'SN' or did[0] == 'Q':
-        d=0
-    elif did[0] == 'F' or did[0] == 'S' or did[0] == 'C' or did[0] == 'A':
         d=1
-    elif did[0] == 'B' or did[0] == 'U' or did[0] == 'M' or did[0] == 'T':
+    elif did[0] == 'F' or did[0] == 'S' or did[0] == 'C' or did[0] == 'A':
         d=2
+    elif did[0] == 'B' or did[0] == 'U' or did[0] == 'M' or did[0] == 'T':
+        d=3
+    elif did[0] == 'X':
+        d=100
     set_lut(lut, d, did);
 print_lut(lut, "section")

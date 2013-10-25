@@ -47,7 +47,7 @@ CPP=avr-gcc
 all: slave_main.hex slave216_main.hex nrf_boot.hex
 
 clean:
-	rm -f *.hex *.o *.elf *.map *.lst
+	rm -f *.hex *.o *.elf *.map *.lst Effect_sets.hpp
 
 
 avr_throbber.o: avr_throbber.cpp
@@ -60,13 +60,16 @@ avr_mike.o: avr_mike.cpp
 avr_max1704x.o: avr_max1704x.cpp
 nrf24l01.o: nrf24l01.cpp
 messages.o: messages.cpp
-Effect.o: Effect.cpp Effect.hpp
+Effect.o: Effect.cpp Effect.hpp Effect_sets.hpp
 lcd_plate.o: lcd_plate.cpp
 
 
 slave_main.o: slave_main.cpp
 tlc-test.o: slave_main.cpp
 rtc-test.o: rtc-test.cpp
+
+Effect_sets.hpp: hatList.csv make_sets.py
+	make_sets.py > $@
 
 slave_main.elf: slave_main.o avr_rtc.o avr_spi.o i2c.o lcd_plate.o avr_tlc5940.o avr_mike.o nrf24l01.o messages.o avr_dbg.o \
 	avr_max1704x.o Effect.o
