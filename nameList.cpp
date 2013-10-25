@@ -46,7 +46,7 @@ NameHatInfo nameList[numberEntries] =
     "Kendall Evans", 94, 113, "A5",
     "Scott Farland", 128, 11, "B13",
     "Brooke Findley", 26, 126, "F11",
-    "Travis Fleming", 240, 163, "M10",
+    "Travis Fleming", 240, 74, "M10",
     "Kristina Franz", 163, 72, "B26",
     "Cornell Fuka", 143, 119, "T14",
     "Ben Garcia", 88, 116, "T6",
