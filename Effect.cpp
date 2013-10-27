@@ -27,6 +27,8 @@ Effect::Effect(uint16_t slave)
    slave_id = slave;
    srand(slave);
    my_rand = rand();
+   for (int i=0; i<sizeof(noise); i++)
+      noise[i] = rand();
    reset();
 };
 
@@ -156,7 +158,6 @@ ______| \____
 */
 void Effect::e0()
 {
-   const long vmax = 4095;
    int v = vmax - dt * vmax / duration;
    if (v<0)
       v=0;
@@ -166,16 +167,15 @@ void Effect::e0()
 // Flash red/green/blue for the duration of the effect; mainly for testing.
 void Effect::e1()
 {
-   long vmax = 512; // intensity at peak
    long cldt = dt & 0x3ff;
    for (unsigned ch=0; ch<12; ch++)
       avr_tlc5940::set_channel(ch, 1);
    if (cldt < 170)
-      set_green(vmax);
+      set_green(vmax>>3);
    else if (341 < cldt && cldt < 511)
-      set_red(vmax);
+      set_red(vmax>>3);
    else if (680 < cldt && cldt < 852)
-      set_blue(vmax);
+      set_blue(vmax>>3);
 }
 
 
@@ -189,7 +189,6 @@ void Effect::e2()
 {
    const long dwell = 500; // t2-t1
    const long rise = duration - dwell; // t1-t0
-   const long vmax = 4095; // intensity at peak
 
    int v;
    if (dt < rise)
@@ -210,7 +209,6 @@ T:    0 1        2
 void Effect::e3()
 {
    const long rise_time = 5000;
-   const long vmax = 4095; // intensity at peak
 
    int v;
    if (dt < rise_time)
@@ -242,7 +240,6 @@ void Effect::e4()
    const long cl = (my_rand & 0xff) * 4 + 512; // 
    const long dwell = 400; // time at full intensity
    const long rise_time = 100; // time to ramp light
-   const long vmax = 4095; // intensity at peak
 
    unsigned r=0;
 
@@ -275,14 +272,13 @@ void Effect::e5()
    const long cl = (my_rand & 0xff) * 4 + 512; // 
    const long dwell = 400; // time at full intensity
    const long rise_time = 100; // time to ramp light
-   long vmax = 4095; // intensity at peak
    const long fade_time=1500;
 
-   vmax = dt < fade_time ? vmax * ( fade_time - dt) / fade_time : 0;
+   unsigned v = dt < fade_time ? vmax * ( fade_time - dt) / fade_time : 0;
 
    unsigned r=0;
 
-   r = vmax;
+   r = v;
 
    set_red(r);
 
@@ -292,9 +288,9 @@ void Effect::e5()
    if (t0 < cldt && cldt < t0+dwell )
    {
       if (cldt < rise_time)
-         b = (vmax * cldt) / rise_time;
+         b = (v * cldt) / rise_time;
       else
-         b = vmax;
+         b = v;
    }
    set_blue(b);
 }
@@ -304,13 +300,12 @@ void Effect::e5()
 void Effect::e6()
 {
    const long rise_time = 2000;
-   const long vmax = 2047; // intensity at peak
 
    int v;
    if (dt > rise_time)
-      v = vmax;
+      v = (vmax>>2);
    else
-      v = (vmax * dt) / rise_time;
+      v = ((vmax>>2) * dt) / rise_time;
 
    set_red(v);
 }
@@ -346,7 +341,6 @@ void Effect::e8()
    const long t2 = 675;
    const long t3 = 825;
    const long t4 = 2550; // cycle length
-   const long vmax = 2047; // intensity at peak
 
    unsigned v=0;
    long cldt = dt<=delay ? 0 : (dt-delay) % t4;
@@ -363,9 +357,6 @@ void Effect::e8()
    set_rgb(v, v, v);
 }
 
-void flash_rgb(uint16_t r, uint16_t g, uint16_t b)
-{
-}
 
 
 /*
@@ -407,14 +398,13 @@ void Effect::e10()
 }
 
 /*
-  movement 3, D1
+A generic flash
           _________vmax
          /|       |\
         / |       | \________vmin
        /  |       | |
 ______/   |       | | 
 T     0   1       2 3
-green
 */
 uint16_t flash(long t1, long t2, long t3, long dt, uint16_t vmax, uint16_t vmin)
 {
@@ -438,12 +428,9 @@ void Effect::e11()
       return;
    dt -= delay;
 
-   if (id==11)
-      set_rgb(0,flash(100, 650, 1500, dt, vmax, vmax>>3),0);
-   else if (id==12)
-      set_rgb(0,0,flash(100, 650, 1500, dt, vmax, vmax>>3));
-   else if (id==13)
-      set_rgb(0,flash(100, 650, 3000, dt, vmax, 0),0);
+   if (id==11)      set_rgb(0, flash(100, 650, 1500, dt, vmax, vmax>>3), 0);
+   else if (id==12) set_rgb(0, 0, flash(100, 650, 1500, dt, vmax, vmax>>3));
+   else if (id==13) set_rgb(0, flash(100, 650, 3000, dt, vmax, 0), 0);
 }
 
 void Effect::e12()
@@ -460,95 +447,80 @@ void Effect::e14()
 {
    const uint8_t d = get_delay(m3_set30_AB, sizeof(m3_set30_AB));
    if (d==0)
-   {
       set_rgb(vmax, 0, vmax);
-   }
    else
-   {
       set_rgb(0, vmax, 0);
-   }
 }
 
 void Effect::e15()
 {
    const uint8_t d = get_delay(m3_set30_AB, sizeof(m3_set30_AB));
    if (d==0)
-   {
       set_rgb(0, 0, vmax);
-   }
    else
-   {
       set_rgb(vmax, 0, 0);
-   }
 }
 
 void Effect::e16()
 {
    const uint8_t d = get_delay(m3_set30_AB, sizeof(m3_set30_AB));
    if (d==0)
-   {
       set_rgb(0, vmax, 0);
-   }
    else
-   {
       set_rgb(vmax, 0, vmax);
-   }
 }
 
 void Effect::e17()
 {
    const uint8_t d = get_delay(m3_set30_AB, sizeof(m3_set30_AB));
    if (d==0)
-   {
       set_rgb(vmax, 0, 0);
-   }
    else
-   {
       set_rgb(0, vmax, vmax);
-   }
 }
+
 void Effect::e18()
 {
    const uint8_t d = get_delay(m3_set30_AB, sizeof(m3_set30_AB));
    if (d==0)
-   {
       set_rgb(0, 0, vmax);
-   }
    else
-   {
       set_rgb(0, 0, vmax);
-   }
 }
 
+
+/*
+red/blue sparkle
+       ___________           _____
+color  |         |           | 
+_______|         |___________| 
+T      0         1           2 
+n      0                     1
+Cycle length = T2
+*/
 void Effect::e19()
 {
-   // my rand = [0..7fff];
-   const long t0 = (my_rand >> 8) * 2; // length of cycle in ms 0 ... 127*5 
-   const long cl = (my_rand & 0xff) * 4 + 512; // 
-   const long dwell = 400; // time at full intensity
-   const long rise_time = 100; // time to ramp light
-   const long vmax = 4095; // intensity at peak
+   // my_rand = [0..7fff];
+   const long t1 = 250 + (my_rand >> 8) * 5;        // length of pulse in ms, 250... 885
+   const long t2 = t1 + 250 + (my_rand & 0xff) * 3; // length of cycle 500...1650
+   long cldt = dt<=0 ? 0 : dt % t2;
+   long i = dt / t2;
+   i = i % sizeof(noise);
+   uint8_t n = noise[i];
 
-   unsigned r=0;
-
-   if (dt < rise_time)
-      r = (vmax * dt) / rise_time;
-   else
-      r = vmax;
-
-
-   unsigned b=0;
-   long cldt = dt<=0 ? 0 : dt % cl;
-
-   if (t0 < cldt && cldt < t0+dwell )
+   if (cldt < t1)
+      n = n>>3;
+   switch (n & 0x7)
    {
-      if (cldt < rise_time)
-         b = (vmax * cldt) / rise_time;
-      else
-         b = vmax;
+      case 0: set_rgb(vmax, 0,    vmax); break;
+      case 1: set_rgb(0,    vmax, 0);    break;
+      case 2: set_rgb(0,    0,    vmax); break;
+      case 3: set_rgb(vmax, 0,    0);    break;
+      case 4: set_rgb(0,    vmax, 0);    break;
+      case 5: set_rgb(vmax, 0,    0);    break;
+      case 6: set_rgb(0,    vmax, vmax); break;
+      case 7: set_rgb(0,    0,    vmax); break;
    }
-
-   set_rgb(r,0,b);
 }
 
 void Effect::e20()

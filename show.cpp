@@ -241,7 +241,7 @@ void process_ui(void)
       event_list.push_back(Event("M3 F3",       16, 10 * mpb));
       event_list.push_back(Event("M3 F4",       17, 15 * mpb));
       event_list.push_back(Event("M3 F5",       18, 21 * mpb));
-      event_list.push_back(Event("M3 F6",       19, 20 * mpb));
+      event_list.push_back(Event("M3 F6",       19, 30 * mpb));
       event_list.push_back(Event("M3 F7",       20, 30000));
 
       //test_list.push_back(Event("Flash",    0,  1500));

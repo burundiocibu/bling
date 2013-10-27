@@ -15,6 +15,7 @@ struct Effect
    long dt;
    long prev_dt;
    int my_rand;
+   uint8_t noise[32];
 
    void init(uint8_t* buff);
    void execute(void);
