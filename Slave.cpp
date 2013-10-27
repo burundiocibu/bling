@@ -51,6 +51,10 @@ bool Slave::operator==(const Slave &slave) const
    return this->slave_no == slave.slave_no;
 } 
 
+bool Slave::operator<(const Slave& slave) const
+{
+   return this->drill_id < slave.drill_id;
+}
 
 void Slave::checkBattStatus()
 {

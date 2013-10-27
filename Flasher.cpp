@@ -271,6 +271,31 @@ bool Flasher::prog_slave(const uint16_t slave_no, uint8_t* image_buff, size_t im
    return true;
 }
 
+bool Flasher::ping_slave(const uint16_t slave_no)
+{
+   nrf_set_slave(slave_no);
+
+   rx_version = "unk";
+   rx_vcell = 0;
+   rx_soc = 0;
+
+   unsigned loss_count=0;
+   uint8_t buff[ensemble::message_size];
+
+   msg::encode_ping(buff);
+   if (debug>1)
+      log << endl << timestamp() << " Sending ping    ";
+   if (nrf_tx(buff, sizeof(buff), 1, loss_count))
+   {
+      if (debug>1)
+         log << endl << timestamp() << " Got ACK from ping of slave " << slave_no << "   ";
+      nrf_rx();
+   }
+   else
+   {
+      log << endl << timestamp() << " No ACK to ping of slave " << slave_no << "   ";
+   }
+}
 
 void Flasher::nrf_set_slave(int slave_no)
 {
@@ -388,7 +413,6 @@ bool Flasher::nrf_rx(void)
       log << endl << timestamp() << " Ping response not received.   ";
       return false;
    }
-
 
    uint32_t t_rx;
    uint16_t slave_id, missed_message_count, vcell, soc;

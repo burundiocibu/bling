@@ -22,10 +22,12 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <list>
+#include <map>
+#include <algorithm>
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
-#include <list>
 #include <sys/file.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -49,52 +51,157 @@ nameList::NameHatInfo testNameList[] =
 };
 
 
-std::ostream& operator<<(std::ostream& s, const std::list<Slave>& slave_list)
+using namespace std;
+
+ostream& operator<<(ostream& s, const list<Slave>& slave_list)
 {
-   std::list<Slave>::const_iterator j;
+   map<string, Slave> sm;
+
+   list<Slave>::const_iterator j;
    for (j=slave_list.begin(); j != slave_list.end(); j++)
-      std::cout << *j << std::endl;
+      sm[j->drill_id] = *j;
+
+   map<string, Slave>::const_iterator i;
+   for (i=sm.begin(); i != sm.end(); i++)
+      cout << i->second << endl;
+
    return s;
 }
 
-
-using namespace std;
+void prog_list(list<Slave> todo, string fn, string version, int debug);
+void ping_list(list<Slave> todo, int debug);
 
 int main(int argc, char **argv)
 {
    Lock lock; // If this fails, we can't get the hardware
 
    int debug=0;
-   char *input_fn;
+   string fn;
    bool test=false;
+   bool ping=false;
    list<unsigned> slaves;
    string version;
    opterr = 0;
    int c;
-   while ((c = getopt(argc, argv, "di:s:tv:")) != -1)
+   while ((c = getopt(argc, argv, "di:s:tv:p")) != -1)
       switch (c)
       {
          case 'd': debug++; break;
-         case 'i': input_fn = optarg; break;
+         case 'i': fn = string(optarg); break;
          case 't': test=true; break;
+         case 'p': ping=true; break;
          case 's': slaves.push_back(atoi(optarg)); break;
          case 'v': version=string(optarg); break;
          default:
             cout << "Usage " << argv[0] << " -i fn [-d] [-s slave_no] [-t] [-v vers]" << endl
-                 << " -t  Just program test list" << endl;
+                 << " -t  Just program test list" << endl
+                 << " -p  Just ping, don't program"
+                 << endl;
             exit(-1);
       }
 
-   if (input_fn==NULL)
+ 
+   list<Slave> todo, done, all;
+   if (slaves.size() > 0)
+   {
+      list<unsigned>::const_iterator i;
+      for (i=slaves.begin(); i != slaves.end(); i++)
+      {
+         bool found=false;
+         for(int j=0; j < nameList::numberEntries; j++)
+         {
+            if (nameList::nameList[j].circuitBoardNumber == *i)
+            {
+               todo.push_back(Slave(nameList::nameList[j].circuitBoardNumber,
+                                    nameList::nameList[j].hatNumber,
+                                    nameList::nameList[j].drillId,
+                                    nameList::nameList[j].name));
+               found = true;
+               break;
+            }
+         }
+         if (!found)
+            todo.push_back(Slave(*i, 1, "Fxx", "Hingle McCringleberry"));
+      }
+   }
+   else if (!test)
+   {
+      for(int i = 0; i < nameList::numberEntries; i++)
+         todo.push_back(Slave(nameList::nameList[i].circuitBoardNumber,
+                              nameList::nameList[i].hatNumber,
+                              nameList::nameList[i].drillId,
+                              nameList::nameList[i].name));
+   }
+   else
+   {
+      size_t ll = sizeof(testNameList)/sizeof(nameList::NameHatInfo);
+      for(int i = 0; i < ll; i++)
+         todo.push_back(Slave(testNameList[i].circuitBoardNumber,
+                              testNameList[i].hatNumber,
+                              testNameList[i].drillId,
+                              testNameList[i].name));
+   }
+
+   if (ping)
+      ping_list(todo, debug);
+   else
+      prog_list(todo, fn, version, debug);
+}
+
+
+void ping_list(list<Slave> todo, int debug)
+{
+   Flasher flasher(debug);
+ 
+   list<Slave> done, all;
+
+   list<Slave>::iterator i;
+   for (int pass=1; todo.size() > 0 && pass < 10; pass++)
+   {
+      cout << "Pass " << pass << " ";
+      for (i = todo.begin(); i != todo.end(); )
+      {
+         if (flasher.ping_slave(i->slave_no))
+         {
+            i->soc = flasher.rx_soc;
+            i->vcell = flasher.rx_vcell;
+            i->version = flasher.rx_version;
+            done.push_back(*i);
+            cout << "." << flush;
+            i = todo.erase(i);
+         }
+         else
+         {
+            cout << "x" << flush;
+            i++;
+         }
+      }
+
+      cout << endl;
+      if (todo.size())
+         sleep(1);
+   }
+
+   cout << "Done" << endl
+        << endl
+        << "Responded:" << endl
+        << done << endl
+        << "No response:" << endl
+        << todo << endl;
+}
+
+void prog_list(list<Slave> todo, string fn, string version, int debug)
+{
+   if (fn.size() == 0)
    {
       cout << "Please specify slave image hex file. Exiting." << endl;
       exit(-1);
    }
 
-   FILE* fp = fopen(input_fn, "r");
+   FILE* fp = fopen(fn.c_str(), "r");
    if (fp == NULL)
    {
-      cout << "Could not open " << input_fn << ". Terminating." << endl;
+      cout << "Could not open " << fn << ". Terminating." << endl;
       exit(-1);
    }
 
@@ -141,46 +248,7 @@ int main(int argc, char **argv)
 
    Flasher flasher(debug);
  
-   list<Slave> todo, done, all;
-   if (slaves.size() > 0)
-   {
-      list<unsigned>::const_iterator i;
-      for (i=slaves.begin(); i != slaves.end(); i++)
-      {
-         bool found=false;
-         for(int j=0; j < nameList::numberEntries; j++)
-         {
-            if (nameList::nameList[j].circuitBoardNumber == *i)
-            {
-               todo.push_back(Slave(nameList::nameList[j].circuitBoardNumber,
-                                    nameList::nameList[j].hatNumber,
-                                    nameList::nameList[j].drillId,
-                                    nameList::nameList[j].name));
-               found = true;
-               break;
-            }
-         }
-         if (!found)
-            todo.push_back(Slave(*i, 1, "Fxx", "Hingle McCringleberry"));
-      }
-   }
-   else if (!test)
-   {
-      for(int i = 0; i < nameList::numberEntries; i++)
-         todo.push_back(Slave(nameList::nameList[i].circuitBoardNumber,
-                              nameList::nameList[i].hatNumber,
-                              nameList::nameList[i].drillId,
-                              nameList::nameList[i].name));
-   }
-   else
-   {
-      size_t ll = sizeof(testNameList)/sizeof(nameList::NameHatInfo);
-      for(int i = 0; i < ll; i++)
-         todo.push_back(Slave(testNameList[i].circuitBoardNumber,
-                              testNameList[i].hatNumber,
-                              testNameList[i].drillId,
-                              testNameList[i].name));
-   }
+   list<Slave> done, all;
 
    list<Slave>::iterator i;
    for (int pass=1; todo.size() > 0 && pass < 10; pass++)
@@ -214,8 +282,5 @@ int main(int argc, char **argv)
       cout << "Giving up." << endl;
 
    cout << "Programmed:" << endl;
-   for (i = done.begin(); i != done.end(); i++)
-      cout << *i << endl;
-
-   return 0;
+   cout << done;
 }

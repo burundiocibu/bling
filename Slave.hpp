@@ -35,6 +35,7 @@ public:
    Slave();
    Slave(uint16_t slave, int hatNumber, const char* drillId, const char *studentName);
    bool operator==(const Slave &) const;
+   bool operator<(const Slave &) const;
    void checkBattStatus();
    void readMissedMsgCnt();
    void sendAllStop();

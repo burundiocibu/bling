@@ -30,6 +30,7 @@ public:
 
    // returns true for a successfull programming
    bool prog_slave(uint16_t slave_no, uint8_t* image_buff, size_t image_size, std::string version=std::string());
+   bool ping_slave(uint16_t slave_no);
    std::string timestamp(void);
 
    std::string rx_version;
