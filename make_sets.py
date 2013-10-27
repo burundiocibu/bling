@@ -62,7 +62,7 @@ with open("hatList.csv", "rU") as fh:
         except:
             pass    
 
-bench=[["S157", 157, 157, "X1",],
+bench=[["S157", 157, 157, "X1"],
        ["S167", 167, 167, "X2"],
        ["S006",   6,   6, "X3"],
        ["S007",   7,   7, "X4"],
@@ -252,12 +252,13 @@ for row in m3_set30_B:
 
 print_lut(lut, "m3_set30_AB")
 
-# 0 = battery
-# 1 = woodwind
-# 2 = brass
+# 1 = battery
+# 2 = woodwind
+# 3 = brass
+# 100 = test bench
 lut=[0xff for i in range(max_sid)]
 for did in sorted(did2sid.keys()):
-    if did[0] == 'O' or did[0:1] == 'SN' or did[0] == 'Q':
+    if did[0] == 'O' or did[0:2] == 'SN' or did[0] == 'Q':
         d=1
     elif did[0] == 'F' or did[0] == 'S' or did[0] == 'C' or did[0] == 'A':
         d=2

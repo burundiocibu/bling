@@ -230,21 +230,21 @@ void process_ui(void)
       event_list.push_back(Event("M3 A7",        9, 4.5 * mpb));
       event_list.push_back(Event("M3 A8",        9, 1   * mpb));
       event_list.push_back(Event("M3 A9",        9, 4   * mpb));
-      event_list.push_back(Event("M3 B1",       10, 4  * mpb));
+      event_list.push_back(Event("M3 B1",       10, 52  * mpb));
 
-      event_list.push_back(Event("M3 D1",       11, 10 * mpb)); // this is intended to overlap the next
-      event_list.push_back(Event("M3 D2",       12, 10 * mpb)); // ditto
-      event_list.push_back(Event("M3 D3",       13, 12 * mpb));
+      event_list.push_back(Event("M3 D1",       11, 14 * mpb)); // this is intended to overlap the next
+      event_list.push_back(Event("M3 D2",       12, 14 * mpb)); // ditto
+      event_list.push_back(Event("M3 D3",       13, 14 * mpb));
 
-      event_list.push_back(Event("M3 F1",       14, 10 *  mpb));
+      event_list.push_back(Event("M3 F1",       14, 10 * mpb));
       event_list.push_back(Event("M3 F2",       15, 12 * mpb));
-      event_list.push_back(Event("M3 F3",       16, 10 *  mpb));
+      event_list.push_back(Event("M3 F3",       16, 10 * mpb));
       event_list.push_back(Event("M3 F4",       17, 15 * mpb));
       event_list.push_back(Event("M3 F5",       18, 21 * mpb));
       event_list.push_back(Event("M3 F6",       19, 20 * mpb));
       event_list.push_back(Event("M3 F7",       20, 30000));
 
-      test_list.push_back(Event("Flash",    0,  1500));
+      //test_list.push_back(Event("Flash",    0,  1500));
       test_list.push_back(Event("RGB Test", 1, 20000));
 
       current_event = event_list.begin();

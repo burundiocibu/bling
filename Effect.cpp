@@ -386,14 +386,16 @@ void Effect::e9()
 
 /*
   movement 3, A10
+  everyone flashes on, ww+b off after
 */
 void Effect::e10()
 {
+   const int32_t bww_len = 1411; // brass and wood winds turn off after this
    const uint8_t s = get_delay(section, sizeof(section));
    if (s==2 || s==3)
    {
-      int v = vmax - dt * vmax / 1411;
-      if (v<0)
+      int v = vmax - dt * vmax / bww_len;
+      if (v<0 || dt > bww_len)
          v=0;
       set_rgb(0, v, 0);
    }
@@ -406,20 +408,22 @@ void Effect::e10()
 
 /*
   movement 3, D1
-       _________vmax
-      |         \
-      |          \________vmin
-      |
-______|
-T     0        1 2
+          _________vmax
+         /|       |\
+        / |       | \________vmin
+       /  |       | |
+______/   |       | | 
+T     0   1       2 3
 green
 */
-uint16_t flash(long t1, long t2, long dt, uint16_t vmax, uint16_t vmin)
+uint16_t flash(long t1, long t2, long t3, long dt, uint16_t vmax, uint16_t vmin)
 {
    if (dt < t1)
-      return vmax;
+      return vmax * dt / t1;
    else if (dt < t2)
-      return (vmax * (t2-dt) + vmin*(dt-t1)) / (t2-t1);
+      return vmax;
+   else if (dt < t3)
+      return (vmax * (t3-dt) + vmin*(dt-t2)) / (t3-t2);
    return vmin;
 }
 
@@ -435,11 +439,11 @@ void Effect::e11()
    dt -= delay;
 
    if (id==11)
-      set_rgb(0,flash(650, 1500, dt, vmax, vmax>>3),0);
+      set_rgb(0,flash(100, 650, 1500, dt, vmax, vmax>>3),0);
    else if (id==12)
-      set_rgb(0,0,flash(650, 1500, dt, vmax, vmax>>3));
+      set_rgb(0,0,flash(100, 650, 1500, dt, vmax, vmax>>3));
    else if (id==13)
-      set_rgb(0,flash(650, 3000, dt, vmax, 0),0);
+      set_rgb(0,flash(100, 650, 3000, dt, vmax, 0),0);
 }
 
 void Effect::e12()
@@ -500,7 +504,7 @@ void Effect::e17()
    }
    else
    {
-      set_rgb(0, 0, vmax);
+      set_rgb(0, vmax, vmax);
    }
 }
 void Effect::e18()
@@ -532,7 +536,6 @@ void Effect::e19()
    else
       r = vmax;
 
-   set_red(r);
 
    unsigned b=0;
    long cldt = dt<=0 ? 0 : dt % cl;
@@ -544,7 +547,8 @@ void Effect::e19()
       else
          b = vmax;
    }
-   set_blue(b);
+
+   set_rgb(r,0,b);
 }
 
 void Effect::e20()
