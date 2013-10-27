@@ -67,8 +67,7 @@ int main(int argc, char **argv)
    int debug=0;
    char *input_fn;
    bool test=false;
-   bool ignore_battery=true;
-   unsigned slave_no=0;
+   list<unsigned> slaves;
    string version;
    opterr = 0;
    int c;
@@ -78,12 +77,11 @@ int main(int argc, char **argv)
          case 'd': debug++; break;
          case 'i': input_fn = optarg; break;
          case 't': test=true; break;
-         case 's': slave_no=atoi(optarg); break;
+         case 's': slaves.push_back(atoi(optarg)); break;
          case 'v': version=string(optarg); break;
-         case 'b': ignore_battery=false; break;
          default:
-            cout << "Usage " << argv[0] << " -i fn [-d] [-s slave_no] [-t] [-b]" << endl
-                 << " -b  Don't skip programming battery " << endl;
+            cout << "Usage " << argv[0] << " -i fn [-d] [-s slave_no] [-t] [-v vers]" << endl
+                 << " -t  Just program test list" << endl;
             exit(-1);
       }
 
@@ -144,8 +142,28 @@ int main(int argc, char **argv)
    Flasher flasher(debug);
  
    list<Slave> todo, done, all;
-   if (slave_no!=0)
-      todo.push_back(Slave(slave_no, 1, "FXX", "Hingle McCringleberry"));
+   if (slaves.size() > 0)
+   {
+      list<unsigned>::const_iterator i;
+      for (i=slaves.begin(); i != slaves.end(); i++)
+      {
+         bool found=false;
+         for(int j=0; j < nameList::numberEntries; j++)
+         {
+            if (nameList::nameList[j].circuitBoardNumber == *i)
+            {
+               todo.push_back(Slave(nameList::nameList[j].circuitBoardNumber,
+                                    nameList::nameList[j].hatNumber,
+                                    nameList::nameList[j].drillId,
+                                    nameList::nameList[j].name));
+               found = true;
+               break;
+            }
+         }
+         if (!found)
+            todo.push_back(Slave(*i, 1, "Fxx", "Hingle McCringleberry"));
+      }
+   }
    else if (!test)
    {
       for(int i = 0; i < nameList::numberEntries; i++)
@@ -164,27 +182,24 @@ int main(int argc, char **argv)
                               testNameList[i].name));
    }
 
+   list<Slave>::iterator i;
    for (int pass=1; todo.size() > 0 && pass < 10; pass++)
    {
       cout << "Pass " << pass << " remaining boards:" << todo.size() << endl;
-      list<Slave>::iterator i;
       for (i = todo.begin(); i != todo.end(); )
       {
-         if (ignore_battery && 
-             (i->drill_id[0] == 'O' || i->drill_id[0] == 'Q' || i->drill_id[1] == 'N'))
+         if (flasher.prog_slave(i->slave_no, image_buff, image_size, version))
          {
+            i->soc = flasher.rx_soc;
+            i->vcell = flasher.rx_vcell;
+            i->version = flasher.rx_version;
             done.push_back(*i);
-            i = todo.erase(i);
-         }
-         else if (flasher.prog_slave(i->slave_no, image_buff, image_size, version))
-         {
-            done.push_back(*i);
-            cout <<  *i  << " Programmed." << endl;
+            cout <<  i->student_name  << " Programmed." << endl;
             i = todo.erase(i);
          }
          else
          {
-            cout << *i << " Failed programming." << endl;
+            cout << i->student_name << " Failed programming." << endl;
             i++;
          }
       }
@@ -197,6 +212,10 @@ int main(int argc, char **argv)
       cout << "All boards programmed." << endl;
    else
       cout << "Giving up." << endl;
+
+   cout << "Programmed:" << endl;
+   for (i = done.begin(); i != done.end(); i++)
+      cout << *i << endl;
 
    return 0;
 }

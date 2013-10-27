@@ -32,6 +32,10 @@ public:
    bool prog_slave(uint16_t slave_no, uint8_t* image_buff, size_t image_size, std::string version=std::string());
    std::string timestamp(void);
 
+   std::string rx_version;
+   double rx_vcell;
+   int rx_soc;
+
 private:
    bool nrf_tx(uint8_t* buff, size_t len, const unsigned max_retry, unsigned &loss_count);
    bool nrf_rx(void);
@@ -47,9 +51,6 @@ private:
    std::ofstream log;
    int debug;
 
-   std::string rx_version;
-   double rx_vbatt;
-   int rx_soc;
 };
 
 #endif

@@ -106,7 +106,7 @@ bool Flasher::prog_slave(const uint16_t slave_no, uint8_t* image_buff, size_t im
    nrf_set_slave(slave_no);
 
    rx_version = "unk";
-   rx_vbatt = 0;
+   rx_vcell = 0;
    rx_soc = 0;
 
    unsigned loss_count=0;
@@ -140,7 +140,7 @@ bool Flasher::prog_slave(const uint16_t slave_no, uint8_t* image_buff, size_t im
 
    if (debug>1)
       log << endl << timestamp() << " Looking for slave " << setw(3) << slave_no << "   ";
-   if (!nrf_tx(buff, ensemble::message_size, 5, loss_count))
+   if (!nrf_tx(buff, ensemble::message_size, 1, loss_count))
    {
       if (debug>1)
          log << endl << timestamp() << " Slave " << setw(3) << slave_no << " Not Found. lc=" << loss_count << "   ";
@@ -255,6 +255,18 @@ bool Flasher::prog_slave(const uint16_t slave_no, uint8_t* image_buff, size_t im
 
    if (debug)
       log << endl << timestamp() << " Programming slave " << slave_no << " complete. lc= " << loss_count << "   ";
+
+
+   bcm2835_delayMicroseconds(5000);
+   msg::encode_ping(buff);
+
+   if (debug>1)
+      log << endl << timestamp() << " Sending ping    ";
+
+   if (nrf_tx(buff, sizeof(buff), 1, loss_count))
+      nrf_rx();
+   else
+      log << endl << timestamp() << " No ACK to ping of slave " << slave_no << "   ";
 
    return true;
 }
@@ -379,21 +391,20 @@ bool Flasher::nrf_rx(void)
 
 
    uint32_t t_rx;
-   uint16_t slave_id, soc, vcell, missed_message_count;
+   uint16_t slave_id, missed_message_count, vcell, soc;
    uint8_t msg_id, freshness_count;
    int8_t major_version, minor_version;
 
    msg::decode_status(buff+1, slave_id, t_rx, major_version, minor_version,
                       vcell, soc, missed_message_count, freshness_count);
 
-   rx_soc = 0xff & (soc >> 8);
-   rx_vbatt = 1e-3*vcell;
-
+   rx_vcell = 1e-3 * vcell;
+   rx_soc = int(0xff & (soc >> 8));
    rx_version = to_string((int)major_version) + "." + to_string((int)minor_version);
-   log << endl << timestamp() << " Ping response: version="
-       << rx_version
-       << ", Vbatt=" << rx_vbatt
-       << ", SOC=" << rx_soc << "%"
+   log << endl << timestamp() << " Ping response: slave " << slave_id 
+       << ", version " << rx_version
+       << ", Vbatt " << rx_vcell
+       << ", SOC " <<  rx_soc << "%"
        << ", i=" << i;
    return true;
 }
