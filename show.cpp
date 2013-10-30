@@ -215,7 +215,7 @@ void process_ui(void)
       int bpm=170; // beats per minute
       int mpb = 1000 * 60 / bpm; // ms per beat
       event_list.push_back(Event("set13",        8, 4500));
-      event_list.push_back(Event("flash",        0, 900));
+      event_list.push_back(Event("flash",        0, 4100));
       event_list.push_back(Event("pre hit",      3, 10000));
       event_list.push_back(Event("sparkle",      4, 30000));
       event_list.push_back(Event("sparkle fade", 5, 4000));
@@ -230,7 +230,7 @@ void process_ui(void)
       event_list.push_back(Event("M3 A7",        9, 4.5 * mpb));
       event_list.push_back(Event("M3 A8",        9, 1   * mpb));
       event_list.push_back(Event("M3 A9",        9, 4   * mpb));
-      event_list.push_back(Event("M3 B1",       10, 52  * mpb));
+      event_list.push_back(Event("M3 B1",       10, 60  * mpb));
 
       event_list.push_back(Event("M3 D1",       11, 14 * mpb)); // this is intended to overlap the next
       event_list.push_back(Event("M3 D2",       12, 14 * mpb)); // ditto

@@ -210,6 +210,7 @@ dt = 1000 * 60 * beats / bpm / delay_lsb
 lut=[0xff for i in range(max_sid)]
 for row in m3_set21:
     d=0
+    row.reverse()
     for did in row:
         set_lut(lut, d, did) 
         d += dt / len(row)

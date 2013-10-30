@@ -136,7 +136,7 @@ NameHatInfo nameList[numberEntries] =
     "Jake Williams", 227, 154, "M7",
     "Emily Winn", 108, 148, "T7",
     "Cameron Young", 156, 158, "B14",
-    "Caroline Young", 98, 158, "C1",
+    "Caroline Young", 98, 109, "C1",
     "McKenzie Young", 47, 43, "F22",
     "Catherine Zukauckas", 135, 101, "B6",
 };
