@@ -289,12 +289,11 @@ bool Flasher::ping_slave(const uint16_t slave_no)
    {
       if (debug>1)
          log << endl << timestamp() << " Got ACK from ping of slave " << slave_no << "   ";
-      nrf_rx();
+      return nrf_rx();
    }
-   else
-   {
-      log << endl << timestamp() << " No ACK to ping of slave " << slave_no << "   ";
-   }
+
+   log << endl << timestamp() << " No ACK to ping of slave " << slave_no << "   ";
+   return false;
 }
 
 void Flasher::nrf_set_slave(int slave_no)

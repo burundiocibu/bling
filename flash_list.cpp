@@ -121,7 +121,7 @@ int main(int argc, char **argv)
             }
          }
          if (!found)
-            todo.push_back(Slave(*i, 1, "Fxx", "Hingle McCringleberry"));
+            todo.push_back(Slave(*i, 1, ("X"+to_string(*i)).c_str(), "Hingle McCringleberry"));
       }
    }
    else if (!test)

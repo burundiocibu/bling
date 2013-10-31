@@ -218,14 +218,18 @@ std::string Slave::status() const
    return std::string(buff);
 }
 
+
 std::ostream& operator<<(std::ostream& s, const Slave& slave)
 {
    s << std::left << std::setw(3) << slave.slave_no
-     << "  " << std::setw(3) << slave.drill_id
-     << "  " << std::setfill('0') << std::setw(5) << slave.vcell << "V" << std::setfill(' ')
-     << "  " << std::right << std::setw(3) << int(slave.soc) << "%"
-     << "  " << slave.version
-     << "  " << std::left << slave.student_name;
+     << "  " << std::setw(4) << slave.drill_id;
+   if (slave.vcell != 0 && slave.soc != 0)
+      s << "  " << std::setfill('0') << std::setw(5) << slave.vcell << "V" << std::setfill(' ')
+        << "  " << std::right << std::setw(3) << int(slave.soc) << "%"
+        << "  " << slave.version;
+   else
+      s << "                   ";
+   s << "  " << std::left << slave.student_name;
    return s;
 }
 
