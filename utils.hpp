@@ -1,6 +1,6 @@
-#include "HeartbeatMsg.hpp"
-
-#include <string.h>
+#ifndef _UTILS_HPP
+#define _UTILS_HPP
+#include <stdint.h>
 
 #ifdef AVR
 // seems like avr don't have these
@@ -13,15 +13,3 @@
                    ((x & 0xFF00)<<8) | ((x & 0xFF)<<24)        \
                    )
 #endif
-
-void HeartbeatMsg::decode(const uint8_t* buff)
-{
-	id=buff[0];
-	t_ms = ntohl(*((uint32_t*)(buff+1)));
-}
-
-void HeartbeatMsg::encode(uint8_t* buff)
-{
-	buff[0] = 0x01;
-	*((uint32_t*)(buff+1)) = ntohl(t_ms);
-}
