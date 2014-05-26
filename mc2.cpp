@@ -31,13 +31,14 @@ public:
    unsigned my_count;
 
    unsigned tx_cnt;
-   unsigned retry_cnt;
    unsigned tx_read_cnt;
+   uint8_t status;    // STATUS register after most recent operation
    uint8_t obs_tx;    // OBSERVE_TX register after most recent operation
-   unsigned tx_err;   // number of transmit errors
+   unsigned tx_err;   // number of failed transmissions
    unsigned nack_cnt; // number of transmissions with ACK req set that don't get responses.
    unsigned no_resp;  // number of ping responses we expected but didn't get
    unsigned tx_dt, rx_dt;  // time to complete tx/rx in usec
+   int slave_dt;     // estimate of slave clock offset in ms
    uint32_t t_tx, t_rx; // time of most recent send and the time in the most recent received packet
 
    // These values are only filled in when there has been a response from a ping
@@ -45,31 +46,56 @@ public:
    uint16_t soc, vcell, mmc;
    int8_t major_version, minor_version;
 
+   uint8_t buff[ensemble::message_size];
+
    void slide_pwm_ch(unsigned ch, int dir);
    void slide_pwm(int dir);
-   void set_pwm();
-   void tx(uint8_t *buff, size_t len, unsigned repeat);
+
+   void tx(unsigned repeat);
    void rx();
-   void ping();
-   void heartbeat();
+   // The following are higher level comands to the slaves
+   // repeat indicates how many times the command will be sent
+   void ping(unsigned repeat=1);
+   void heartbeat(unsigned repeat=1);
+   void all_stop(unsigned repeat=1);
+   void reboot(unsigned repeat=1);
+   void set_pwm(unsigned repeat=1);
 };
+
 
 void display_header()
 {
-   mvprintw(0, 0, "       ____________________tx___________________   _______________rx______________");
-   mvprintw(1, 0, "slave   #    time   ch0 ch1 ch2   dt    obs  err     time    ver  vcell   soc  mmc");
+   mvprintw(0, 0, "       ____________________tx_______________");
+   mvprintw(1, 0, "slave   #  time(s)  ch0 ch1 ch2  dt(ms)  err");
+   mvprintw(0, 46, "  __________rx___________   ver  Vcell  SOC    MMC   clk  ");
+   mvprintw(1, 46, "  time(s)    dt(ms)   NR          (v)   (%)          (ms)  ");
 }
 
 void display(const Slave& slave)
 {
-   mvprintw(2+slave.my_count, 0, "%3d  %4d %8.3f  %03x %03x %03x %6.3f  %2x  %3d",
-            slave.id, slave.tx_cnt, 1e-6*slave.t_tx, slave.pwm[0], slave.pwm[1], slave.pwm[2],
-            0.001*slave.tx_dt, slave.obs_tx, slave.tx_err);
-   if (slave.t_ping != 0)
-      mvprintw(2+slave.my_count, 50, "%8.3f  %2d.%1d  %1.3fmV %3d%%    %4d  ",
-               0.001*slave.t_ping, slave.major_version, slave.minor_version,
-               0.001*slave.vcell,  slave.soc, slave.mmc);
+   mvprintw(2+slave.my_count, 0,
+            "%3d  %4d %8.3f  %03x %03x %03x %6.3f  %3d",
+            slave.id, slave.tx_cnt, 1e-6*slave.t_tx,
+            slave.pwm[0], slave.pwm[1], slave.pwm[2],
+            1e-3*slave.tx_dt, slave.tx_err);
+   mvprintw(2+slave.my_count, 46,
+            "%8.3f  %8.3f  %4d   %2d.%1d  %1.3f  %3d  %5d  %4d",
+            1e-6*slave.t_rx, 1e-3*slave.rx_dt, slave.no_resp,
+            slave.major_version, slave.minor_version,
+            1e-3*slave.vcell,  slave.soc, slave.mmc, slave.slave_dt);
+   printw("  [status:%02x, obs:%02x, tx_read_cnt:%d, nack_cnt:%d]",
+          slave.status, slave.obs_tx, slave.tx_read_cnt, slave.nack_cnt);
 }
+
+
+void hexdump(const Slave& slave, size_t len)
+{
+   mvprintw(2+slave.my_count, 120, "> ");
+   for (int i = 0; i <len; i++)
+      printw("%.2X ", slave.buff[i]);
+}
+
+
 
 int debug;
 
@@ -117,27 +143,30 @@ int main(int argc, char **argv)
    nRF24L01::configure_PTX();
    nRF24L01::flush_tx();
 
-   uint8_t buff[ensemble::message_size];
-   for (int i=0; i<sizeof(buff); i++) buff[i]=0;
+
    Slave broadcast(0);
    Slave slave(slave_id);
 
-   uint8_t h=0, s=255, v=0;
-   unsigned hb_count=0;
-   uint32_t last_hb=0;
    display_header();
 
    while (true)
    {
-      if (runtime.msec() % 1000 <250)
-         mvprintw(0, 0, "^");
-      else
-         mvprintw(0, 0, "_");
+      // A simple throbber
+      if (runtime.msec() % 1000 <250)  mvprintw(0, 0, "^");
+      else                             mvprintw(0, 0, "_");
 
+      // Send out heartbeat ever second
       if (runtime.usec() - broadcast.t_tx > 999000)
       {
          broadcast.heartbeat();
          display(broadcast);
+      }
+
+      // Ping slave every 5 seconds
+      if (runtime.usec() - slave.t_rx > 4999000)
+      {
+         slave.ping();
+         display(slave);
       }
 
       char key = getch();
@@ -168,13 +197,11 @@ int main(int argc, char **argv)
             break;
 
          case 'x':
-            msg::encode_all_stop(buff);
-            slave.tx(buff, sizeof(buff), 5);
+            slave.all_stop();
             break;
 
          case 'z':
-            msg::encode_reboot(buff);
-            slave.tx(buff, sizeof(buff), 1);
+            slave.reboot();
             break;
       }
       display(slave);
@@ -186,10 +213,73 @@ int main(int argc, char **argv)
 }
 
 
+//===================================================================================
+unsigned Slave::slave_count = 0;
+
+
+Slave::Slave(unsigned _id)
+   : id(_id), my_count(slave_count++), pwm(15),
+     tx_cnt(0), tx_read_cnt(0),
+     obs_tx(0), tx_err(0), nack_cnt(0),
+     no_resp(0), tx_dt(0), rx_dt(0),
+     t_tx(0), t_rx(0), t_ping(0), slave_dt(0), mmc(0),
+     vcell(0), soc(0)
+{
+   for (int i=0; i<sizeof(buff); i++) buff[i]=0;
+};
+
+
+void Slave::tx(unsigned repeat)
+{
+   using namespace nRF24L01;
+
+   bool ack = id != 0;
+
+   tx_cnt++;
+   t_tx = runtime.usec();
+
+   for (int i=0; i<repeat; i++)
+   {
+      write_tx_payload(buff, sizeof(buff), (const char*)ensemble::slave_addr[id], ack);
+
+      for(tx_read_cnt=0; tx_read_cnt<100; tx_read_cnt++)
+      {
+         status = read_reg(STATUS);
+         if (status & STATUS_TX_DS)
+            break;
+         delay_us(5);
+      }
+
+      if (status & STATUS_MAX_RT)
+      {
+         nack_cnt++;
+         write_reg(STATUS, STATUS_MAX_RT);
+         // data doesn't get automatically removed...
+         flush_tx();
+      }
+      else if (status & STATUS_TX_DS)
+      {
+         write_reg(STATUS, STATUS_TX_DS); //Clear the data sent notice
+         // No need to resend if we get an ack...
+         if (ack)
+            break;
+      }
+      else
+         tx_err++;
+
+      if (i<repeat)
+         delay_us(2500);
+   }
+
+   obs_tx = read_reg(OBSERVE_TX);
+   tx_dt = runtime.usec() - t_tx;
+}
+
 void Slave::rx(void)
 {
    using namespace nRF24L01;
-   uint8_t buff[ensemble::message_size];
+
+   for (int i=0; i<sizeof(buff); i++) buff[i]=0;
    uint8_t pipe;
    char config = read_reg(CONFIG);
    config |= CONFIG_PRIM_RX;
@@ -214,7 +304,12 @@ void Slave::rx(void)
    clear_CE();
 
    if (i==100)
+   {
+      no_resp++;
       return;
+   }
+
+   t_rx = runtime.usec();
 
    uint16_t slave_id;
    uint8_t freshness_count;
@@ -223,29 +318,41 @@ void Slave::rx(void)
                       vcell, soc, mmc, freshness_count);
 
    soc = 0xff & (soc >> 8);
+   rx_dt = t_rx - t_tx;
+   slave_dt = t_ping - t_rx/1000;
 }
 
 
-void hexdump(uint8_t* buff, size_t len)
+void Slave::heartbeat(unsigned repeat)
 {
-   for (int i = 0; i <len; i++)
-      printw("%.2X ", buff[i]);
+   for (int i=0; i<sizeof(buff); i++) buff[i]=0;
+   msg::encode_heartbeat(buff, runtime.msec());
+   tx(repeat);
 }
 
 
+void Slave::ping(unsigned repeat)
+{
+   for (int i=0; i<sizeof(buff); i++) buff[i]=0;
+   msg::encode_ping(buff);
+   tx(repeat);
+   rx();
+}
 
-//===================================================================================
-unsigned Slave::slave_count = 0;
+void Slave::all_stop(unsigned repeat)
+{
+   for (int i=0; i<sizeof(buff); i++) buff[i]=0;
+   msg::encode_all_stop(buff);
+   tx(repeat);
+}
 
 
-Slave::Slave(unsigned _id)
-   : id(_id), my_count(slave_count++), pwm(15),
-     tx_cnt(0), retry_cnt(0), tx_read_cnt(0),
-     obs_tx(0), tx_err(0), nack_cnt(0),
-     no_resp(0), tx_dt(0), rx_dt(0),
-     t_tx(0), t_rx(0), t_ping(0),
-     vcell(0), soc(0)
-{};
+void Slave::reboot(unsigned repeat)
+{
+   for (int i=0; i<sizeof(buff); i++) buff[i]=0;
+   msg::encode_reboot(buff);
+   tx(repeat);
+}
 
 
 void Slave::slide_pwm_ch(unsigned ch, int dir)
@@ -275,81 +382,12 @@ void Slave::slide_pwm(int dir)
 }
 
 
-void Slave::set_pwm()
+void Slave::set_pwm(unsigned repeat)
 {
-   uint8_t buff[ensemble::message_size];
-   for (int i=0; i<sizeof(buff); i++) buff[i]=0;
-
-   for (int ch=0; ch<15; ch+=3)
+   for (int ch=0; ch<15; ch++)
    {
+      for (int i=0; i<sizeof(buff); i++) buff[i]=0;
       msg::encode_set_tlc_ch(buff, ch, pwm[ch]);
-      tx(buff, sizeof(buff), 1);
+      tx(repeat);
    }
 };
-
-
-void Slave::tx(uint8_t *buff, size_t len, unsigned repeat)
-{
-   using namespace nRF24L01;
-
-   bool ack = id != 0;
-   int i,j;
-
-   tx_cnt++;
-   t_tx = runtime.usec();
-
-   for (i=0; i<repeat; i++)
-   {
-      if (i>0)
-         retry_cnt++;
-      write_tx_payload(buff, len, (const char*)ensemble::slave_addr[id], ack);
-
-      uint8_t status;
-      for(tx_read_cnt=0; tx_read_cnt<100; tx_read_cnt++)
-      {
-         status = read_reg(STATUS);
-         if (status & STATUS_TX_DS)
-            break;
-         delay_us(5);
-      }
-
-      if (status & STATUS_MAX_RT)
-      {
-         nack_cnt++;
-         write_reg(STATUS, STATUS_MAX_RT);
-         // data doesn't get automatically removed...
-         flush_tx();
-      }
-      else if (status & STATUS_TX_DS)
-      {
-         write_reg(STATUS, STATUS_TX_DS); //Clear the data sent notice
-         if (ack)
-            break;
-      }
-      else
-         tx_err++;
-
-      if (i<repeat)
-         delay_us(2500);
-   }
-
-   obs_tx = read_reg(OBSERVE_TX);
-   tx_dt = runtime.usec() - t_tx;
-}
-
-
-void Slave::heartbeat()
-{
-   uint8_t buff[ensemble::message_size];
-   msg::encode_heartbeat(buff, runtime.msec());
-   tx(buff, sizeof(buff), 1);
-}
-
-
-void Slave::ping()
-{
-   uint8_t buff[ensemble::message_size];
-   msg::encode_ping(buff);
-   tx(buff, sizeof(buff), 1);
-   rx();
-}
