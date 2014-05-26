@@ -1,5 +1,5 @@
 CPPFLAGS+=-std=c++0x
-ALL_BIN=master_curses show get_param flash_list checkBatt parseNames
+ALL_BIN=master_curses mc2 show get_param flash_list parseNames
 
 
 all: $(ALL_BIN)
@@ -25,8 +25,11 @@ nameList.cpp: parseNames hatList.csv
 	parseNames
 	rm midFile.hpp
 
-master_curses: LDLIBS+=-lbcm2835 -lstdc++ -lncurses
+master_curses: LDLIBS+=-lbcm2835 -lstdc++ -lncurses -lm
 master_curses: master_curses.o rt_utils.o nrf24l01.o messages.o i2c.o lcd_plate.o
+
+mc2: LDLIBS+=-lbcm2835 -lstdc++ -lncurses -lm
+mc2: mc2.o rt_utils.o nrf24l01.o messages.o
 
 master_test: LDLIBS+=-lbcm2835 -lstdc++
 master_test: master_test.o rt_utils.o nrf24l01.o messages.o i2c.o
