@@ -2,6 +2,7 @@
 #define _LOCK_HPP
 #include <cstring>
 #include <sys/file.h>
+#include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <iostream>
@@ -19,7 +20,6 @@ public:
                    << strerror(errno) << std::endl;
          exit(0);
       }
-      
    };
 
    ~Lock()

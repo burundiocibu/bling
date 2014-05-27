@@ -212,7 +212,7 @@ namespace nRF24L01
       memcpy(buff, master_addr, addr_len); // only TX to master
       write_reg(TX_ADDR, buff, addr_len);
 
-      // pipe 0 is for receiving broadcast 
+      // pipe 0 is for receiving broadcast
       memcpy(buff, broadcast_addr, addr_len);
       write_reg(RX_ADDR_P0, buff, addr_len);
 
@@ -267,7 +267,7 @@ namespace nRF24L01
    void write_tx_payload(void* data, const size_t len, const char slave_addr[], bool ack)
    {
       char config = read_reg(CONFIG);
-      write_reg(CONFIG, config  & ~CONFIG_PWR_UP); // power down 
+      write_reg(CONFIG, config  & ~CONFIG_PWR_UP); // power down
       if (ack)
          write_reg(EN_AA, EN_AA_ENAA_P0);
       else

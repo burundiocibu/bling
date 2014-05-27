@@ -29,7 +29,7 @@ master_curses: LDLIBS+=-lbcm2835 -lstdc++ -lncurses -lm
 master_curses: master_curses.o rt_utils.o nrf24l01.o messages.o i2c.o lcd_plate.o
 
 mc2: LDLIBS+=-lbcm2835 -lstdc++ -lncurses -lm
-mc2: mc2.o rt_utils.o nrf24l01.o messages.o
+mc2: mc2.o rt_utils.o nrf24l01.o messages.o Slave.o
 
 master_test: LDLIBS+=-lbcm2835 -lstdc++
 master_test: master_test.o rt_utils.o nrf24l01.o messages.o i2c.o

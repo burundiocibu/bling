@@ -61,7 +61,7 @@ namespace messages
       v = *reinterpret_cast<T*>(p);
       return p + sizeof(T);
    }
-   
+
    template <class T>
    uint8_t* encode_var(uint8_t *p, T &v )
    {

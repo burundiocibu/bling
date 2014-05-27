@@ -2,8 +2,8 @@
 
 eval `get_param $1`
 
-loader_hex=../bling-slave/nrf_boot.hex
-show_hex=../bling-slave/slave_main.hex
+loader_hex=slave/nrf_boot.hex
+show_hex=slave/slave_main.hex
 
 if [ -z "$slave_addr" ]; then
     exit -1
@@ -19,7 +19,7 @@ if [ ! -f "$show_hex" ]; then
     exit -1
 fi
 
-avrdude="sudo avrdude -C avrdude.conf -p m328 -c usbtiny"
+avrdude="sudo avrdude -p m328 -c usbtiny"
 avrterm="$avrdude -t -qq"
 
 echo "Initializing slave ${slave_no}, addr=${slave_addr}"

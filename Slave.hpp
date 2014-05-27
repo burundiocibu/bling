@@ -3,6 +3,8 @@
 
 #include <string>
 #include <iostream>
+#include <vector>
+
 #include "rt_utils.hpp"
 #include "messages.hpp"
 #include "ensemble.hpp"
@@ -10,43 +12,50 @@
 class Slave
 {
 public:
-   uint16_t slave_no;
-   int hat_no;
+   Slave(unsigned _id, const std::string& _drill_id=std::string(), const std::string& _student_name=std::string());
+   bool operator==(const Slave &) const;
+   bool operator<(const Slave &) const;
+
+   void slide_pwm_ch(unsigned ch, int dir);
+   void slide_pwm(int dir);
+
+   void tx(unsigned repeat);
+   void rx();
+
+   // The following are higher level comands to the slaves
+   // repeat indicates how many times the command will be sent
+   void ping(unsigned repeat=1);
+   void heartbeat(unsigned repeat=1);
+   void all_stop(unsigned repeat=1);
+   void reboot(unsigned repeat=1);
+   void set_pwm(unsigned repeat=1);
+
+   unsigned id;
    std::string drill_id;
    std::string student_name;
 
+   std::vector<uint16_t> pwm;
+   static unsigned slave_count;  // A count of the total number of Slave objects created
+   unsigned my_count;
+   bool ack; // whether to request acks on the messages to this slave
+
    unsigned tx_cnt;
-   unsigned retry_cnt;
-   unsigned tx_err;  // number of transmit errors
-   unsigned nack_cnt;  // number of transmissions with ACK req set that don't get responses.
-   unsigned no_resp; // number of ping responses we expected but didn't get
+   uint8_t status;    // STATUS register after most recent operation
+   unsigned tx_err;   // number of failed transmissions
+   unsigned nack_cnt; // number of transmissions with ACK req set that don't get responses.
+   unsigned no_resp;  // number of ping responses we expected but didn't get
+   unsigned arc_cnt;  // running counter of ARC_CNT from OBSERVE_TX
+   unsigned plos_cnt; // ditto but for PLOS_CNT
    unsigned tx_dt, rx_dt;  // time to complete tx/rx in usec
    uint32_t t_tx, t_rx; // time of most recent send and the time in the most recent received packet
-   uint16_t missed_message_count;
-   bool validRead;
 
-   double vcell;
-   int soc;
-   std::string version;
+   // These values are only filled in when there has been a response from a ping
+   uint32_t t_ping; // slave time (msec)
+   int slave_dt;    // estimate of slave clock offset in ms
+   uint16_t soc, vcell, mmc;
+   int8_t major_version, minor_version;
 
-   // used for the tx & rx functions
    uint8_t buff[ensemble::message_size];
-
-   Slave();
-   Slave(uint16_t slave, int hatNumber, const char* drillId, const char *studentName);
-   bool operator==(const Slave &) const;
-   bool operator<(const Slave &) const;
-   void checkBattStatus();
-   void readMissedMsgCnt();
-   void sendAllStop();
-   void sendReboot();
-   bool readStatusSuccess();
-   bool isActNow();
-   bool isWarnNow();
-
-   bool tx(); // Returns true if it was successfull
-   void rx_ping();
-   std::string status() const;
 };
 
 std::ostream& operator<<(std::ostream& s, const Slave& slave);

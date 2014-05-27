@@ -144,9 +144,9 @@ int main(int argc, char **argv)
 
       switch(key)
       {
-         case 'w': rgb.slide(0, 1);rgb.slide(1, 1);rgb.slide(2, 1);set_rgb(rgb); break;
-         case 'W': rgb.slide(0,-1);rgb.slide(1,-1);rgb.slide(2,-1); set_rgb(rgb); break;
-            
+         case 'w': for (int i=0; i<3; i++) rgb.slide(i, 1);  set_rgb(rgb); break;
+         case 'W': for (int i=0; i<3; i++) rgb.slide(i, -1); set_rgb(rgb); break;
+
          case 'r': rgb.slide(0, 1); set_rgb(rgb); break;
          case 'R': rgb.slide(0,-1); set_rgb(rgb); break;
          case 'g': rgb.slide(1, 1); set_rgb(rgb); break;
@@ -159,7 +159,6 @@ int main(int argc, char **argv)
          case 'H': hsv.h-=2; hsv2rgb(hsv, rgb); set_rgb(rgb); break;
          case 's': hsv.s+=2; hsv2rgb(hsv, rgb); set_rgb(rgb); break;
          case 'S': hsv.s-=2; hsv2rgb(hsv, rgb); set_rgb(rgb); break;
-            
          case '0':
             msg::encode_start_effect(buff, 0, t, 750);
             nrf_tx(buff, sizeof(buff), slave, 25);
@@ -242,7 +241,7 @@ void nrf_tx(uint8_t *buff, size_t len, unsigned slave, unsigned repeat)
             break;
          delay_us(5);
       }
-      
+
       if (status & STATUS_MAX_RT)
       {
          ack_err++;
@@ -253,12 +252,12 @@ void nrf_tx(uint8_t *buff, size_t len, unsigned slave, unsigned repeat)
       else if (status & STATUS_TX_DS)
       {
          write_reg(STATUS, STATUS_TX_DS); //Clear the data sent notice
-         if (ack) 
+         if (ack)
             break;
       }
       else
          tx_err++;
-      
+
       if (i<repeat)
          delay_us(2500);
    }
@@ -357,7 +356,7 @@ void hsv2rgb(hsv_t hsv, rgb_t &rgb)
    p = (unsigned char)(v * ( 1 - s ));
    q = (unsigned char)(v * ( 1 - s * f ));
    t = (unsigned char)(v * ( 1 - s * ( 1 - f ) ));
-   
+
    switch( i )
    {
       case 0: rgb.r = v; rgb.g = t; rgb.b = p; break;
@@ -378,19 +377,15 @@ void set_rgb(rgb_t rgb)
    uint8_t buff[ensemble::message_size];
    for (int i=0; i<sizeof(buff); i++) buff[i]=0;
 
-   msg::encode_set_tlc_ch(buff, 2, rgb.g);
-   nrf_tx(buff, sizeof(buff), slave,1);
-   msg::encode_set_tlc_ch(buff, 1, rgb.r);
-   nrf_tx(buff, sizeof(buff), slave, 1);
-   msg::encode_set_tlc_ch(buff, 0, rgb.b);
-   nrf_tx(buff, sizeof(buff), slave, 1);
-
-   msg::encode_set_tlc_ch(buff, 5, rgb.g);
-   nrf_tx(buff, sizeof(buff), slave, 1);
-   msg::encode_set_tlc_ch(buff, 4, rgb.r);
-   nrf_tx(buff, sizeof(buff), slave, 1);
-   msg::encode_set_tlc_ch(buff, 3, rgb.b);
-   nrf_tx(buff, sizeof(buff), slave, 1);
+   for (int i=0; i<15; i+=3)
+   {
+      msg::encode_set_tlc_ch(buff, i+2, rgb.g);
+      nrf_tx(buff, sizeof(buff), slave, 1);
+      msg::encode_set_tlc_ch(buff, i+1, rgb.r);
+      nrf_tx(buff, sizeof(buff), slave, 1);
+      msg::encode_set_tlc_ch(buff, i, rgb.b);
+      nrf_tx(buff, sizeof(buff), slave, 1);
+   }
 }
 
 
@@ -405,7 +400,7 @@ void hsv_float(uint8_t h, uint8_t s, uint8_t v)
 
    double c = sat * val;
    double hue_ = hue/60.0;
-   double x = c * (1 - abs(fmod(hue_, 2) - 1));
+   double x = c * (1 - abs(std::fmod(hue_, 2) - 1));
 
    double r,g,b;
    if ( 0 <= hue_ && hue_ < 1) {
