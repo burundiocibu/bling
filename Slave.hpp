@@ -12,7 +12,7 @@
 class Slave
 {
 public:
-   Slave(unsigned _id, const std::string& _drill_id=std::string(), const std::string& _student_name=std::string());
+   Slave(unsigned _id=0, const std::string& _drill_id=std::string(), const std::string& _student_name=std::string());
    bool operator==(const Slave &) const;
    bool operator<(const Slave &) const;
 
@@ -36,10 +36,11 @@ public:
 
    std::vector<uint16_t> pwm;
    static unsigned slave_count;  // A count of the total number of Slave objects created
+   static bool header_output;    // Has the header line only go out once
    unsigned my_count;
    bool ack; // whether to request acks on the messages to this slave
 
-   unsigned tx_cnt;
+   unsigned long tx_cnt;
    uint8_t status;    // STATUS register after most recent operation
    unsigned tx_err;   // number of failed transmissions
    unsigned nack_cnt; // number of transmissions with ACK req set that don't get responses.
@@ -47,13 +48,14 @@ public:
    unsigned arc_cnt;  // running counter of ARC_CNT from OBSERVE_TX
    unsigned plos_cnt; // ditto but for PLOS_CNT
    unsigned tx_dt, rx_dt;  // time to complete tx/rx in usec
-   uint32_t t_tx, t_rx; // time of most recent send and the time in the most recent received packet
+   unsigned long t_tx, t_rx; // time of most recent send and the time in the most recent received packet
 
    // These values are only filled in when there has been a response from a ping
    uint32_t t_ping; // slave time (msec)
    int slave_dt;    // estimate of slave clock offset in ms
-   uint16_t soc, vcell, mmc;
-   int8_t major_version, minor_version;
+   std::string version;
+   uint16_t mmc;
+   double soc, vcell;
 
    uint8_t buff[ensemble::message_size];
 };

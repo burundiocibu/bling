@@ -16,6 +16,7 @@
 extern RunTime runtime;
 
 unsigned Slave::slave_count = 0;
+bool Slave::header_output = false;
 
 namespace msg=messages;
 using namespace std;
@@ -26,7 +27,7 @@ Slave::Slave(unsigned _id, const string& _drill_id, const string& _student_name)
      tx_cnt(0), tx_err(0), nack_cnt(0),
      no_resp(0), tx_dt(0), rx_dt(0),
      t_tx(0), t_rx(0), t_ping(0), slave_dt(0), mmc(0),
-     major_version(0), minor_version(0),
+     version("unk"),
      arc_cnt(0), plos_cnt(0),
      vcell(0), soc(0)
 {
@@ -159,13 +160,16 @@ void Slave::rx(void)
 
    t_rx = runtime.usec();
 
-   uint16_t slave_id;
+   uint16_t slave_id, _soc, _vcell;
    uint8_t freshness_count;
+   int8_t major, minor;
 
-   msg::decode_status(buff, slave_id, t_ping, major_version, minor_version,
-                      vcell, soc, mmc, freshness_count);
-
-   soc = 0xff & (soc >> 8);
+   msg::decode_status(buff, slave_id, t_ping, major, minor,
+                      _vcell, _soc, mmc, freshness_count);
+   version = std::to_string(major) + "." + std::to_string(minor);
+   soc = 0xff & (_soc >> 8);
+   soc += (0xff & _soc) / 256.0;
+   vcell = 1e-3 * _vcell;
    rx_dt = t_rx - t_tx;
    slave_dt = t_ping - t_rx/1000;
 }
@@ -241,32 +245,32 @@ void Slave::set_pwm(unsigned repeat)
 };
 
 
-
 std::ostream& operator<<(std::ostream& s, const Slave& slave)
 {
-   s << left << setw(2) << slave.id
-     << "  " << setw(4) << slave.tx_cnt
+   if (!Slave::header_output)
+   {
+      Slave::header_output = true;
+      s << "           __________tx_________  __________rx____________    ver   Vcell    SOC    MMC   clk   nac  arc " << endl
+        << "id     #    time(s)  dt(ms)  err   time(s)    dt(ms)    NR           (v)     (%)          (ms)           " << endl;
+   }
+
+   s << left << setw(3) << slave.id
+     << right
+     << " " << setw(4) << slave.tx_cnt
+     << right
+     << fixed << setprecision(3)
      << "  " << setw(8) << 1e-6*slave.t_tx
-     << hex << setfill('0')
-     << "  " << setw(3) << slave.pwm[0]
-     << " " << setw(3) << slave.pwm[1]
-     << " " << setw(3) << slave.pwm[2]
-     << dec
      << "  " << setw(6) << 1e-3*slave.tx_dt
      << "  " << setw(3) << slave.tx_err
      << "  " << setw(8) << 1e-6*slave.t_rx
      << "  " << setw(8) << 1e-3*slave.rx_dt
      << "  " << setw(4) << slave.no_resp
-     << "  " << slave.major_version << "." << slave.minor_version
-     << "  " << setw(5) << 1e-3*slave.vcell
-     << "  " << setw(3) << slave.soc
+     << "    " << slave.version
+     << "  " << setw(6) << setprecision(3) << slave.vcell
+     << "  " << setw(5) << setprecision(2) << slave.soc
      << "  " << setw(5) << slave.mmc
      << "  " << setw(4) << slave.slave_dt
-     << hex
-     << "  staus:" << slave.status
-     << ", nac_cnt:" << slave.nack_cnt
-     << ", arc_cnt:" << slave.arc_cnt
-     << ", plos_cnt:" << slave.plos_cnt
-     << dec << endl;
+     << "  " << setw(4) << slave.nack_cnt
+     << "  " << setw(4) << slave.arc_cnt;
    return s;
 }

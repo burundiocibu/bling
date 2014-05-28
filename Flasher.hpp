@@ -34,8 +34,7 @@ public:
    std::string timestamp(void);
 
    std::string rx_version;
-   double rx_vcell;
-   int rx_soc;
+   uint16_t rx_vcell, rx_soc;
 
 private:
    bool nrf_tx(uint8_t* buff, size_t len, const unsigned max_retry, unsigned &loss_count);

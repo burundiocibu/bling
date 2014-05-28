@@ -113,7 +113,6 @@ int main(int argc, char **argv)
             if (nameList::nameList[j].circuitBoardNumber == *i)
             {
                todo.push_back(Slave(nameList::nameList[j].circuitBoardNumber,
-                                    nameList::nameList[j].hatNumber,
                                     nameList::nameList[j].drillId,
                                     nameList::nameList[j].name));
                found = true;
@@ -121,14 +120,13 @@ int main(int argc, char **argv)
             }
          }
          if (!found)
-            todo.push_back(Slave(*i, 1, ("X"+to_string(*i)).c_str(), "Hingle McCringleberry"));
+            todo.push_back(Slave(*i, ("X"+to_string(*i)).c_str(), "Hingle McCringleberry"));
       }
    }
    else if (!test)
    {
       for(int i = 0; i < nameList::numberEntries; i++)
          todo.push_back(Slave(nameList::nameList[i].circuitBoardNumber,
-                              nameList::nameList[i].hatNumber,
                               nameList::nameList[i].drillId,
                               nameList::nameList[i].name));
    }
@@ -137,7 +135,6 @@ int main(int argc, char **argv)
       size_t ll = sizeof(testNameList)/sizeof(nameList::NameHatInfo);
       for(int i = 0; i < ll; i++)
          todo.push_back(Slave(testNameList[i].circuitBoardNumber,
-                              testNameList[i].hatNumber,
                               testNameList[i].drillId,
                               testNameList[i].name));
    }
@@ -152,7 +149,7 @@ int main(int argc, char **argv)
 void ping_list(list<Slave> todo, int debug)
 {
    Flasher flasher(debug);
- 
+
    list<Slave> done, all;
 
    list<Slave>::iterator i;
@@ -161,7 +158,7 @@ void ping_list(list<Slave> todo, int debug)
       cout << "Pass " << pass << " ";
       for (i = todo.begin(); i != todo.end(); )
       {
-         if (flasher.ping_slave(i->slave_no))
+         if (flasher.ping_slave(i->id))
          {
             i->soc = flasher.rx_soc;
             i->vcell = flasher.rx_vcell;
@@ -256,7 +253,7 @@ void prog_list(list<Slave> todo, string fn, string version, int debug)
       cout << "Pass " << pass << " remaining boards:" << todo.size() << endl;
       for (i = todo.begin(); i != todo.end(); )
       {
-         if (flasher.prog_slave(i->slave_no, image_buff, image_size, version))
+         if (flasher.prog_slave(i->id, image_buff, image_size, version))
          {
             i->soc = flasher.rx_soc;
             i->vcell = flasher.rx_vcell;

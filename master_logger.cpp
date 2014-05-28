@@ -16,32 +16,6 @@ using namespace std;
 
 RunTime runtime;
 
-void display_header()
-{
-   mvprintw(0, 0, "       ____________________tx_______________");
-   mvprintw(1, 0, "slave   #  time(s)  ch0 ch1 ch2  dt(ms)  err");
-   mvprintw(0, 46, "  __________rx___________   ver  Vcell  SOC    MMC   clk  ");
-   mvprintw(1, 46, "  time(s)    dt(ms)   NR          (v)   (%)          (ms)  ");
-}
-
-void display(const Slave& slave)
-{
-   mvprintw(2+slave.my_count, 0,
-            "%3d  %4d %8.3f  %03x %03x %03x %6.3f  %3d",
-            slave.id, slave.tx_cnt, 1e-6*slave.t_tx,
-            slave.pwm[0], slave.pwm[1], slave.pwm[2],
-            1e-3*slave.tx_dt, slave.tx_err);
-   mvprintw(2+slave.my_count, 46,
-            "%8.3f  %8.3f  %4d   %3s  %1.3f  %3d  %5d  %4d",
-            1e-6*slave.t_rx, 1e-3*slave.rx_dt, slave.no_resp,
-            slave.version.c_str(),
-            1e-3*slave.vcell,  slave.soc, slave.mmc, slave.slave_dt);
-   printw("  [nack_cnt:%d, arc_cnt:%d, plos_cnt:%d]  ",
-          slave.nack_cnt, slave.arc_cnt, slave.plos_cnt);
-   mvprintw(24, 0, ">");
-}
-
-
 int debug;
 
 int main(int argc, char **argv)
@@ -60,28 +34,6 @@ int main(int argc, char **argv)
             printf("Usage %s -i fn -s slave_id [-d]\n", argv[0]);
             exit(-1);
       }
-
-   // lock this process into memory
-   if (false)
-   {
-      struct sched_param sp;
-      memset(&sp, 0, sizeof(sp));
-      sp.sched_priority = sched_get_priority_max(SCHED_FIFO);
-      sched_setscheduler(0, SCHED_FIFO, &sp);
-      mlockall(MCL_CURRENT | MCL_FUTURE);
-   }
-
-   WINDOW *win;
-   int prev_curs;
-
-   win = initscr();
-   cbreak();
-   nodelay(win, true);
-   noecho();
-   nonl();
-   intrflush(win, true);
-   keypad(win, true);
-   prev_curs = ::curs_set(0);   // we want an invisible cursor.
 
    nRF24L01::channel = ensemble::default_channel;
    memcpy(nRF24L01::master_addr,    ensemble::master_addr,   nRF24L01::addr_len);
@@ -102,27 +54,21 @@ int main(int argc, char **argv)
    Slave broadcast(0);
    Slave slave(slave_id);
 
-   display_header();
-
    while (true)
    {
-      // A simple throbber
-      if (runtime.msec() % 1000 < 250)  mvprintw(0, 0, "^");
-      else                             mvprintw(0, 0, "_");
-      mvprintw(24, 0, ">");
-
       // Send out heartbeat ever second
       if (runtime.usec() - broadcast.t_tx > 999000)
       {
          broadcast.heartbeat();
-         display(broadcast);
+         if (debug)
+            cout << broadcast << endl;
       }
 
       // Ping slave every 5 seconds
       if (runtime.usec() - slave.t_tx > 4999000)
       {
          slave.ping();
-         display(slave);
+         cout << slave << endl;
       }
 
       char key = getch();
@@ -135,6 +81,8 @@ int main(int argc, char **argv)
          bcm2835_delayMicroseconds(10000);
          continue;
       }
+
+      cout << endl;
 
       switch(key)
       {
@@ -160,10 +108,9 @@ int main(int argc, char **argv)
             slave.reboot();
             break;
       }
-      display(slave);
+      cout << slave << endl;
    }
 
    nRF24L01::shutdown();
-   endwin();
    return 0;
 }
