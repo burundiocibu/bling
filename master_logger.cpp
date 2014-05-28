@@ -53,6 +53,7 @@ int main(int argc, char **argv)
 
    Slave broadcast(0);
    Slave slave(slave_id);
+   cout << broadcast.stream_header << endl;
 
    while (true)
    {

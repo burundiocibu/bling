@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <cmath>
 #include <vector>
+#include <sstream>
 #include <sys/mman.h> // for settuing up no page swapping
 
 #include <bcm2835.h>
@@ -16,28 +17,13 @@ using namespace std;
 
 RunTime runtime;
 
-void display_header()
-{
-   mvprintw(0, 0, "       ____________________tx_______________");
-   mvprintw(1, 0, "slave   #  time(s)  ch0 ch1 ch2  dt(ms)  err");
-   mvprintw(0, 46, "  __________rx___________   ver  Vcell  SOC    MMC   clk  ");
-   mvprintw(1, 46, "  time(s)    dt(ms)   NR          (v)   (%)          (ms)  ");
-}
 
 void display(const Slave& slave)
 {
-   mvprintw(2+slave.my_count, 0,
-            "%3d  %4d %8.3f  %03x %03x %03x %6.3f  %3d",
-            slave.id, slave.tx_cnt, 1e-6*slave.t_tx,
-            slave.pwm[0], slave.pwm[1], slave.pwm[2],
-            1e-3*slave.tx_dt, slave.tx_err);
-   mvprintw(2+slave.my_count, 46,
-            "%8.3f  %8.3f  %4d   %3s  %1.3f  %3d  %5d  %4d",
-            1e-6*slave.t_rx, 1e-3*slave.rx_dt, slave.no_resp,
-            slave.version.c_str(),
-            1e-3*slave.vcell,  slave.soc, slave.mmc, slave.slave_dt);
-   printw("  [nack_cnt:%d, arc_cnt:%d, plos_cnt:%d]  ",
-          slave.nack_cnt, slave.arc_cnt, slave.plos_cnt);
+   ostringstream ss;
+   ss << slave;
+   mvprintw(1+slave.my_count, 0, ss.str().c_str());
+   printw("   pwm:%03x %03x %03x", slave.pwm[0], slave.pwm[1], slave.pwm[2]);
    mvprintw(24, 0, ">");
 }
 
@@ -102,7 +88,8 @@ int main(int argc, char **argv)
    Slave broadcast(0);
    Slave slave(slave_id);
 
-   display_header();
+   broadcast.header_output=true;
+   mvprintw(0, 0, broadcast.stream_header.c_str());
 
    while (true)
    {

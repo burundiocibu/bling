@@ -369,7 +369,7 @@ bool Flasher::nrf_tx(uint8_t* data, size_t len, const unsigned max_retry, unsign
          log << endl << timestamp() << " Missed MAX_RT    ";
    }
 
-   if (debug>1) 
+   if (debug>1)
       log << "X" << flush;
    return false;
 }

@@ -21,6 +21,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <iomanip>
 #include <string>
 #include <list>
 #include <map>
@@ -61,9 +62,17 @@ ostream& operator<<(ostream& s, const list<Slave>& slave_list)
    for (j=slave_list.begin(); j != slave_list.end(); j++)
       sm[j->drill_id] = *j;
 
-   map<string, Slave>::const_iterator i;
-   for (i=sm.begin(); i != sm.end(); i++)
-      cout << i->second << endl;
+   if (sm.size())
+   {
+      map<string, Slave>::const_iterator i;
+      for (i=sm.begin(); i != sm.end(); i++)
+         cout << left << setw(3) << i->second.id << "  " << setw(3) << i->second.version
+              << right << fixed
+              << "  " << setw(6) << setprecision(3) << i->second.vcell << "V"
+              << "  " << setw(5) << setprecision(2) << i->second.soc << "%"
+              << "  " << i->second.student_name
+              << endl;
+   }
 
    return s;
 }
@@ -100,7 +109,7 @@ int main(int argc, char **argv)
             exit(-1);
       }
 
- 
+
    list<Slave> todo, done, all;
    if (slaves.size() > 0)
    {

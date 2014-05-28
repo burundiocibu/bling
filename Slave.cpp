@@ -34,6 +34,8 @@ Slave::Slave(unsigned _id, const string& _drill_id, const string& _student_name)
    if (id >= ensemble::num_slaves)
       cout << "Invalid slave " << id << endl;
 
+   stream_header =   "id     #     t_tx    tx_dt   err    t_rx      rx_dt    NR    ver    Vcell    SOC     MMC   dt    nac   arc ";
+
    ack = id != 0;
    for (int i=0; i<sizeof(buff); i++) buff[i]=0;
 };
@@ -247,13 +249,6 @@ void Slave::set_pwm(unsigned repeat)
 
 std::ostream& operator<<(std::ostream& s, const Slave& slave)
 {
-   if (!Slave::header_output)
-   {
-      Slave::header_output = true;
-      s << "           __________tx_________  __________rx____________    ver   Vcell    SOC    MMC   clk   nac  arc " << endl
-        << "id     #    time(s)  dt(ms)  err   time(s)    dt(ms)    NR           (v)     (%)          (ms)           " << endl;
-   }
-
    s << left << setw(3) << slave.id
      << right
      << " " << setw(4) << slave.tx_cnt
@@ -267,7 +262,7 @@ std::ostream& operator<<(std::ostream& s, const Slave& slave)
      << "  " << setw(4) << slave.no_resp
      << "    " << slave.version
      << "  " << setw(6) << setprecision(3) << slave.vcell
-     << "  " << setw(5) << setprecision(2) << slave.soc
+     << "   " << setw(5) << setprecision(2) << slave.soc
      << "  " << setw(5) << slave.mmc
      << "  " << setw(4) << slave.slave_dt
      << "  " << setw(4) << slave.nack_cnt

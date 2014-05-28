@@ -30,6 +30,8 @@ public:
    void reboot(unsigned repeat=1);
    void set_pwm(unsigned repeat=1);
 
+   std::string stream_header;
+
    unsigned id;
    std::string drill_id;
    std::string student_name;
@@ -61,5 +63,6 @@ public:
 };
 
 std::ostream& operator<<(std::ostream& s, const Slave& slave);
+
 
 #endif
