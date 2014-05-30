@@ -1,5 +1,5 @@
 CPPFLAGS+=-std=c++0x
-ALL_BIN=master_curses show get_param flash_list parseNames
+ALL_BIN=master_curses show get_param flash_list
 
 
 all: $(ALL_BIN)
@@ -16,14 +16,6 @@ rx-test: rx-test.o rt_utils.o nrf24l01.o messages.o
 
 tx-test: LDLIBS+=-lbcm2835 -lstdc++
 tx-test: tx-test.o rt_utils.o nrf24l01.o messages.o
-
-parseNames:LDLIBS+=-lstdc++
-parseNames: parseNames.o
-
-nameList.o: nameList.cpp
-nameList.cpp: parseNames hatList.csv
-	parseNames
-	rm midFile.hpp
 
 master_curses: LDLIBS+=-lbcm2835 -lstdc++ -lncurses -lm
 master_curses: master_curses.o rt_utils.o nrf24l01.o messages.o Slave.o
@@ -44,13 +36,10 @@ master_blaster: LDLIBS+=-lbcm2835 -lstdc++
 master_blaster: master_blaster.o
 
 flash_list: LDLIBS+=-lbcm2835 -lstdc++
-flash_list: flash_list.o nameList.o Slave.o rt_utils.o nrf24l01.o messages.o Flasher.o
+flash_list: flash_list.o Slave.o rt_utils.o nrf24l01.o messages.o Flasher.o
 
 show:  LDLIBS+=-lbcm2835 -lstdc++
 show: show.o rt_utils.o nrf24l01.o messages.o i2c.o lcd_plate.o
-
-checkBatt:LDLIBS+=-lstdc++ -lbcm2835
-checkBatt: checkBatt.o Slave.o nameList.o nrf24l01.o rt_utils.o messages.o
 
 #=================================================================
 # This is a helper program that runs on the local machine. It is

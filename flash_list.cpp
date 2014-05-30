@@ -35,22 +35,8 @@
 
 
 #include "Slave.hpp"
-#include "nameList.hpp"
 #include "Flasher.hpp"
 #include "Lock.hpp"
-
-nameList::NameHatInfo testNameList[] =
-{
-   "S002", 157, 157, "X1",
-   "S167", 167, 167, "X2",
-   "S006",   6,   6, "X3",
-   "S007",   7,   7, "X4",
-   "S008",   8,   8, "X5",
-   "S005",   5,   5, "X6",
-   "S083",  83,  83, "X7",
-   "S017",  17,  17, "X8"
-};
-
 
 using namespace std;
 
@@ -85,45 +71,51 @@ int main(int argc, char **argv)
    Lock lock; // If this fails, we can't get the hardware
 
    int debug=0;
-   string fn;
-   bool test=false;
+   string image_fn, list_fn, version;
    bool ping=false;
    list<unsigned> slaves;
-   string version;
    opterr = 0;
    int c;
-   while ((c = getopt(argc, argv, "di:s:tv:p")) != -1)
+   while ((c = getopt(argc, argv, "di:l:s:v:p")) != -1)
       switch (c)
       {
          case 'd': debug++; break;
-         case 'i': fn = string(optarg); break;
-         case 't': test=true; break;
+         case 'i': image_fn = string(optarg); break;
+         case 'l': list_fn = string(optarg); break;
          case 'p': ping=true; break;
          case 's': slaves.push_back(atoi(optarg)); break;
          case 'v': version=string(optarg); break;
          default:
-            cout << "Usage " << argv[0] << " -i fn [-d] [-s slave_no] [-t] [-v vers]" << endl
-                 << " -t  Just program test list" << endl
-                 << " -p  Just ping, don't program"
-                 << endl;
+            cout << "Usage " << argv[0] << " -i [hex_fn] -l [slave_fn] [-d] [-s slave_no] [-v vers]" << endl
+                 << " -i  specifies hex image file" << endl
+                 << " -l  specifies board list file" << endl
+                 << " -d  Enable debug ouput" << endl
+                 << " -v  Don't program if board already has this version" << endl
+                 << " -s  board id to program, repeat for more than one board." << endl
+                 << " -p  Just ping, don't program" << endl;
             exit(-1);
       }
 
 
-   list<Slave> todo, done, all;
+   SlaveList todo, done, all, sl;
+   if (list_fn.size())
+   {
+      sl = read_slaves(list_fn);
+      if (debug>2)
+         cout << list_fn << ":" << endl << sl;
+   }
+
    if (slaves.size() > 0)
    {
       list<unsigned>::const_iterator i;
       for (i=slaves.begin(); i != slaves.end(); i++)
       {
          bool found=false;
-         for(int j=0; j < nameList::numberEntries; j++)
+         for(auto j=sl.begin(); j != sl.end(); j++)
          {
-            if (nameList::nameList[j].circuitBoardNumber == *i)
+            if (j->id == *i)
             {
-               todo.push_back(Slave(nameList::nameList[j].circuitBoardNumber,
-                                    nameList::nameList[j].drillId,
-                                    nameList::nameList[j].name));
+               todo.push_back(*j);
                found = true;
                break;
             }
@@ -132,26 +124,22 @@ int main(int argc, char **argv)
             todo.push_back(Slave(*i, ("X"+to_string(*i)).c_str(), "Hingle McCringleberry"));
       }
    }
-   else if (!test)
-   {
-      for(int i = 0; i < nameList::numberEntries; i++)
-         todo.push_back(Slave(nameList::nameList[i].circuitBoardNumber,
-                              nameList::nameList[i].drillId,
-                              nameList::nameList[i].name));
-   }
    else
+      todo = sl;
+
+   if (debug>1)
+      cout << "todo:" << endl << todo;
+
+   if (todo.size() == 0)
    {
-      size_t ll = sizeof(testNameList)/sizeof(nameList::NameHatInfo);
-      for(int i = 0; i < ll; i++)
-         todo.push_back(Slave(testNameList[i].circuitBoardNumber,
-                              testNameList[i].drillId,
-                              testNameList[i].name));
+      cout << "No boards specified. Please use -l and/or -s" << endl;
+      exit(-1);
    }
 
    if (ping)
       ping_list(todo, debug);
    else
-      prog_list(todo, fn, version, debug);
+      prog_list(todo, image_fn, version, debug);
 }
 
 

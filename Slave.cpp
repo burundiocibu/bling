@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 #include <cstdlib>
 #include <cstdio>
@@ -268,4 +269,33 @@ std::ostream& operator<<(std::ostream& s, const Slave& slave)
      << "  " << setw(4) << slave.nack_cnt
      << "  " << setw(4) << slave.arc_cnt;
    return s;
+}
+
+string trim(const string& str, const string& whitespace = " \t")
+{
+   size_t i = str.find_first_not_of(whitespace);
+   if (i == string::npos)
+      return "";
+   size_t j = str.find_last_not_of(whitespace);
+   return str.substr(i, j-i+1);
+}
+
+SlaveList read_slaves(const std::string filename)
+{
+   SlaveList slaves;
+   ifstream s(filename);
+   string line;
+   while (getline(s, line))
+   {
+      if (line[0] == '#')
+         continue;
+      size_t i=line.find(',');
+      size_t j=line.find(',', i+1);
+      string name(trim(line.substr(0,i)));
+      int slave_id=stoi(line.substr(i+1,j-i-1));
+      string drill_id(trim(line.substr(j+1)));
+
+      slaves.push_back(Slave(slave_id, drill_id, name));
+   }
+   return slaves;
 }

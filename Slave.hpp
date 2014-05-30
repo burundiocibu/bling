@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <list>
 
 #include "rt_utils.hpp"
 #include "messages.hpp"
@@ -61,6 +62,10 @@ public:
 
    uint8_t buff[ensemble::message_size];
 };
+
+typedef std::list<Slave> SlaveList;
+
+SlaveList read_slaves(const std::string filename);
 
 std::ostream& operator<<(std::ostream& s, const Slave& slave);
 
