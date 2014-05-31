@@ -94,8 +94,8 @@ int main(int argc, char **argv)
    while (true)
    {
       // A simple throbber
-      if (runtime.msec() % 1000 < 250)  mvprintw(0, 0, "^");
-      else                             mvprintw(0, 0, "_");
+      if (runtime.msec() % 1000 < 250) mvprintw(0, 7, "#");
+      else                             mvprintw(0, 7, "_");
       mvprintw(24, 0, ">");
 
       // Send out heartbeat ever second
