@@ -51,7 +51,7 @@ public:
    unsigned arc_cnt;  // running counter of ARC_CNT from OBSERVE_TX
    unsigned plos_cnt; // ditto but for PLOS_CNT
    unsigned tx_dt, rx_dt;  // time to complete tx/rx in usec
-   unsigned long t_tx, t_rx; // time of most recent send and the time in the most recent received packet
+   uint64_t t_tx, t_rx; // time of most recent send and the time in the most recent received packet
 
    // These values are only filled in when there has been a response from a ping
    uint32_t t_ping; // slave time (msec)

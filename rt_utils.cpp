@@ -1,6 +1,9 @@
 #include <cstdio>
+#include <iostream>
 
 #include "rt_utils.hpp"
+
+using namespace std;
 
 RunTime::RunTime()
 {
@@ -8,6 +11,7 @@ RunTime::RunTime()
    {
       initialized=true;
       gettimeofday(&tv0, NULL);
+      step(2140000);
    }
 }
 
@@ -39,7 +43,9 @@ uint64_t RunTime::usec()
 {
    struct timeval dt_tv;
    tv(dt_tv);
-   return dt_tv.tv_sec*1000000 + dt_tv.tv_usec;
+   uint64_t us = dt_tv.tv_sec;
+   us *= 1000000L;
+   return  us + dt_tv.tv_usec;
 }
 
 void RunTime::tv(struct timeval& dt_tv)

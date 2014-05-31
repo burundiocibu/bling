@@ -35,7 +35,7 @@ Slave::Slave(unsigned _id, const string& _drill_id, const string& _student_name)
    if (id >= ensemble::num_slaves)
       cout << "Invalid slave " << id << endl;
 
-   stream_header =   "id     #     t_tx    tx_dt   err    t_rx      rx_dt    NR    ver    Vcell    SOC     MMC   dt    nac   arc ";
+   stream_header =   "id     #     t_tx    tx_dt   err    t_rx      rx_dt    NR    ver   Vcell     SOC    MMC    dt   nac   arc ";
 
    ack = id != 0;
    for (int i=0; i<sizeof(buff); i++) buff[i]=0;
