@@ -1,11 +1,11 @@
 CPPFLAGS+=-std=c++0x
-ALL_BIN=master_curses show get_param flash_list
+ALL_BIN=master_curses master_logger master_loader show get_param flash_list
 
 
 all: $(ALL_BIN)
 
 clean:
-	-rm -f $(ALL_BIN) *.o nameList.cpp
+	-rm -f $(ALL_BIN) *.o
 
 
 spi-time: LDLIBS+=-lbcm2835
