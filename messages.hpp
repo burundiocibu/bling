@@ -17,7 +17,8 @@ namespace messages
       status_id = 6,
       reboot_id = 7,
       sleep_id = 8,
-      wake_id = 9
+      wake_id = 9,
+      set_tlc_id = 10
    };
 
    extern uint16_t missed_message_count;
@@ -34,6 +35,9 @@ namespace messages
 
    void encode_set_tlc_ch(uint8_t* p, uint8_t  ch, uint16_t  value);
    void decode_set_tlc_ch(uint8_t* p, uint8_t &ch, uint16_t &value);
+
+   void encode_set_tlc(uint8_t* p, uint16_t value[]);
+   void decode_set_tlc(uint8_t* p, uint16_t value[]);
 
    void encode_start_effect(uint8_t* p, uint8_t  effect_id, uint32_t  start_time, uint32_t  duration);
    void decode_start_effect(uint8_t* p, uint8_t &effect_id, uint32_t &start_time, uint32_t &duration);

@@ -22,6 +22,7 @@
 
 void do_heartbeat(uint8_t* buff, uint32_t& t_hb);
 void do_set_tlc_ch(uint8_t* buff);
+void do_set_tlc(uint8_t* buff);
 void do_set_rgb(uint8_t* buff);
 void do_ping(uint8_t* buff, uint8_t pipe);
 
@@ -29,7 +30,7 @@ uint16_t slave_id;
 
 // 0.1 was original app load to slaves
 const int8_t major_version = 0;
-const int8_t minor_version = 8;
+const int8_t minor_version = 9;
 
 int main (void)
 {
@@ -64,7 +65,7 @@ int main (void)
    for (;;)
    {
       avr_dbg::throbber(t_hb);
-      
+
       // Handle any data from the radio
       for(int cnt=0; ; cnt++)
       {
@@ -85,13 +86,14 @@ int main (void)
             case messages::all_stop_id:     effect.all_stop(buff); break;
             case messages::start_effect_id: effect.init(buff); break;
             case messages::set_tlc_ch_id:   do_set_tlc_ch(buff); break;
+            case messages::set_tlc_id:      do_set_tlc(buff); break;
             case messages::set_rgb_id:      do_set_rgb(buff); break;
             case messages::ping_id:         do_ping(buff, pipe); break;
             case messages::reboot_id:       ((APP*)0)(); break;
             case boot_id:                   ((APP*)BOOTADDR)(); break;
          }
       }
-      
+
       effect.execute();
       avr_tlc5940::output_gsdata();
       sleep_mode();
@@ -109,6 +111,13 @@ void do_heartbeat(uint8_t* buff, uint32_t& t_hb)
       avr_rtc::step(dt);
 }
 
+void do_set_tlc(uint8_t* buff)
+{
+   uint16_t value[15];
+   messages::decode_set_tlc(buff, value);
+   for (size_t ch=0; ch<15; ch++)
+      avr_tlc5940::set_channel(ch, value[ch]);
+}
 
 void do_set_tlc_ch(uint8_t* buff)
 {
@@ -117,7 +126,6 @@ void do_set_tlc_ch(uint8_t* buff)
    messages::decode_set_tlc_ch(buff, ch, value);
    avr_tlc5940::set_channel(ch, value);
 }
-
 
 void do_set_rgb(uint8_t* buff)
 {}
@@ -150,7 +158,7 @@ void do_ping(uint8_t* buff, uint8_t pipe)
    messages::encode_status((uint8_t*)&iobuff[1], slave_id, t_rx, major_version, minor_version,
                            vcell, soc);
    write_data(iobuff, ensemble::message_size+1);
-   
+
    set_CE();
    delay_us(10);
    clear_CE();

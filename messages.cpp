@@ -1,6 +1,6 @@
-#include "messages.hpp"
-
 #include <string.h>
+#include "messages.hpp"
+#include "ensemble.hpp"
 
 
 namespace messages
@@ -28,6 +28,7 @@ namespace messages
    // ========================================
    void encode_all_stop(uint8_t* p)
    {
+      memset(p, 0, ensemble::message_size);
       *p++ = all_stop_id;
       *p++ = ++freshness_count;
    }
@@ -42,6 +43,7 @@ namespace messages
    // ========================================
    void encode_heartbeat(uint8_t* p, uint32_t t_ms)
    {
+      memset(p, 0, ensemble::message_size);
       *p++ = heartbeat_id;
       *p++ = ++freshness_count;
       p = encode_var<uint32_t>(p, t_ms);
@@ -58,13 +60,14 @@ namespace messages
    // ========================================
    void encode_set_tlc_ch(uint8_t* p, uint8_t ch, uint16_t value)
    {
+      memset(p, 0, ensemble::message_size);
       *p++ = set_tlc_ch_id;
       *p++ = ++freshness_count;
       p = encode_var<uint8_t>(p, ch);
       p = encode_var<uint16_t>(p, value);
    }
-      
-   void decode_set_tlc_ch(uint8_t* p, uint8_t &ch, uint16_t &value)
+
+   void decode_set_tlc_ch(uint8_t* p, uint8_t& ch, uint16_t& value)
    {
       p++; // skip ID
       p = check_fc(p);
@@ -72,9 +75,11 @@ namespace messages
       p = decode_var<uint16_t>(p, value);
    }
 
+
    // ========================================
    void encode_start_effect(uint8_t* p, uint8_t effect_id, uint32_t start_time, uint32_t duration)
    {
+      memset(p, 0, ensemble::message_size);
       *p++ = start_effect_id;
       *p++ = ++freshness_count;
       p = encode_var<uint8_t>(p, effect_id);
@@ -91,12 +96,14 @@ namespace messages
       p = decode_var<uint32_t>(p, duration);
    }
 
+
    // ========================================
    // Note that this message doesn't get a freshness count since it generally goes in the 'oppisite'
    // direction.
    void encode_status(uint8_t* p, uint16_t slave_id, uint32_t t_rx, int8_t major_version, int8_t minor_version,
                       uint16_t vcell, uint16_t soc)
    {
+      memset(p, 0, ensemble::message_size);
       *p++ = status_id;
       p = messages::encode_var<uint16_t>(p, slave_id);
       *p++ = major_version;
@@ -122,9 +129,11 @@ namespace messages
       fc = *p++;
    }
 
+
    // ========================================
    void encode_ping(uint8_t* p)
    {
+      memset(p, 0, ensemble::message_size);
       *p++ = ping_id;
       *p++ = ++freshness_count;
    }
@@ -135,9 +144,11 @@ namespace messages
       p = check_fc(p);
    }
 
+
    // ========================================
    void encode_reboot(uint8_t* p)
    {
+      memset(p, 0, ensemble::message_size);
       *p++ = reboot_id;
       *p++ = ++freshness_count;
    }
@@ -148,9 +159,11 @@ namespace messages
       p = check_fc(p);
    }
 
+
    // ========================================
    void encode_sleep(uint8_t* p)
    {
+      memset(p, 0, ensemble::message_size);
       *p++ = sleep_id;
       *p++ = ++freshness_count;
    }
@@ -161,9 +174,11 @@ namespace messages
       p = check_fc(p);
    }
 
+
    // ========================================
    void encode_wake(uint8_t* p)
    {
+      memset(p, 0, ensemble::message_size);
       *p++ = wake_id;
       *p++ = ++freshness_count;
    }
@@ -172,5 +187,37 @@ namespace messages
    {
       p++; // skip ID
       p = check_fc(p);
+   }
+
+
+   // ========================================
+   void encode_set_tlc(uint8_t* p, uint16_t value[])
+   {
+      memset(p, 0, ensemble::message_size);
+      *p++ = set_tlc_id;
+      *p++ = ++freshness_count;
+      for (int i=0; i<15; i++)
+      {
+         uint8_t b=0;
+         uint16_t v=value[i];
+         for (b=0; v; b++)
+            v>>=1;
+         p = encode_var<uint8_t>(p, b);
+      }
+   }
+
+   void decode_set_tlc(uint8_t* p, uint16_t value[])
+   {
+      p++; // skip ID
+      p = check_fc(p);
+      for (int i=0; i<15; i++)
+      {
+         uint8_t b;
+         uint16_t v=0;
+         p = decode_var<uint8_t>(p, b);
+         for (int j=0; j<b; j++)
+            v = v<<1 | 0x1; ;
+         value[i] = v;
+      }
    }
 }

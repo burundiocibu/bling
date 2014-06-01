@@ -38,7 +38,6 @@ Slave::Slave(unsigned _id, const string& _drill_id, const string& _student_name)
    stream_header =   "id     #     t_tx    tx_dt   err    t_rx      rx_dt    NR    ver   Vcell     SOC    MMC    dt   nac   arc ";
 
    ack = id != 0;
-   for (int i=0; i<sizeof(buff); i++) buff[i]=0;
 };
 
 
@@ -180,7 +179,6 @@ void Slave::rx(void)
 
 void Slave::heartbeat(unsigned repeat)
 {
-   for (int i=0; i<sizeof(buff); i++) buff[i]=0;
    msg::encode_heartbeat(buff, runtime.msec());
    tx(repeat);
 }
@@ -188,7 +186,6 @@ void Slave::heartbeat(unsigned repeat)
 
 void Slave::ping(unsigned repeat)
 {
-   for (int i=0; i<sizeof(buff); i++) buff[i]=0;
    msg::encode_ping(buff);
    tx(repeat);
    rx();
@@ -196,7 +193,6 @@ void Slave::ping(unsigned repeat)
 
 void Slave::all_stop(unsigned repeat)
 {
-   for (int i=0; i<sizeof(buff); i++) buff[i]=0;
    msg::encode_all_stop(buff);
    tx(repeat);
 }
@@ -204,7 +200,6 @@ void Slave::all_stop(unsigned repeat)
 
 void Slave::reboot(unsigned repeat)
 {
-   for (int i=0; i<sizeof(buff); i++) buff[i]=0;
    msg::encode_reboot(buff);
    tx(repeat);
 }
@@ -239,12 +234,16 @@ void Slave::slide_pwm(int dir)
 
 void Slave::set_pwm(unsigned repeat)
 {
+   msg::encode_set_tlc(buff, &pwm[0]);
+   tx(repeat);
+/*
    for (int ch=0; ch<15; ch++)
    {
       for (int i=0; i<sizeof(buff); i++) buff[i]=0;
       msg::encode_set_tlc_ch(buff, ch, pwm[ch]);
       tx(repeat);
    }
+*/
 };
 
 
