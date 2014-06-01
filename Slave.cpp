@@ -72,25 +72,31 @@ void Slave::tx(unsigned repeat)
    }
    if (clear_count == 100)
    {
-      cout << "Slave " << id << " could not clear status of nrf." << endl;
+      cout << "Slave " << id << " tx: could not clear status of nrf." << endl;
       tx_err++;
       return;
    }
    else if (clear_count)
-      cout << "Slave " << id << " took " << clear_count << " writes to reset status." << endl;
+      cout << "Slave " << id << " tx: took " << clear_count << " writes to reset status." << endl;
 
    int tx_read_cnt;
    for (int i=0; i<repeat; i++)
    {
       write_tx_payload(buff, sizeof(buff), (const char*)ensemble::slave_addr[id], ack);
 
-      for(tx_read_cnt=0; tx_read_cnt<200; tx_read_cnt++)
+      // It looks like for 1 retry, 400 us
+      // 2 retries 600 us
+      // 3 retries 855 us
+      for(tx_read_cnt=0; tx_read_cnt<1000; tx_read_cnt++)
       {
          status = read_reg(STATUS);
          if (status & STATUS_TX_DS)
             break;
          delay_us(5);
       }
+
+      if (tx_read_cnt>35)
+         cout << "Slave " << id << " tx: tx_read_cnt=" << tx_read_cnt << endl;
 
       if (status & STATUS_MAX_RT)
       {
@@ -108,7 +114,7 @@ void Slave::tx(unsigned repeat)
       }
       else
       {
-         cout << "Slave " << id << " tx error, tx_read_count=" << tx_read_cnt << endl;
+         cout << "Slave " << id << " tx: error" << endl;
          tx_err++;
       }
 
@@ -116,14 +122,16 @@ void Slave::tx(unsigned repeat)
          delay_us(2500);
    }
 
-   tx_dt = runtime.usec() - t_tx;
-
    if (ack)
    {
       uint8_t obs_tx = read_reg(OBSERVE_TX);
       arc_cnt += 0xf & obs_tx;
       plos_cnt += 0xf & (obs_tx>>4);
    }
+
+   flush_tx();
+
+   tx_dt = runtime.usec() - t_tx;
 }
 
 
@@ -136,7 +144,10 @@ void Slave::rx(void)
    char config = read_reg(CONFIG);
    config |= CONFIG_PRIM_RX;
    write_reg(CONFIG, config); // should still be powered on
-   delay_us(1000);
+   // have been using 1500 us here with marginal results
+   // have to be careful that the master start listening prior to
+   // the slave transmitting the response.
+   delay_us(100);
    set_CE();
 
    int i;
@@ -155,9 +166,14 @@ void Slave::rx(void)
    write_reg(CONFIG, config); // should still be powered on
    clear_CE();
 
+   delay_us(100);  // Not sure this is useful...
+
+   if (i>15)
+      cout << "Slave " << id << " rx: rx_read_cnt=" << i << endl;
+
    if (i==100)
    {
-      cout << "Slave " << id << " rx error, No response after " << i << " reads." << endl;
+      cout << "Slave " << id << " rx: error " << endl;
       no_resp++;
       return;
    }
@@ -176,6 +192,7 @@ void Slave::rx(void)
    vcell = 1e-3 * _vcell;
    rx_dt = t_rx - t_tx;
    slave_dt = t_ping - t_rx/1000;
+
 }
 
 
@@ -258,19 +275,30 @@ std::ostream& operator<<(std::ostream& s, const Slave& slave)
      << fixed << setprecision(3)
      << "  " << setw(8) << 1e-6*slave.t_tx
      << "  " << setw(6) << 1e-3*slave.tx_dt
-     << "  " << setw(3) << slave.tx_err
-     << "  " << setw(8) << 1e-6*slave.t_rx
-     << "  " << setw(8) << 1e-3*slave.rx_dt
-     << "  " << setw(4) << slave.no_resp
-     << "    " << slave.version
-     << "  " << setw(6) << setprecision(3) << slave.vcell
-     << "   " << setw(5) << setprecision(2) << slave.soc
-     << "  " << setw(5) << slave.mmc
-     << "  " << setw(4) << slave.slave_dt
-     << "  " << setw(4) << slave.nack_cnt
+     << "  " << setw(3) << slave.tx_err;
+   if (slave.t_rx)
+     s << "  "   << setw(8) << 1e-6*slave.t_rx
+       << "  "   << setw(8) << 1e-3*slave.rx_dt
+       << "  "   << setw(4) << slave.no_resp
+       << "    " << setw(3) << slave.version
+       << "  "   << setw(6) << setprecision(3) << slave.vcell
+       << "   "  << setw(5) << setprecision(2) << slave.soc
+       << "  "   << setw(5) << slave.mmc
+       << "  "   << setw(4) << slave.slave_dt;
+   else
+     s << "  "   << setw(8) << "-"
+       << "  "   << setw(8) << "-"
+       << "  "   << setw(4) << "-"
+       << "    " << setw(3) << "-"
+       << "  "   << setw(6) << "-"
+       << "   "  << setw(5) << "-"
+       << "  "   << setw(5) << "-"
+       << "  "   << setw(4) << "-";
+   s << "  " << setw(4) << slave.nack_cnt
      << "  " << setw(4) << slave.arc_cnt;
    return s;
 }
+
 
 string trim(const string& str, const string& whitespace = " \t")
 {
@@ -280,6 +308,7 @@ string trim(const string& str, const string& whitespace = " \t")
    size_t j = str.find_last_not_of(whitespace);
    return str.substr(i, j-i+1);
 }
+
 
 SlaveList read_slaves(const std::string filename)
 {

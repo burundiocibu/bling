@@ -161,6 +161,7 @@ void do_ping(uint8_t* buff, uint8_t pipe)
    tlc[2] = avr_tlc5940::get_channel(2);
    messages::encode_status((uint8_t*)&iobuff[1], slave_id, t_rx, major_version, minor_version,
                            vcell, soc, tlc);
+   delay_us(250); // give the master a chance to get ready to receive this packet...
    write_data(iobuff, ensemble::message_size+1);
 
    set_CE();

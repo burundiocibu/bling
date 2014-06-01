@@ -35,6 +35,16 @@ int main(int argc, char **argv)
             exit(-1);
       }
 
+   // lock this process into memory
+   if (true)
+   {
+      struct sched_param sp;
+      memset(&sp, 0, sizeof(sp));
+      sp.sched_priority = sched_get_priority_max(SCHED_FIFO);
+      sched_setscheduler(0, SCHED_FIFO, &sp);
+      mlockall(MCL_CURRENT | MCL_FUTURE);
+   }
+
    nRF24L01::channel = ensemble::default_channel;
    memcpy(nRF24L01::master_addr,    ensemble::master_addr,   nRF24L01::addr_len);
    memcpy(nRF24L01::broadcast_addr, ensemble::slave_addr[0], nRF24L01::addr_len);
@@ -53,23 +63,33 @@ int main(int argc, char **argv)
 
    Slave broadcast(0);
    Slave slave(slave_id);
+
+   // Reset all the slaves, and give them a chance to come back up
+   broadcast.reboot();
+   bcm2835_delayMicroseconds(100000);
+
    cout << broadcast.stream_header << endl;
 
+   long t_hb=-1000, t_ping=-1000;
    while (true)
    {
+      long t=runtime.sec();
+
       // Send out heartbeat ever second
-      if (runtime.usec() - broadcast.t_tx > 999000)
+      if (t != t_hb)
       {
          broadcast.heartbeat();
          if (debug)
             cout << broadcast << endl;
+         t_hb=t;
       }
 
       // Ping slave every 5 seconds
-      if (runtime.usec() - slave.t_tx > 4999000)
+      if (t - t_ping >= 5)
       {
          slave.ping();
          cout << slave << endl;
+         t_ping = t;
       }
 
       char key = getch();
@@ -81,35 +101,9 @@ int main(int argc, char **argv)
          // sleep 10 ms
          bcm2835_delayMicroseconds(10000);
          continue;
-      }
+      } else
+         cout << "ch:" << key << endl;
 
-      cout << endl;
-
-      switch(key)
-      {
-         case 'w':
-            slave.slide_pwm(1);
-            slave.set_pwm();
-            break;
-
-         case 'W':
-            slave.slide_pwm(-1);
-            slave.set_pwm();
-            break;
-
-         case 'p':
-            slave.ping();
-            break;
-
-         case 'x':
-            slave.all_stop();
-            break;
-
-         case 'z':
-            slave.reboot();
-            break;
-      }
-      cout << slave << endl;
    }
 
    nRF24L01::shutdown();

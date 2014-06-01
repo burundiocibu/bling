@@ -91,6 +91,11 @@ int main(int argc, char **argv)
    broadcast.header_output=true;
    mvprintw(0, 0, broadcast.stream_header.c_str());
 
+   // Reset all the slaves, and give them a chance to come back up
+   broadcast.reboot();
+   bcm2835_delayMicroseconds(100000);
+
+   unsigned long t_hb=0, t_ping=0;
    while (true)
    {
       // A simple throbber
@@ -99,17 +104,20 @@ int main(int argc, char **argv)
       mvprintw(24, 0, ">");
 
       // Send out heartbeat ever second
-      if (runtime.usec() - broadcast.t_tx > 999000)
+      unsigned long t=runtime.sec();
+      if (t != t_hb)
       {
          broadcast.heartbeat();
          display(broadcast);
+         t_hb=t;
       }
 
       // Ping slave every 5 seconds
-      if (runtime.usec() - slave.t_tx > 4999000)
+      if (t - t_ping >= 5)
       {
          slave.ping();
          display(slave);
+         t_ping = t;
       }
 
       char key = getch();
