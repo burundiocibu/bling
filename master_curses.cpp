@@ -23,7 +23,7 @@ void display(const Slave& slave)
    ostringstream ss;
    ss << slave;
    mvprintw(1+slave.my_count, 0, ss.str().c_str());
-   printw("   pwm:%03x %03x %03x", slave.pwm[0], slave.pwm[1], slave.pwm[2]);
+   printw("   pwm:%03x %03x %03x", slave.tlc[0], slave.tlc[1], slave.tlc[2]);
    mvprintw(24, 0, ">");
 }
 

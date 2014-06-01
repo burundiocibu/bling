@@ -38,6 +38,7 @@ public:
    std::string student_name;
 
    std::vector<uint16_t> pwm;
+   uint16_t tlc[3];  // Used to store what the slave reports as being the channel values...
    static unsigned slave_count;  // A count of the total number of Slave objects created
    static bool header_output;    // Has the header line only go out once
    unsigned my_count;

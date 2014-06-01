@@ -417,9 +417,10 @@ bool Flasher::nrf_rx(void)
    uint16_t slave_id, missed_message_count, vcell, soc;
    uint8_t msg_id, freshness_count;
    int8_t major_version, minor_version;
+   uint16_t tlc[3];
 
    msg::decode_status(buff+1, slave_id, t_rx, major_version, minor_version,
-                      vcell, soc, missed_message_count, freshness_count);
+                      vcell, soc, missed_message_count, freshness_count, tlc);
 
    rx_vcell = 1e-3 * vcell;
    rx_soc = int(0xff & (soc >> 8));

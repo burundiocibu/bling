@@ -35,6 +35,8 @@ Slave::Slave(unsigned _id, const string& _drill_id, const string& _student_name)
    if (id >= ensemble::num_slaves)
       cout << "Invalid slave " << id << endl;
 
+   for (int i=0; i<3; i++) tlc[i]=0;
+
    stream_header =   "id     #     t_tx    tx_dt   err    t_rx      rx_dt    NR    ver   Vcell     SOC    MMC    dt   nac   arc ";
 
    ack = id != 0;
@@ -167,7 +169,7 @@ void Slave::rx(void)
    int8_t major, minor;
 
    msg::decode_status(buff, slave_id, t_ping, major, minor,
-                      _vcell, _soc, mmc, freshness_count);
+                      _vcell, _soc, mmc, freshness_count, tlc);
    version = std::to_string(major) + "." + std::to_string(minor);
    soc = 0xff & (_soc >> 8);
    soc += (0xff & _soc) / 256.0;

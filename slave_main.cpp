@@ -155,8 +155,12 @@ void do_ping(uint8_t* buff, uint8_t pipe)
    // delay_us(150);
    // above delay not required because the I2C reads will take much longer than that.
    iobuff[0] = W_TX_PAYLOAD;
+   uint16_t tlc[3];
+   tlc[0] = avr_tlc5940::get_channel(0);
+   tlc[1] = avr_tlc5940::get_channel(1);
+   tlc[2] = avr_tlc5940::get_channel(2);
    messages::encode_status((uint8_t*)&iobuff[1], slave_id, t_rx, major_version, minor_version,
-                           vcell, soc);
+                           vcell, soc, tlc);
    write_data(iobuff, ensemble::message_size+1);
 
    set_CE();

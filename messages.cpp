@@ -99,9 +99,10 @@ namespace messages
 
    // ========================================
    // Note that this message doesn't get a freshness count since it generally goes in the 'oppisite'
-   // direction.
+   // direction. Also need to manually make sure that this messages isn't longer than the
+   // max message length.  Through the tlc2 value is 21 bytes
    void encode_status(uint8_t* p, uint16_t slave_id, uint32_t t_rx, int8_t major_version, int8_t minor_version,
-                      uint16_t vcell, uint16_t soc)
+                      uint16_t vcell, uint16_t soc, uint16_t tlc[])
    {
       memset(p, 0, ensemble::message_size);
       *p++ = status_id;
@@ -113,10 +114,13 @@ namespace messages
       p = messages::encode_var<uint16_t>(p, soc);
       p = messages::encode_var<uint16_t>(p, missed_message_count);
       *p++ = freshness_count;
+      p = messages::encode_var<uint16_t>(p, tlc[0]);
+      p = messages::encode_var<uint16_t>(p, tlc[1]);
+      p = messages::encode_var<uint16_t>(p, tlc[2]);
    }
 
    void decode_status(uint8_t* p, uint16_t &slave_id, uint32_t &t_rx, int8_t &major_version, int8_t &minor_version,
-                      uint16_t &vcell, uint16_t &soc, uint16_t &mmc, uint8_t &fc)
+                      uint16_t &vcell, uint16_t &soc, uint16_t &mmc, uint8_t &fc, uint16_t tlc[])
    {
       p++; // throw away the message id
       p = messages::decode_var<uint16_t>(p, slave_id);
@@ -127,6 +131,9 @@ namespace messages
       p = messages::decode_var<uint16_t>(p, soc);
       p = messages::decode_var<uint16_t>(p, mmc);
       fc = *p++;
+      p = messages::decode_var<uint16_t>(p, tlc[0]);
+      p = messages::decode_var<uint16_t>(p, tlc[1]);
+      p = messages::decode_var<uint16_t>(p, tlc[2]);
    }
 
 

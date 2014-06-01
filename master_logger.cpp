@@ -25,13 +25,13 @@ int main(int argc, char **argv)
    opterr = 0;
    int c;
    unsigned slave_id=0;
-   while ((c = getopt(argc, argv, "di:s:")) != -1)
+   while ((c = getopt(argc, argv, "ds:")) != -1)
       switch (c)
       {
          case 'd': debug++; break;
          case 's': slave_id = atoi(optarg); break;
          default:
-            printf("Usage %s -i fn -s slave_id [-d]\n", argv[0]);
+            printf("Usage %s -s slave_id [-d]\n", argv[0]);
             exit(-1);
       }
 

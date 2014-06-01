@@ -43,9 +43,10 @@ namespace messages
    void decode_start_effect(uint8_t* p, uint8_t &effect_id, uint32_t &start_time, uint32_t &duration);
 
    void decode_status(uint8_t* p, uint16_t &slave_id, uint32_t &t_rx, int8_t &major_version, int8_t &minor_version,
-                      uint16_t &vcell, uint16_t &soc, uint16_t &missed_message_count, uint8_t &freshness_count);
+                      uint16_t &vcell, uint16_t &soc, uint16_t &missed_message_count, uint8_t &freshness_count,
+                      uint16_t tlc[]);
    void encode_status(uint8_t* p, uint16_t slave_id, uint32_t t_rx, int8_t major_version, int8_t minor_version,
-                      uint16_t vcell, uint16_t soc);
+                      uint16_t vcell, uint16_t soc, uint16_t tlc[]);
 
    void encode_ping(uint8_t* p);
    void decode_ping(uint8_t* p);
