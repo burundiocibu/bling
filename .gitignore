@@ -19,7 +19,6 @@ master_loader
 show
 get_param
 master_test
-master_blaster
-checkBatt
-parseNames
+master_logger
 flash_list
+Effect_sets.hpp
