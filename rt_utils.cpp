@@ -11,7 +11,7 @@ RunTime::RunTime()
    {
       initialized=true;
       gettimeofday(&tv0, NULL);
-      step(2140000);
+      // step(2140000); // to help test rollovers
    }
 }
 
