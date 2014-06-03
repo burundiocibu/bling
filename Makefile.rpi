@@ -1,5 +1,9 @@
+# Local Variables:
+# mode: makefile
+# End:
+
 CPPFLAGS+=-std=c++0x
-ALL_BIN=master_curses master_logger master_loader show get_param flash_list
+ALL_BIN=master_curses master_logger master_scan master_loader show get_param flash_list
 
 
 all: $(ALL_BIN)
@@ -19,6 +23,9 @@ tx-test: tx-test.o rt_utils.o nrf24l01.o messages.o
 
 master_curses: LDLIBS+=-lbcm2835 -lstdc++ -lncurses -lm
 master_curses: master_curses.o rt_utils.o nrf24l01.o messages.o Slave.o
+
+master_scan: LDLIBS+=-lbcm2835 -lstdc++ -lncurses -lm
+master_scan: master_scan.o rt_utils.o nrf24l01.o messages.o Slave.o
 
 master_logger: LDLIBS+=-lbcm2835 -lstdc++ -lncurses -lm
 master_logger: master_logger.o rt_utils.o nrf24l01.o messages.o Slave.o

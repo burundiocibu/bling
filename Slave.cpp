@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <map>
 
 #include <bcm2835.h>
 
@@ -16,11 +17,12 @@
 
 extern RunTime runtime;
 
-unsigned Slave::slave_count = 0;
-bool Slave::header_output = false;
-
 namespace msg=messages;
 using namespace std;
+
+
+unsigned Slave::slave_count = 0;
+string Slave::stream_header("id     #     t_tx    tx_dt   err    t_rx      rx_dt    NR    ver   Vcell      SOC    MMC    dt   nac   arc ");
 
 Slave::Slave(unsigned _id, const string& _drill_id, const string& _student_name)
    : id(_id), my_count(slave_count++), pwm(15),
@@ -37,8 +39,6 @@ Slave::Slave(unsigned _id, const string& _drill_id, const string& _student_name)
 
    for (int i=0; i<3; i++) tlc[i]=0;
 
-   stream_header =   "id     #     t_tx    tx_dt   err    t_rx      rx_dt    NR    ver   Vcell     SOC    MMC    dt   nac   arc ";
-
    ack = id != 0;
 };
 
@@ -54,11 +54,13 @@ bool Slave::operator<(const Slave& slave) const
    return this->id < slave.id;
 }
 
-
-void Slave::tx(unsigned repeat)
+// Across this whole routine (i.e. dt_tx at the end), I see
+// a delay of about 360 us for an tx that does not request
+// ACK. Returns false if there was an ack requested and none was received.
+int Slave::tx(unsigned repeat)
 {
    using namespace nRF24L01;
-
+   int rc=0;
    tx_cnt++;
    t_tx = runtime.usec();
 
@@ -70,11 +72,13 @@ void Slave::tx(unsigned repeat)
       write_reg(STATUS, 0xf0);
       delay_us(10);
    }
+
    if (clear_count == 100)
    {
       cout << "Slave " << id << " tx: could not clear status of nrf." << endl;
       tx_err++;
-      return;
+      rc=3;
+      return rc;
    }
    else if (clear_count)
       cout << "Slave " << id << " tx: took " << clear_count << " writes to reset status." << endl;
@@ -84,10 +88,10 @@ void Slave::tx(unsigned repeat)
    {
       write_tx_payload(buff, sizeof(buff), (const char*)ensemble::slave_addr[id], ack);
 
-      // It looks like for 1 retry, 400 us
-      // 2 retries 600 us
-      // 3 retries 855 us
-      for(tx_read_cnt=0; tx_read_cnt<1000; tx_read_cnt++)
+      // It looks like for 1 retry, 400 us (> ~80 counts)
+      // 2 retries 600 us (>~120 counts)
+      // 3 retries 855 us (> ~170 counts)
+      for(tx_read_cnt=0; tx_read_cnt<300; tx_read_cnt++)
       {
          status = read_reg(STATUS);
          if (status & STATUS_TX_DS)
@@ -95,26 +99,27 @@ void Slave::tx(unsigned repeat)
          delay_us(5);
       }
 
-      if (tx_read_cnt>35)
+      if (false && tx_read_cnt>85)
          cout << "Slave " << id << " tx: tx_read_cnt=" << tx_read_cnt << endl;
 
       if (status & STATUS_MAX_RT)
       {
          nack_cnt++;
+         rc=2;
          write_reg(STATUS, STATUS_MAX_RT);
          // data doesn't get automatically removed...
          flush_tx();
       }
       else if (status & STATUS_TX_DS)
       {
-         write_reg(STATUS, STATUS_TX_DS); //Clear the data sent notice
+         write_reg(STATUS, STATUS_TX_DS); // Clear the data sent notice
          // No need to resend if we get an ack...
          if (ack)
             break;
       }
       else
       {
-         cout << "Slave " << id << " tx: error" << endl;
+         rc=1;
          tx_err++;
       }
 
@@ -132,10 +137,11 @@ void Slave::tx(unsigned repeat)
    flush_tx();
 
    tx_dt = runtime.usec() - t_tx;
+   return rc;
 }
 
 
-void Slave::rx(void)
+int Slave::rx(void)
 {
    using namespace nRF24L01;
 
@@ -168,14 +174,15 @@ void Slave::rx(void)
 
    delay_us(100);  // Not sure this is useful...
 
-   if (i>15)
+   if (false && i>15)
       cout << "Slave " << id << " rx: rx_read_cnt=" << i << endl;
 
    if (i==100)
    {
-      cout << "Slave " << id << " rx: error " << endl;
+      if (false)
+         cout << "Slave " << id << " rx: error " << endl;
       no_resp++;
-      return;
+      return 1;
    }
 
    t_rx = runtime.usec();
@@ -193,6 +200,7 @@ void Slave::rx(void)
    rx_dt = t_rx - t_tx;
    slave_dt = t_ping - t_rx/1000;
 
+   return 0;
 }
 
 
@@ -203,11 +211,13 @@ void Slave::heartbeat(unsigned repeat)
 }
 
 
-void Slave::ping(unsigned repeat)
+int Slave::ping(unsigned repeat)
 {
    msg::encode_ping(buff);
-   tx(repeat);
-   rx();
+   int rc = tx(repeat);
+   if (rc)
+      return rc;
+   return rx();
 }
 
 void Slave::all_stop(unsigned repeat)
@@ -282,7 +292,7 @@ std::ostream& operator<<(std::ostream& s, const Slave& slave)
        << "  "   << setw(4) << slave.no_resp
        << "    " << setw(3) << slave.version
        << "  "   << setw(6) << setprecision(3) << slave.vcell
-       << "   "  << setw(5) << setprecision(2) << slave.soc
+       << "   "  << setw(6) << setprecision(2) << slave.soc
        << "  "   << setw(5) << slave.mmc
        << "  "   << setw(4) << slave.slave_dt;
    else
@@ -291,7 +301,7 @@ std::ostream& operator<<(std::ostream& s, const Slave& slave)
        << "  "   << setw(4) << "-"
        << "    " << setw(3) << "-"
        << "  "   << setw(6) << "-"
-       << "   "  << setw(5) << "-"
+       << "   "  << setw(6) << "-"
        << "  "   << setw(5) << "-"
        << "  "   << setw(4) << "-";
    s << "  " << setw(4) << slave.nack_cnt
@@ -299,6 +309,28 @@ std::ostream& operator<<(std::ostream& s, const Slave& slave)
    return s;
 }
 
+ostream& operator<<(ostream& s, const SlaveList& slave_list)
+{
+   map<string, Slave> sm;
+
+   list<Slave>::const_iterator j;
+   for (j=slave_list.begin(); j != slave_list.end(); j++)
+      sm[j->drill_id] = *j;
+
+   if (sm.size())
+   {
+      map<string, Slave>::const_iterator i;
+      for (i=sm.begin(); i != sm.end(); i++)
+         cout << left << setw(3) << i->second.id << "  " << setw(3) << i->second.version
+              << right << fixed
+              << "  " << setw(6) << setprecision(3) << i->second.vcell << "V"
+              << "  " << setw(5) << setprecision(2) << i->second.soc << "%"
+              << "  " << i->second.student_name
+              << endl;
+   }
+
+   return s;
+}
 
 string trim(const string& str, const string& whitespace = " \t")
 {
@@ -329,3 +361,4 @@ SlaveList read_slaves(const std::string filename)
    }
    return slaves;
 }
+

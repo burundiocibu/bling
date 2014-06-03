@@ -40,29 +40,6 @@
 
 using namespace std;
 
-ostream& operator<<(ostream& s, const list<Slave>& slave_list)
-{
-   map<string, Slave> sm;
-
-   list<Slave>::const_iterator j;
-   for (j=slave_list.begin(); j != slave_list.end(); j++)
-      sm[j->drill_id] = *j;
-
-   if (sm.size())
-   {
-      map<string, Slave>::const_iterator i;
-      for (i=sm.begin(); i != sm.end(); i++)
-         cout << left << setw(3) << i->second.id << "  " << setw(3) << i->second.version
-              << right << fixed
-              << "  " << setw(6) << setprecision(3) << i->second.vcell << "V"
-              << "  " << setw(5) << setprecision(2) << i->second.soc << "%"
-              << "  " << i->second.student_name
-              << endl;
-   }
-
-   return s;
-}
-
 void prog_list(list<Slave> todo, string fn, string version, int debug);
 void ping_list(list<Slave> todo, int debug);
 

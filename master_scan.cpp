@@ -36,19 +36,17 @@ int main(int argc, char **argv)
 
    opterr = 0;
    int c;
-   unsigned slave_id=0;
    while ((c = getopt(argc, argv, "di:s:")) != -1)
       switch (c)
       {
          case 'd': debug++; break;
-         case 's': slave_id = atoi(optarg); break;
          default:
-            printf("Usage %s -i fn -s slave_id [-d]\n", argv[0]);
+            printf("Usage %s [-d]\n", argv[0]);
             exit(-1);
       }
 
    // lock this process into memory
-   if (false)
+   if (true)
    {
       struct sched_param sp;
       memset(&sp, 0, sizeof(sp));
@@ -56,18 +54,6 @@ int main(int argc, char **argv)
       sched_setscheduler(0, SCHED_FIFO, &sp);
       mlockall(MCL_CURRENT | MCL_FUTURE);
    }
-
-   WINDOW *win;
-   int prev_curs;
-
-   win = initscr();
-   cbreak();
-   nodelay(win, true);
-   noecho();
-   nonl();
-   intrflush(win, true);
-   keypad(win, true);
-   prev_curs = ::curs_set(0);   // we want an invisible cursor.
 
    nRF24L01::channel = ensemble::default_channel;
    memcpy(nRF24L01::master_addr,    ensemble::master_addr,   nRF24L01::addr_len);
@@ -86,78 +72,50 @@ int main(int argc, char **argv)
 
 
    Slave broadcast(0);
-   Slave slave(slave_id);
-
-   mvprintw(0, 0, Slave::stream_header.c_str());
+   SlaveList ship, found;
 
    // Reset all the slaves, and give them a chance to come back up
    broadcast.reboot();
    bcm2835_delayMicroseconds(100000);
 
-   long t_hb=-1000, t_ping=-1000;
-   while (true)
+   SlaveList todo, done, all;
+
+   for (int id=1; id < ensemble::num_slaves; id++)
+      todo.push_back(Slave(id));
+
+   SlaveList::iterator i;
+   for (int pass=1; todo.size() > 0 && pass < 10; pass++)
    {
-      // A simple throbber
-      if (runtime.msec() % 1000 < 250) mvprintw(0, 7, "#");
-      else                             mvprintw(0, 7, "_");
-      mvprintw(24, 0, ">");
-
-      // Send out heartbeat ever second
-      unsigned long t=runtime.sec();
-      if (t != t_hb)
+      cout << "Pass " << pass << " " << 1e-6*runtime.usec() << " " << endl;
+      for (i = todo.begin(); i != todo.end(); )
       {
-         broadcast.heartbeat();
-         display(broadcast);
-         t_hb=t;
+         if (i->ping() == 0)
+         {
+            done.push_back(*i);
+            cout << "." << flush;
+            i = todo.erase(i);
+         }
+         else
+         {
+            cout << "x" << flush;
+            i++;
+         }
       }
 
-      // Ping slave every 5 seconds
-      if (t - t_ping >= 5)
-      {
-         slave.ping();
-         display(slave);
-         t_ping = t;
-      }
-
-      char key = getch();
-      if (key=='q')
-         break;
-
-      if (key == 0xff)
-      {
-         // sleep 10 ms
-         bcm2835_delayMicroseconds(10000);
-         continue;
-      }
-
-      switch(key)
-      {
-         case 'w':
-            slave.slide_pwm(1);
-            slave.set_pwm();
-            break;
-
-         case 'W':
-            slave.slide_pwm(-1);
-            slave.set_pwm();
-            break;
-
-         case 'p':
-            slave.ping();
-            break;
-
-         case 'x':
-            slave.all_stop();
-            break;
-
-         case 'z':
-            slave.reboot();
-            break;
-      }
-      display(slave);
+      cout << endl;
+      if (todo.size())
+         sleep(1);
    }
 
+   cout << "Done" << endl
+        << endl
+        << "Responded:" << endl
+        << done << endl;
+
+   if (debug>2)
+      cout << "No response:" << endl
+           << todo << endl;
+
    nRF24L01::shutdown();
-   endwin();
    return 0;
 }

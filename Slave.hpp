@@ -20,18 +20,19 @@ public:
    void slide_pwm_ch(unsigned ch, int dir);
    void slide_pwm(int dir);
 
-   void tx(unsigned repeat);
-   void rx();
+   // Returns zero for no known errors
+   int tx(unsigned repeat);
+   int rx();
 
    // The following are higher level comands to the slaves
    // repeat indicates how many times the command will be sent
-   void ping(unsigned repeat=1);
+   int ping(unsigned repeat=1);
    void heartbeat(unsigned repeat=1);
    void all_stop(unsigned repeat=1);
    void reboot(unsigned repeat=1);
    void set_pwm(unsigned repeat=1);
 
-   std::string stream_header;
+   static std::string stream_header;
 
    unsigned id;
    std::string drill_id;
@@ -40,7 +41,6 @@ public:
    std::vector<uint16_t> pwm;
    uint16_t tlc[3];  // Used to store what the slave reports as being the channel values...
    static unsigned slave_count;  // A count of the total number of Slave objects created
-   static bool header_output;    // Has the header line only go out once
    unsigned my_count;
    bool ack; // whether to request acks on the messages to this slave
 
@@ -69,6 +69,6 @@ typedef std::list<Slave> SlaveList;
 SlaveList read_slaves(const std::string filename);
 
 std::ostream& operator<<(std::ostream& s, const Slave& slave);
-
+std::ostream& operator<<(std::ostream& s, const SlaveList& slave_list);
 
 #endif
