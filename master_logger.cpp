@@ -61,10 +61,13 @@ int main(int argc, char **argv)
    nRF24L01::flush_tx();
 
 
-   Slave broadcast(0);
-   Slave slave(slave_id);
+   SlaveList todo;
+   for (int id=1; id < ensemble::num_slaves; id++)
+      todo.push_back(Slave(id));
+   SlaveList found = scan(todo);
 
    // Reset all the slaves, and give them a chance to come back up
+   Slave broadcast(0);
    broadcast.reboot();
    bcm2835_delayMicroseconds(100000);
 
@@ -87,8 +90,11 @@ int main(int argc, char **argv)
       // Ping slave every 5 seconds
       if (t - t_ping >= 5)
       {
-         slave.ping();
-         cout << slave << endl;
+         for (auto i=found.begin(); i!=found.end(); i++)
+         {
+            i->ping();
+            cout << *i << endl;
+         }
          t_ping = t;
       }
 
