@@ -21,11 +21,10 @@ namespace msg=messages;
 using namespace std;
 
 
-unsigned Slave::slave_count = 0;
 string Slave::stream_header("id     #     t_tx    tx_dt   err    t_rx      rx_dt    NR    ver   Vcell      SOC    MMC    dt   nac   arc ");
 
 Slave::Slave(unsigned _id, const string& _drill_id, const string& _student_name)
-   : id(_id), my_count(slave_count++), pwm(15),
+   : id(_id), my_line(0), pwm(15),
      drill_id(_drill_id), student_name(_student_name),
      tx_cnt(0), tx_err(0), nack_cnt(0),
      no_resp(0), tx_dt(0), rx_dt(0),
@@ -309,7 +308,8 @@ std::ostream& operator<<(std::ostream& s, const Slave& slave)
    return s;
 }
 
-ostream& operator<<(ostream& s, const SlaveList& slave_list)
+
+void sort_by_dril_id(SlaveList& slave_list)
 {
    map<string, Slave> sm;
 
@@ -317,18 +317,23 @@ ostream& operator<<(ostream& s, const SlaveList& slave_list)
    for (j=slave_list.begin(); j != slave_list.end(); j++)
       sm[j->drill_id] = *j;
 
-   if (sm.size())
-   {
-      map<string, Slave>::const_iterator i;
-      for (i=sm.begin(); i != sm.end(); i++)
-         cout << left << setw(3) << i->second.id << "  " << setw(3) << i->second.version
-              << right << fixed
-              << "  " << setw(6) << setprecision(3) << i->second.vcell << "V"
-              << "  " << setw(5) << setprecision(2) << i->second.soc << "%"
-              << "  " << i->second.student_name
-              << endl;
-   }
+   slave_list.clear();
+   map<string, Slave>::const_iterator i;
+   for (i=sm.begin(); i != sm.end(); i++)
+      slave_list.push_back(i->second);
+}
 
+
+ostream& operator<<(ostream& s, const SlaveList& slave_list)
+{
+   if (slave_list.size())
+      for (auto i=slave_list.begin(); i != slave_list.end(); i++)
+         s << left << setw(3) << i->id << "  " << setw(3) << i->version
+           << right << fixed
+           << "  " << setw(6) << setprecision(3) << i->vcell << "V"
+           << "  " << setw(5) << setprecision(2) << i->soc << "%"
+           << "  " << i->student_name
+           << endl;
    return s;
 }
 
@@ -362,3 +367,29 @@ SlaveList read_slaves(const std::string filename)
    return slaves;
 }
 
+
+SlaveList scan(SlaveList& slave_list, int tries)
+{
+   SlaveList found;
+   for (int pass=0; slave_list.size() > 0 && pass < tries; pass++)
+   {
+      //cout << "Pass " << pass << " " << 1e-6*runtime.usec() << " " << endl;
+      for (auto i = slave_list.begin(); i != slave_list.end(); )
+      {
+         if (i->ping() == 0)
+         {
+            found.push_back(*i);
+            //cout << "." << flush;
+            i = slave_list.erase(i);
+         }
+         else
+         {
+            // cout << "x" << flush;
+            i++;
+         }
+      }
+      //cout << endl;
+   }
+
+   return found;
+}

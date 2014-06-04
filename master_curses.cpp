@@ -22,7 +22,7 @@ void display(const Slave& slave)
 {
    ostringstream ss;
    ss << slave;
-   mvprintw(1+slave.my_count, 0, ss.str().c_str());
+   mvprintw(slave.my_line, 0, ss.str().c_str());
    printw("   pwm:%03x %03x %03x", slave.tlc[0], slave.tlc[1], slave.tlc[2]);
    mvprintw(24, 0, ">");
 }
@@ -84,15 +84,21 @@ int main(int argc, char **argv)
    nRF24L01::configure_PTX();
    nRF24L01::flush_tx();
 
-
-   Slave broadcast(0);
-   Slave slave(slave_id);
-
    mvprintw(0, 0, Slave::stream_header.c_str());
 
    // Reset all the slaves, and give them a chance to come back up
+   Slave broadcast(0);
+   broadcast.my_line=1;
    broadcast.reboot();
    bcm2835_delayMicroseconds(100000);
+
+   SlaveList todo;
+   for (int id=1; id < ensemble::num_slaves; id++)
+      todo.push_back(Slave(id));
+   SlaveList found = scan(todo);
+   int line = 2;
+   for (auto i = found.begin(); i != found.end(); i++)
+      i->my_line = line++;
 
    long t_hb=-1000, t_ping=-1000;
    while (true)
@@ -114,8 +120,11 @@ int main(int argc, char **argv)
       // Ping slave every 5 seconds
       if (t - t_ping >= 5)
       {
-         slave.ping();
-         display(slave);
+         for (auto i=found.begin(); i!=found.end(); i++)
+         {
+            i->ping();
+            display(*i);
+         }
          t_ping = t;
       }
 
@@ -130,31 +139,35 @@ int main(int argc, char **argv)
          continue;
       }
 
-      switch(key)
+      for (auto i=found.begin(); i!=found.end(); i++)
       {
-         case 'w':
-            slave.slide_pwm(1);
-            slave.set_pwm();
-            break;
+         Slave& slave(*i);
+         switch(key)
+         {
+            case 'w':
+               slave.slide_pwm(1);
+               slave.set_pwm();
+               break;
 
-         case 'W':
-            slave.slide_pwm(-1);
-            slave.set_pwm();
-            break;
+            case 'W':
+               slave.slide_pwm(-1);
+               slave.set_pwm();
+               break;
 
-         case 'p':
-            slave.ping();
-            break;
+            case 'p':
+               slave.ping();
+               break;
 
-         case 'x':
-            slave.all_stop();
-            break;
+            case 'x':
+               slave.all_stop();
+               break;
 
-         case 'z':
-            slave.reboot();
-            break;
+            case 'z':
+               slave.reboot();
+               break;
+         }
+         display(slave);
       }
-      display(slave);
    }
 
    nRF24L01::shutdown();

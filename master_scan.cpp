@@ -17,31 +17,24 @@ using namespace std;
 
 RunTime runtime;
 
-
-void display(const Slave& slave)
-{
-   ostringstream ss;
-   ss << slave;
-   mvprintw(1+slave.my_count, 0, ss.str().c_str());
-   printw("   pwm:%03x %03x %03x", slave.tlc[0], slave.tlc[1], slave.tlc[2]);
-   mvprintw(24, 0, ">");
-}
-
-
-int debug;
-
 int main(int argc, char **argv)
 {
    Lock lock;
 
+   int debug=0;
+
+   string list_fn;
    opterr = 0;
    int c;
-   while ((c = getopt(argc, argv, "di:s:")) != -1)
+   while ((c = getopt(argc, argv, "di:l:s:v:p")) != -1)
       switch (c)
       {
          case 'd': debug++; break;
+         case 'l': list_fn = string(optarg); break;
          default:
-            printf("Usage %s [-d]\n", argv[0]);
+            cout << "Usage " << argv[0] << " -l [slave_fn] [-d]" << endl
+                 << " -l  specifies board list file" << endl
+                 << " -d  Enable debug ouput" << endl;
             exit(-1);
       }
 
@@ -70,47 +63,21 @@ int main(int argc, char **argv)
    nRF24L01::configure_PTX();
    nRF24L01::flush_tx();
 
-
-   Slave broadcast(0);
-   SlaveList ship, found;
-
-   // Reset all the slaves, and give them a chance to come back up
-   broadcast.reboot();
-   bcm2835_delayMicroseconds(100000);
-
-   SlaveList todo, done, all;
-
-   for (int id=1; id < ensemble::num_slaves; id++)
-      todo.push_back(Slave(id));
-
-   SlaveList::iterator i;
-   for (int pass=1; todo.size() > 0 && pass < 10; pass++)
+   SlaveList todo;
+   if (list_fn.size())
    {
-      cout << "Pass " << pass << " " << 1e-6*runtime.usec() << " " << endl;
-      for (i = todo.begin(); i != todo.end(); )
-      {
-         if (i->ping() == 0)
-         {
-            done.push_back(*i);
-            cout << "." << flush;
-            i = todo.erase(i);
-         }
-         else
-         {
-            cout << "x" << flush;
-            i++;
-         }
-      }
-
-      cout << endl;
-      if (todo.size())
-         sleep(1);
+      todo = read_slaves(list_fn);
+      if (debug>2)
+         cout << list_fn << ":" << endl << todo;
    }
+   else
+      for (int id=1; id < ensemble::num_slaves; id++)
+         todo.push_back(Slave(id));
 
-   cout << "Done" << endl
-        << endl
-        << "Responded:" << endl
-        << done << endl;
+   SlaveList found = scan(todo);
+
+   cout << "Boards found:" << endl
+        << found << endl;
 
    if (debug>2)
       cout << "No response:" << endl

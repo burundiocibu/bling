@@ -40,8 +40,7 @@ public:
 
    std::vector<uint16_t> pwm;
    uint16_t tlc[3];  // Used to store what the slave reports as being the channel values...
-   static unsigned slave_count;  // A count of the total number of Slave objects created
-   unsigned my_count;
+   unsigned my_line; // Used to indicate where on screen this slave should be placed...
    bool ack; // whether to request acks on the messages to this slave
 
    unsigned long tx_cnt;
@@ -67,6 +66,7 @@ public:
 typedef std::list<Slave> SlaveList;
 
 SlaveList read_slaves(const std::string filename);
+SlaveList scan(SlaveList& slave_list, int tries=1);
 
 std::ostream& operator<<(std::ostream& s, const Slave& slave);
 std::ostream& operator<<(std::ostream& s, const SlaveList& slave_list);
