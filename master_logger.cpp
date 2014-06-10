@@ -60,18 +60,16 @@ int main(int argc, char **argv)
    nRF24L01::configure_PTX();
    nRF24L01::flush_tx();
 
-
-   SlaveList todo;
-   for (int id=1; id < ensemble::num_slaves; id++)
-      todo.push_back(Slave(id));
-   SlaveList found = scan(todo);
-
    // Reset all the slaves, and give them a chance to come back up
    Slave broadcast(0);
    broadcast.reboot();
-   bcm2835_delayMicroseconds(100000);
+   bcm2835_delayMicroseconds(50000);
 
    cout << broadcast.stream_header << endl;
+
+   SlaveList all, found;
+   for (int id=1; id < ensemble::num_slaves; id++)
+      all.push_back(Slave(id));
 
    long t_hb=-1000, t_ping=-1000;
    while (true)
@@ -81,21 +79,31 @@ int main(int argc, char **argv)
       // Send out heartbeat ever second
       if (t != t_hb)
       {
+         t_hb=t;
          broadcast.heartbeat();
          if (debug)
             cout << broadcast << endl;
-         t_hb=t;
       }
 
       // Ping slave every 5 seconds
       if (t - t_ping >= 5)
       {
+         t_ping = t;
+         if (all.size())
+         {
+            SlaveList more = scan(all);
+            if (more.size())
+            {
+               cout << "Added " << more.size() << " slaves, "
+                    << all.size() << " not found." << endl;
+               found.splice(found.end(), more);
+            }
+         }
          for (auto i=found.begin(); i!=found.end(); i++)
          {
             i->ping();
             cout << *i << endl;
          }
-         t_ping = t;
       }
 
       char key = getch();

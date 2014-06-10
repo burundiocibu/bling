@@ -23,7 +23,8 @@ void display(const Slave& slave)
    ostringstream ss;
    ss << slave;
    mvprintw(slave.my_line, 0, ss.str().c_str());
-   printw("   pwm:%03x %03x %03x", slave.tlc[0], slave.tlc[1], slave.tlc[2]);
+   if (slave.id)
+      printw("   pwm:%03x %03x %03x", slave.tlc[0], slave.tlc[1], slave.tlc[2]);
    mvprintw(24, 0, ">");
 }
 
@@ -36,14 +37,12 @@ int main(int argc, char **argv)
 
    opterr = 0;
    int c;
-   unsigned slave_id=0;
-   while ((c = getopt(argc, argv, "di:s:")) != -1)
+   while ((c = getopt(argc, argv, "d")) != -1)
       switch (c)
       {
          case 'd': debug++; break;
-         case 's': slave_id = atoi(optarg); break;
          default:
-            printf("Usage %s -i fn -s slave_id [-d]\n", argv[0]);
+            printf("Usage %s [-d]\n", argv[0]);
             exit(-1);
       }
 
@@ -92,13 +91,9 @@ int main(int argc, char **argv)
    broadcast.reboot();
    bcm2835_delayMicroseconds(100000);
 
-   SlaveList todo;
+   SlaveList all, found;
    for (int id=1; id < ensemble::num_slaves; id++)
-      todo.push_back(Slave(id));
-   SlaveList found = scan(todo);
-   int line = 2;
-   for (auto i = found.begin(); i != found.end(); i++)
-      i->my_line = line++;
+      all.push_back(Slave(id));
 
    long t_hb=-1000, t_ping=-1000;
    while (true)
@@ -112,20 +107,31 @@ int main(int argc, char **argv)
       unsigned long t=runtime.sec();
       if (t != t_hb)
       {
+         t_hb=t;
          broadcast.heartbeat();
          display(broadcast);
-         t_hb=t;
       }
 
       // Ping slave every 5 seconds
       if (t - t_ping >= 5)
       {
+         t_ping = t;
+         if (all.size())
+         {
+            SlaveList more = scan(all);
+            if (more.size())
+            {
+               found.splice(found.end(), more);
+               int line = 2;
+               for (auto i = found.begin(); i != found.end(); i++)
+                  i->my_line = line++;
+            }
+         }
          for (auto i=found.begin(); i!=found.end(); i++)
          {
             i->ping();
             display(*i);
          }
-         t_ping = t;
       }
 
       char key = getch();
@@ -139,34 +145,35 @@ int main(int argc, char **argv)
          continue;
       }
 
-      for (auto i=found.begin(); i!=found.end(); i++)
+      for (auto slave=found.begin(); slave!=found.end(); slave++)
       {
-         Slave& slave(*i);
          switch(key)
          {
             case 'w':
-               slave.slide_pwm(1);
-               slave.set_pwm();
+               slave->slide_pwm(1);
+               slave->set_pwm();
+               slave->ping();
                break;
 
             case 'W':
-               slave.slide_pwm(-1);
-               slave.set_pwm();
+               slave->slide_pwm(-1);
+               slave->set_pwm();
+               slave->ping();
                break;
 
             case 'p':
-               slave.ping();
+               slave->ping();
                break;
 
             case 'x':
-               slave.all_stop();
+               slave->all_stop();
                break;
 
             case 'z':
-               slave.reboot();
+               slave->reboot();
                break;
          }
-         display(slave);
+         display(*slave);
       }
    }
 
