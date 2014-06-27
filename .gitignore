@@ -6,6 +6,8 @@
 *.map
 *.log
 *.pyc
+*.pb.cc
+*.pb.h
 spi-time
 tx-test
 rx-test
@@ -23,3 +25,5 @@ master_logger
 flash_list
 Effect_sets.hpp
 master_scan
+master_server
+client_test
