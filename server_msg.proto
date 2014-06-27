@@ -1,0 +1,52 @@
+package bling;
+
+
+message header
+{
+   enum msg_id_type
+   {
+      GET_SLAVE_LIST = 0;
+      SLAVE_LIST = 1;
+      SET_SLAVE_TLC = 2;
+      START_EFFECT = 3;
+   }
+   required msg_id_type msg_id = 1;
+   required fixed32 len = 2;
+}
+
+message get_slave_list
+{
+   required bool scan = 1;  // Whether or not to scan for slaves or use the existing known list
+   optional uint32 tries = 2;  // How many scans to conduct before returning
+}
+
+message slave_list
+{
+   message slave_info
+   {
+      required uint32 slave_id = 1;
+      optional uint32 major_version = 2;
+      optional uint32 minor_version = 3;
+      optional uint32 t_rx = 4;
+      optional uint32 vcell = 5;
+      optional uint32 soc = 6;
+      optional uint32 mmc = 7;
+      optional uint32 fc = 8;
+      repeated uint32 tlc = 16;
+   }
+   repeated slave_info slave = 1;
+}
+
+message set_slave_tlc
+{
+   required uint32 slave_id = 1;
+   repeated uint32 tlc = 2;
+}
+
+message start_effect
+{
+   required uint32 slave_id = 1;
+   required uint32 effect_id = 2;
+   required uint32 start_time = 3;
+   required uint32 duration = 4;
+}

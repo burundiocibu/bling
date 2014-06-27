@@ -48,10 +48,18 @@ flash_list: flash_list.o Slave.o rt_utils.o nrf24l01.o messages.o Flasher.o
 show:  LDLIBS+=-lbcm2835 -lstdc++
 show: show.o rt_utils.o nrf24l01.o messages.o i2c.o lcd_plate.o
 
-#=================================================================
+#==============================================================
 # This is a helper program that runs on the local machine. It is
 # used with the slave_init.sh script
 get_param: get_param.cpp ensemble.hpp nrf_boot.h
 	gcc -o $@ $?
-#=================================================================
+#==============================================================
 
+client_asio_test: client_asio_test.cpp
+	cc -o $@ -lboost_system -lstdc++ $?
+
+master_server: master_server.cpp
+	cc -o $@ -lboost_system -lstdc++ $?
+
+client_test: client_test.cpp
+	cc -o $@ -l boost_system -lstdc++ $?

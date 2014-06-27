@@ -1,57 +1,90 @@
-//
-// client.cpp
-// ~~~~~~~~~~
-//
-// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
-//
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-//
-
+#include <cstdlib>
+#include <string>
+#include <cstring>
 #include <iostream>
-#include <boost/array.hpp>
 #include <boost/asio.hpp>
+
+#include "server_msg.pb.h"
+#include "pb_helpers.hpp"
 
 using boost::asio::ip::tcp;
 
 int main(int argc, char* argv[])
 {
-  try
-  {
-    if (argc != 2)
-    {
-      std::cerr << "Usage: client <host>" << std::endl;
-      return 1;
-    }
+   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-    boost::asio::io_service io_service;
+   using namespace std; // For strlen.
+   try
+   {
+      if (argc != 3)
+      {
+         std::cerr << "Usage: blocking_tcp_echo_client <host> <port>\n";
+         return 1;
+      }
 
-    tcp::resolver resolver(io_service);
-    tcp::resolver::query query(argv[1], "daytime");
-    tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+      boost::asio::io_service io_service;
 
-    tcp::socket socket(io_service);
-    boost::asio::connect(socket, endpoint_iterator);
+      tcp::resolver resolver(io_service);
+      tcp::resolver::query query(tcp::v4(), argv[1], argv[2]);
+      tcp::resolver::iterator iterator = resolver.resolve(query);
 
-    for (;;)
-    {
-      boost::array<char, 128> buf;
-      boost::system::error_code error;
+      tcp::socket s(io_service);
+      boost::asio::connect(s, iterator);
 
-      size_t len = socket.read_some(boost::asio::buffer(buf), error);
+      while (true)
+      {
+         cout << "Enter message: ";
+	 string msg;
+	 getline(cin, msg);
 
-      if (error == boost::asio::error::eof)
-        break; // Connection closed cleanly by peer.
-      else if (error)
-        throw boost::system::system_error(error); // Some other error.
+         if (msg == "list")
+         {
+            bling::get_slave_list gsl;
+            gsl.set_scan(true);
+            gsl.set_tries(2);
+            write_message(s, gsl);
 
-      std::cout.write(buf.data(), len);
-    }
-  }
-  catch (std::exception& e)
-  {
-    std::cerr << e.what() << std::endl;
-  }
+            bling::slave_list sl;
+            if (read_message(s, sl))
+               cout << sl.DebugString() << endl;
+         }
+         else if (msg == "on")
+         {
+            bling::set_slave_tlc msg;
+            msg.set_slave_id(3);
+            for (int i=0; i<15; i++)
+               msg.add_tlc(0xfff);
+            write_message(s, msg);
+         }
+         else if (msg == "off")
+         {
+            bling::set_slave_tlc msg;
+            msg.set_slave_id(3);
+            for (int i=0; i<15; i++)
+               msg.add_tlc(0x000);
+            write_message(s, msg);
+         }
+         else if (msg == "quit" || msg == "q")
+         {
+            break;
+         }
+         else
+         {
+            write_string(s, msg);
+            boost::asio::streambuf rx_buff;
+            istream rx_stream(&rx_buff);
+            size_t reply_length = boost::asio::read_until(s, rx_buff, '\n');
+            string str;
+            getline(rx_stream, str);
+            cout << "Reply is: " << str << endl;
+         }
+      }
+   }
+   catch (std::exception& e)
+   {
+      std::cerr << "Exception: " << e.what() << endl;
+   }
 
-  return 0;
+   google::protobuf::ShutdownProtobufLibrary();
+   return 0;
 }
