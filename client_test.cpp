@@ -39,18 +39,18 @@ int main(int argc, char* argv[])
 
          if (msg == "list")
          {
-            bling::get_slave_list gsl;
+            bling_pb::get_slave_list gsl;
             gsl.set_scan(true);
             gsl.set_tries(2);
             write_message(s, gsl);
 
-            bling::slave_list sl;
+            bling_pb::slave_list sl;
             if (read_message(s, sl))
                cout << sl.DebugString() << endl;
          }
          else if (msg == "on")
          {
-            bling::set_slave_tlc msg;
+            bling_pb::set_slave_tlc msg;
             msg.set_slave_id(3);
             for (int i=0; i<15; i++)
                msg.add_tlc(0xfff);
@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
          }
          else if (msg == "off")
          {
-            bling::set_slave_tlc msg;
+            bling_pb::set_slave_tlc msg;
             msg.set_slave_id(3);
             for (int i=0; i<15; i++)
                msg.add_tlc(0x000);

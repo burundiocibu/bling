@@ -1,52 +1,102 @@
-package bling;
+package bling_pb;
 
 
+// These messages are intended to be sent/received across a TCP/IP
+// connection. Every 'real' message is preceeded by a header message
+// which provides the length and type of the following message.
+// These messages are sent between the clinet and the master_server.
+// Many of these have corresponding messages that are sent from the
+// master to the slaves (defined in messages.hpp).
 message header
 {
    enum msg_id_type
    {
-      GET_SLAVE_LIST = 0;
-      SLAVE_LIST = 1;
-      SET_SLAVE_TLC = 2;
-      START_EFFECT = 3;
+      SEND_ALL_STOP = 0;
+      GET_SLAVE_LIST = 1;
+      SLAVE_LIST = 2;
+      SET_SLAVE_TLC = 3;
+      START_EFFECT = 4;
+      PING_SLAVE = 5;
+      REBOOT_SLAVE = 6;
+      SLEEP_SLAVE = 7;
+      WAKE_SLAVE = 8;
    }
    required msg_id_type msg_id = 1;
    required fixed32 len = 2;
 }
 
+
+// master will send all stop commnad to indicated slave.
+// master sends no response.
+message send_all_stop
+{
+   required uint32 slave_id = 1;  // Slave to send all stop to. (0 is broadcast)
+   optional uint32 tries = 2;     // How many times to resend 
+}
+
+
+// master will re-run a scan of all slaves (if requested)
+// master replys with a slave_list message will all slaves it has found.
 message get_slave_list
 {
    required bool scan = 1;  // Whether or not to scan for slaves or use the existing known list
    optional uint32 tries = 2;  // How many scans to conduct before returning
+   optional uint32 slave_id =3; // used to just get one (or more slave's info)
 }
 
+
+// A list of slaves and their info
 message slave_list
 {
    message slave_info
    {
       required uint32 slave_id = 1;
-      optional uint32 major_version = 2;
-      optional uint32 minor_version = 3;
-      optional uint32 t_rx = 4;
-      optional uint32 vcell = 5;
-      optional uint32 soc = 6;
-      optional uint32 mmc = 7;
-      optional uint32 fc = 8;
+      optional string version = 2;
+      optional uint32 t_rx = 3;
+      optional float vcell = 4;
+      optional float soc = 5;
+      optional uint32 mmc = 6;
+      optional uint32 fc = 7;
       repeated uint32 tlc = 16;
    }
    repeated slave_info slave = 1;
 }
 
+
+// the master will send either a set_tlc or a set_tlc_ch command to the indicated slave.
+// master sends no response.
 message set_slave_tlc
 {
    required uint32 slave_id = 1;
    repeated uint32 tlc = 2;
 }
 
+
+// master will send the indicated command to the slave(s).
+// master sends no response.
 message start_effect
 {
    required uint32 slave_id = 1;
    required uint32 effect_id = 2;
    required uint32 start_time = 3;
    required uint32 duration = 4;
+}
+
+
+// master will ping indicated slave.
+// master replys with slave_list message with only the indicated slave's info.
+// If the slave never responds, the slave_list will be empty.
+message ping_slave
+{
+   required uint32 slave_id = 1;
+   optional uint32 tries = 2;
+}
+
+
+// master will send a reboot command to the indicated slave.
+// master sends no response.
+message reboot_slave
+{
+   required uint32 slave_id = 1;
+   optional uint32 tries = 2;
 }
