@@ -65,6 +65,7 @@ Slave* Master_Server::find_slave(unsigned slave_id)
       for (auto i=found.begin(); i!=found.end(); i++)
          if (i->id == slave_id)
             return &(*i);
+   return NULL;
 }
 
 
@@ -109,26 +110,20 @@ string Master_Server::get_slave_list(string& msg)
       }
    }
    bling_pb::slave_list sl;
-   if (gsl.has_slave_id())
+   for (auto i=found.begin(); i!=found.end(); i++)
    {
-   }
-   else
-   {
-      for (auto i=found.begin(); i!=found.end(); i++)
-      {
-         if (gsl.has_slave_id() && i->id != gsl.slave_id())
-            continue;
-         bling_pb::slave_list::slave_info* slave=sl.add_slave();
-         slave->set_slave_id(i->id);
-         slave->set_vcell(i->vcell);
-         slave->set_version(i->version);
-         slave->set_t_rx(i->t_rx);
-         slave->set_soc(i->soc);
-         slave->set_mmc(i->mmc);
-         slave->add_tlc(i->tlc[0]);
-         slave->add_tlc(i->tlc[1]);
-         slave->add_tlc(i->tlc[2]);
-      }
+      if (gsl.has_slave_id() && i->id != gsl.slave_id())
+         continue;
+      bling_pb::slave_list::slave_info* slave=sl.add_slave();
+      slave->set_slave_id(i->id);
+      slave->set_vcell(i->vcell);
+      slave->set_version(i->version);
+      slave->set_t_rx(i->t_rx);
+      slave->set_soc(i->soc);
+      slave->set_mmc(i->mmc);
+      slave->add_tlc(i->tlc[0]);
+      slave->add_tlc(i->tlc[1]);
+      slave->add_tlc(i->tlc[2]);
    }
    if (debug>1)
       cout << "slave_list::" << sl.ShortDebugString() << endl;
