@@ -32,6 +32,10 @@ public:
    void reboot(unsigned repeat=1);
    void set_pwm(unsigned repeat=1);
 
+   void start_effect(uint8_t effect_id, uint32_t start_time, uint32_t duration, unsigned repeat=1);
+   void set_tlc_ch(uint8_t* p, uint8_t  ch, uint16_t  value, unsigned repeat=1);
+   void set_tlc(uint8_t* p, uint16_t value[], unsigned repeat=1);
+
    static std::string stream_header;
 
    unsigned id;

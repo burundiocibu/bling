@@ -1,3 +1,7 @@
+// Local Variables:
+// mode: c++
+// End:
+
 package bling_pb;
 
 
@@ -26,12 +30,26 @@ message header
 }
 
 
+// Sent as a response to some messages to indicate errors
+message nak
+{
+   optional uint32 msg_id = 1;
+   optional string reason = 2;
+}
+
+// Sent as a response to some messages to indicate happiness 
+message ack
+{
+   optional uint32 msg_id = 1;
+}
+
+
 // master will send all stop commnad to indicated slave.
 // master sends no response.
 message send_all_stop
 {
    required uint32 slave_id = 1;  // Slave to send all stop to. (0 is broadcast)
-   optional uint32 tries = 2;     // How many times to resend 
+   optional uint32 repeat = 2 [default = 1];
 }
 
 
@@ -39,9 +57,9 @@ message send_all_stop
 // master replys with a slave_list message will all slaves it has found.
 message get_slave_list
 {
-   required bool scan = 1;  // Whether or not to scan for slaves or use the existing known list
-   optional uint32 tries = 2;  // How many scans to conduct before returning
-   optional uint32 slave_id =3; // used to just get one (or more slave's info)
+   required bool scan = 1;       // Whether or not to scan for slaves or use the existing known list
+   optional uint32 tries = 2;    // How many scans to conduct before returning
+   optional uint32 slave_id = 3; // used to just get one (or more slave's info)
 }
 
 
@@ -69,6 +87,7 @@ message set_slave_tlc
 {
    required uint32 slave_id = 1;
    repeated uint32 tlc = 2;
+   optional uint32 repeat = 3 [default = 1];
 }
 
 
@@ -80,6 +99,7 @@ message start_effect
    required uint32 effect_id = 2;
    required uint32 start_time = 3;
    required uint32 duration = 4;
+   optional uint32 repeat = 5 [default = 1];
 }
 
 
@@ -89,7 +109,7 @@ message start_effect
 message ping_slave
 {
    required uint32 slave_id = 1;
-   optional uint32 tries = 2;
+   optional uint32 repeat = 2 [default = 1];
 }
 
 
@@ -98,5 +118,5 @@ message ping_slave
 message reboot_slave
 {
    required uint32 slave_id = 1;
-   optional uint32 tries = 2;
+   optional uint32 repeat = 2 [default = 1];
 }
