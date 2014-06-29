@@ -47,14 +47,13 @@ int main(int argc, char **argv)
       }
 
    // lock this process into memory
-   if (false)
-   {
+#ifdef linux
       struct sched_param sp;
       memset(&sp, 0, sizeof(sp));
       sp.sched_priority = sched_get_priority_max(SCHED_FIFO);
       sched_setscheduler(0, SCHED_FIFO, &sp);
       mlockall(MCL_CURRENT | MCL_FUTURE);
-   }
+#endif
 
    WINDOW *win;
    int prev_curs;
@@ -138,7 +137,7 @@ int main(int argc, char **argv)
       if (key=='q')
          break;
 
-      if (key == 0xff)
+      if (key == '\377')
       {
          // sleep 10 ms
          bcm2835_delayMicroseconds(10000);

@@ -313,7 +313,7 @@ int main(int argc, char* argv[])
       boost::asio::deadline_timer t0(io_service, boost::posix_time::seconds(1));
       t0.async_wait(boost::bind(heartbeat, boost::asio::placeholders::error, &t0, &broadcast));
 
-      boost::asio::deadline_timer t1(io_service, boost::posix_time::seconds(0.1));
+      boost::asio::deadline_timer t1(io_service, boost::posix_time::millisec(100));
       t1.async_wait(boost::bind(scan, boost::asio::placeholders::error, &t1, &all, &found));
 
       io_service.run();
