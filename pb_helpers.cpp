@@ -43,7 +43,6 @@ string read_string(tcp::socket& s, size_t len)
 {
    vector<char> buff(len);
    boost::asio::read(s, boost::asio::buffer(buff));
-   hexdump(buff);
    return string(&buff[0], len);
 }
 
@@ -91,10 +90,10 @@ bool read_message(boost::asio::ip::tcp::socket& s, ::google::protobuf::Message& 
    string str = read_string(s, header_length);
    if (!hdr.ParseFromString(str))
       return false;
-   cout << "hdr::" << hdr.ShortDebugString() << endl;
+   //cout << "hdr::" << hdr.ShortDebugString() << endl;
 
    str = read_string(s, hdr.len());
-   hexdump(str);
+   //hexdump(str);
    if (hdr.msg_id() == bling_pb::header::SLAVE_LIST && 
        (typeid(msg) == typeid(bling_pb::slave_list)))
       return msg.ParseFromString(str);

@@ -27,3 +27,4 @@ Effect_sets.hpp
 master_scan
 master_server
 client_test
+client_cmd

@@ -3,7 +3,7 @@
 # End:
 
 CPPFLAGS+=-std=c++0x
-ALL_BIN=client_test master_server
+ALL_BIN=client_test client_cmd master_server
 
 all: $(ALL_BIN)
 
@@ -14,8 +14,12 @@ client_test: LDLIBS+=-lboost_system -lstdc++ -lprotobuf
 client_test: client_test.o  server_msg.pb.o  pb_helpers.o
 client_test.o: client_test.cpp  server_msg.pb.h
 
-master_server: LDLIBS+=-lboost_system -lstdc++ -lprotobuf
-master_server: master_server_main.o master_server.o server_msg.pb.o pb_helpers.o
+client_cmd: LDLIBS+=-lboost_system -lstdc++ -lprotobuf -lboost_program_options
+client_cmd: client_cmd.o  server_msg.pb.o  pb_helpers.o
+client_cmd.o: client_cmd.cpp  server_msg.pb.h
+
+master_server: LDLIBS+=-lboost_system -lstdc++ -lprotobuf -lbcm2835
+master_server: master_server_main.o master_server.o server_msg.pb.o pb_helpers.o Slave.o rt_utils.o nrf24l01.o messages.o
 master_server.o: master_server.cpp master_server.hpp server_msg.pb.h
 master_server_main.o: master_server_main.cpp master_server.hpp  server_msg.pb.h
 #sudo /usr/libexec/ApplicationFirewall/socketfilterfw --unblockapp $PWD/master_server
