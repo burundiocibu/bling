@@ -49,3 +49,18 @@ Master executables:
    * master_probe -- used to scan for what boards are responding...
    * show -- an executable that uses the LCD shield to step through
      a performance
+
+   * master_server -- Used to allow control of the show from a tcp/ip
+     connection.
+   * client_test -- Use to help ring out the TCP/IP protocol with the
+     master_server program.
+     
+Network Control
+--------------
+It would be nice to be able to control the system from a remote
+pad/computer. So turn the raspberry pi into a 'gateway' between the
+nRF link to the slaves and a control client.
+
+The general idea is to use google protocol.buffers to encode messages
+that will be exchanged between a remote client and the master across a
+TCP/IP socket. 

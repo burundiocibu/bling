@@ -61,8 +61,10 @@ client_test: client_test.o  server_msg.pb.o  pb_helpers.o
 client_test.o: client_test.cpp  server_msg.pb.h
 
 master_server: LDLIBS+=-lbcm2835 -lboost_system -lstdc++ -lprotobuf
-master_server: master_server.o server_msg.pb.o pb_helpers.o rt_utils.o nrf24l01.o messages.o Slave.o
-master_server.o: master_server.cpp server_msg.pb.h
+master_server: master_server_main.o master_server.o server_msg.pb.o \
+	pb_helpers.o  rt_utils.o nrf24l01.o messages.o Slave.o
+master_server.o: master_server.cpp master_server.hpp server_msg.pb.h
+master_server_main.o: master_server_main.cpp master_server.hpp  server_msg.pb.h
 
 server_msg.pb.o: server_msg.pb.cc server_msg.pb.h
 
