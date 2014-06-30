@@ -40,8 +40,7 @@ int main(int argc, char* argv[])
          if (msg == "list")
          {
             bling_pb::get_slave_list gsl;
-            gsl.set_scan(true);
-            gsl.set_tries(2);
+            gsl.set_scan(false);
             write_message(s, gsl);
 
             bling_pb::slave_list sl;

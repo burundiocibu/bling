@@ -169,7 +169,7 @@ namespace nRF24L01
 
    bool configure_base(void)
    {
-      if (read_reg(CONFIG) == 0xff || read_reg(STATUS) == 0xff)
+      if (read_reg(CONFIG) == (char)0xff || read_reg(STATUS) == (char)0xff)
          return false;
       
       const uint8_t cfg=CONFIG_EN_CRC | CONFIG_CRCO | CONFIG_MASK_TX_DS | CONFIG_MASK_MAX_RT;

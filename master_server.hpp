@@ -27,6 +27,8 @@ public:
 
    void scan();
 
+   Slave* find_slave(unsigned slave_id);
+
    SlaveList all;
    SlaveList found;
    SlaveList::iterator last_scanned;
@@ -34,5 +36,7 @@ public:
 
    int debug;
    RunTime runtime;
+
+   std::string nak, ack;
 };
 #endif

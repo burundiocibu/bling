@@ -203,6 +203,33 @@ int Slave::rx(void)
 }
 
 
+void Slave::start_effect(uint8_t effect_id, uint32_t start_time, uint32_t duration, unsigned repeat)
+{
+   msg::encode_start_effect(buff, effect_id, start_time, duration);
+   tx(repeat);
+}
+
+
+void Slave::set_tlc_ch(uint8_t* p, uint8_t  ch, uint16_t  value, unsigned repeat)
+{
+   if (ch >= 15)
+      return;
+
+   pwm[ch] = value;
+   for (int i=0; i<sizeof(buff); i++) buff[i]=0;
+   msg::encode_set_tlc_ch(buff, ch, pwm[ch]);
+   tx(repeat);
+}
+
+
+void Slave::set_tlc(uint8_t* p, uint16_t value[], unsigned repeat)
+{
+   for (int ch=0; ch<15; ch++)
+      pwm[ch] = value[ch];
+   set_pwm(repeat);
+}
+
+
 void Slave::heartbeat(unsigned repeat)
 {
    msg::encode_heartbeat(buff, runtime.msec());
@@ -218,6 +245,7 @@ int Slave::ping(unsigned repeat)
       return rc;
    return rx();
 }
+
 
 void Slave::all_stop(unsigned repeat)
 {
@@ -262,16 +290,17 @@ void Slave::slide_pwm(int dir)
 
 void Slave::set_pwm(unsigned repeat)
 {
+   // This only uses 4 bits to set each channel
    msg::encode_set_tlc(buff, &pwm[0]);
    tx(repeat);
-/*
-   for (int ch=0; ch<15; ch++)
-   {
-      for (int i=0; i<sizeof(buff); i++) buff[i]=0;
-      msg::encode_set_tlc_ch(buff, ch, pwm[ch]);
-      tx(repeat);
-   }
-*/
+   // This approach sends all 12 bits.
+   if (false)
+      for (int ch=0; ch<15; ch++)
+      {
+         for (int i=0; i<sizeof(buff); i++) buff[i]=0;
+         msg::encode_set_tlc_ch(buff, ch, pwm[ch]);
+         tx(repeat);
+      }
 };
 
 
