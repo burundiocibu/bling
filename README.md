@@ -33,9 +33,8 @@ to build the application code for the AVR
 $ make nrf_boot.hex to build the nrf-enabled bootloader.
 
 Makefile.rpi is used to make the executables that are run on the
-master (currently a raspberry pi). This requires the bcm2835
-libraray to be installed (http://www.airspayce.com/mikem/bcm2835/)
-along with the ncurses-dev package
+master (currently a raspberry pi). This requires the bcm2835 c
+libraray to be installed along with the ncurses-dev package.
 
 Master executables:
 -----------------
@@ -50,11 +49,12 @@ Master executables:
    * show -- an executable that uses the LCD shield to step through
      a performance
 
-   * master_server -- Used to allow control of the show from a tcp/ip
-     connection.
+   * master_server -- Used to allow control of the show from a basic
+     TCP/IP socket.
    * client_cmd -- Use to help ring out the TCP/IP protocol with the
      master_server program.
      
+
 Network Control
 --------------
 It would be nice to be able to control the system from a remote
@@ -63,17 +63,25 @@ nRF link to the slaves and a control client.
 
 The general idea is to use google protocol.buffers to encode messages
 that will be exchanged between a remote client and the master across a
-TCP/IP socket.
+websocket.
 
 Then, to allow basically any device to control the system, have the
-master server up a javascript program...
+master server up a javascript program to the client as long as the
+client can support websockets.
 
 
 Setup of the master
 ----------------
-<tbd>
+debian packages required:
+   gcc-avr, avr-libc, and binutils-avr
+   gcc, g++, ncurses-dev
+   libboost-asio, libboost-program-options
+   libprotobuf-dev, protobuf-compiler
+   python-protobuf (in case I write a python client)
+   
+Other libs required:
+   git://git.libwebsockets.org/libwebsockets
+   http://www.airspayce.com/mikem/bcm2835/
 
 
-Setup of the client
----------------
-<tbd>
+
