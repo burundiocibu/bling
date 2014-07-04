@@ -66,6 +66,8 @@ int main(int argc, char* argv[])
       if (command[0] == "list")
       {
          bling_pb::get_slave_list gsl;
+         if (command.size() > 1)
+            
          gsl.set_scan(false);
          write_message(s, gsl);
 

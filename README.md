@@ -52,7 +52,7 @@ Master executables:
 
    * master_server -- Used to allow control of the show from a tcp/ip
      connection.
-   * client_test -- Use to help ring out the TCP/IP protocol with the
+   * client_cmd -- Use to help ring out the TCP/IP protocol with the
      master_server program.
      
 Network Control
@@ -63,4 +63,17 @@ nRF link to the slaves and a control client.
 
 The general idea is to use google protocol.buffers to encode messages
 that will be exchanged between a remote client and the master across a
-TCP/IP socket. 
+TCP/IP socket.
+
+Then, to allow basically any device to control the system, have the
+master server up a javascript program...
+
+
+Setup of the master
+----------------
+<tbd>
+
+
+Setup of the client
+---------------
+<tbd>

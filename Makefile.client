@@ -22,7 +22,6 @@ master_server: LDLIBS+=-lboost_system -lstdc++ -lprotobuf -lbcm2835
 master_server: master_server_main.o master_server.o server_msg.pb.o pb_helpers.o Slave.o rt_utils.o nrf24l01.o messages.o
 master_server.o: master_server.cpp master_server.hpp server_msg.pb.h
 master_server_main.o: master_server_main.cpp master_server.hpp  server_msg.pb.h
-#sudo /usr/libexec/ApplicationFirewall/socketfilterfw --unblockapp $PWD/master_server
 
 server_msg.pb.o: server_msg.pb.cc server_msg.pb.h
 
