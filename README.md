@@ -13,7 +13,7 @@ The master that I use is a raspberry pi with a some additional hardware.
    * An LCD shield with 5 buttons (http://www.adafruit.com/products/1109)
    * An nRF24L01+ tranceiver (https://www.sparkfun.com/products/705)
 
-Some day I should put the board design on github too.
+Some day I should put the board design and the rpi hardware design on github too.
 
 The nRF24L01+ is a addressable packet oriented radio with mutiple addresses on
 which it can 'listen'. Each of thes is called a pipe. A common address is used
@@ -53,6 +53,11 @@ Master executables:
      TCP/IP socket.
    * client_cmd -- Use to help ring out the TCP/IP protocol with the
      master_server program.
+   * master_ws -- same as master_server but uses websockets (using the
+     libwebsockets library) as opposed to raw bsd sockets.
+   * http_server -- a simple webserver (also based upon libwebsockets)
+     that will serve up a page to a client to allow the client to form
+     a websocket to master_ws and run the show.
      
 
 Network Control

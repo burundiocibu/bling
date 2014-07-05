@@ -39,8 +39,9 @@ Master_Server::Master_Server()
    Slave broadcast(0);
    broadcast.reboot();
    bcm2835_delayMicroseconds(50000);
-   
-   cout << broadcast.stream_header << endl;
+
+   if (debug)
+      cout << broadcast.stream_header << endl;
    
    for (int id=1; id < ensemble::num_slaves; id++)
       all.push_back(Slave(id));
@@ -213,7 +214,7 @@ void Master_Server::scan()
 
    if (all.size() && scan_count==0)
    {
-      if (debug)
+      if (debug>1)
          cout << "scan" << endl;
       scan_count++;
       SlaveList more = ::scan(all);
@@ -227,6 +228,7 @@ void Master_Server::scan()
    for (auto i=found.begin(); i!=found.end(); i++)
    {
       i->ping();
-      cout << *i << endl;
+      if (debug)
+         cout << *i << endl;
    }
 }

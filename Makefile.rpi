@@ -2,9 +2,9 @@
 # mode: makefile
 # End:
 
-CPPFLAGS+=-std=c++0x
+CXXFLAGS+=-std=c++0x
 ALL_BIN=master_curses master_logger master_scan master_loader show get_param flash_list\
- client_test master_server
+ client_test master_server http_server master_ws
 
 
 all: $(ALL_BIN)
@@ -70,3 +70,10 @@ server_msg.pb.o: server_msg.pb.cc server_msg.pb.h
 
 server_msg.pb.cc server_msg.pb.h: server_msg.proto
 	protoc --cpp_out=. $?
+
+http_server: LDLIBS+=-lwebsockets
+http_server: http_server.c
+
+master_ws: LDLIBS+=-lbcm2835 -lstdc++ -lwebsockets -lprotobuf
+master_ws: master_ws.cpp  master_server.o server_msg.pb.o \
+	rt_utils.o nrf24l01.o messages.o Slave.o
