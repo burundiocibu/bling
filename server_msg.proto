@@ -93,6 +93,10 @@ message set_slave_tlc
 
 // master will send the indicated command to the slave(s).
 // master sends no response.
+// Note that the start_time in this message is relative
+// to when the master_server receives the message as opposed
+// to an absolute time that is used in the message that is sent
+// to the slaves.
 message start_effect
 {
    required uint32 slave_id = 1;

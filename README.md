@@ -58,10 +58,12 @@ Master executables:
    * http_server -- a simple webserver (also based upon libwebsockets)
      that will serve up a page to a client to allow the client to form
      a websocket to master_ws and run the show.
+   * js/server.js -- will probably replace the above http_server
+   * js/client.js -- a command line client for master_ws
      
 
 Network Control
---------------
+-----------------
 It would be nice to be able to control the system from a remote
 pad/computer. So turn the raspberry pi into a 'gateway' between the
 nRF link to the slaves and a control client.
@@ -74,6 +76,12 @@ Then, to allow basically any device to control the system, have the
 master server up a javascript program to the client as long as the
 client can support websockets.
 
+The master server is based upon the node.js package and the custom
+code is in the js directory. To use the node package manager to
+download dependencies, do the following:
+$ cd js
+$ npm install
+$ npm install nopt
 
 Setup of the master
 ----------------
@@ -83,10 +91,10 @@ debian packages required:
    libboost-asio, libboost-program-options
    libprotobuf-dev, protobuf-compiler
    python-protobuf (in case I write a python client)
+   nodejs node-nopt
    
 Other libs required:
    git://git.libwebsockets.org/libwebsockets
    http://www.airspayce.com/mikem/bcm2835/
-
 
 
