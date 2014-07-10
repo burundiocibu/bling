@@ -40,8 +40,7 @@ Master_Server::Master_Server()
    broadcast.reboot();
    bcm2835_delayMicroseconds(50000);
 
-   if (debug)
-      cout << broadcast.stream_header << endl;
+   //cout << broadcast.stream_header << endl;
    
    for (int id=1; id < ensemble::num_slaves; id++)
       all.push_back(Slave(id));
@@ -126,8 +125,9 @@ string Master_Server::get_slave_list(string& msg)
       slave->add_tlc(i->tlc[1]);
       slave->add_tlc(i->tlc[2]);
    }
-   if (debug>1)
-      cout << "slave_list::" << sl.ShortDebugString() << endl;
+
+   if (debug)
+      cout << "slave_list:" << sl.ShortDebugString() << endl;
 
    string s1,s2;
    sl.SerializeToString(&s2);
@@ -146,9 +146,13 @@ string Master_Server::set_slave_tlc(string& msg)
    if (sst.tlc_size() == 0)
       return nak;
 
+   if (debug)
+      cout << "set_slave_tlc:" << sst.ShortDebugString() << endl;
+
    Slave* slave = find_slave(sst.slave_id());
    if (slave == NULL)
       return nak;
+
 
    for (int i=0; i<sst.tlc_size(); i++)
       slave->pwm[i] = sst.tlc(i);
@@ -163,11 +167,17 @@ string Master_Server::start_effect(string& msg)
    if (!se.ParseFromString(msg))
       return nak;
 
+   if (debug)
+      cout << "start_effect:" << se.ShortDebugString() << endl;
+
    Slave* slave = find_slave(se.slave_id());
    if (slave == NULL)
       return nak;
 
-   slave->start_effect(se.effect_id(), se.start_time(), se.duration(), se.repeat());
+   if (debug)
+      cout << "start_effect: found slave, id=" << slave->id << endl;
+   
+   slave->start_effect(se.effect_id(), runtime.msec() + se.start_time(), se.duration(), se.repeat());
    return ack;
 }
 
@@ -202,7 +212,7 @@ string Master_Server::reboot_slave(string& msg)
 void Master_Server::heartbeat()
 {
    broadcast.heartbeat();
-   if (debug)
+   if (debug & 0x2)
       cout << broadcast << endl;
 }
 
@@ -214,7 +224,7 @@ void Master_Server::scan()
 
    if (all.size() && scan_count==0)
    {
-      if (debug>1)
+      if (debug & 0x2)
          cout << "scan" << endl;
       scan_count++;
       SlaveList more = ::scan(all);
@@ -228,7 +238,7 @@ void Master_Server::scan()
    for (auto i=found.begin(); i!=found.end(); i++)
    {
       i->ping();
-      if (debug)
+      if (debug & 0x2)
          cout << *i << endl;
    }
 }
