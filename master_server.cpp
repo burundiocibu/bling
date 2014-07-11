@@ -15,9 +15,9 @@
 
 using namespace std;
 
-Master_Server::Master_Server()
+Master_Server::Master_Server(int _debug)
+   : debug(_debug)
 {
-   debug = 1;
    Lock lock;
 
    nRF24L01::channel = ensemble::default_channel;
@@ -40,7 +40,8 @@ Master_Server::Master_Server()
    broadcast.reboot();
    bcm2835_delayMicroseconds(50000);
 
-   //cout << broadcast.stream_header << endl;
+   if (debug)
+      cout << broadcast.stream_header << endl;
    
    for (int id=1; id < ensemble::num_slaves; id++)
       all.push_back(Slave(id));
@@ -211,34 +212,62 @@ string Master_Server::reboot_slave(string& msg)
 
 void Master_Server::heartbeat()
 {
-   broadcast.heartbeat();
-   if (debug & 0x2)
-      cout << broadcast << endl;
-}
+   // All times in ms
+   const long hb_dt = 1000;
+   const long ping_dt = 5000;
+   static long hb_time = -hb_dt;
+   static long ping_time = -ping_dt;
 
-void Master_Server::scan()
-{
-   static unsigned scan_count=0;
-   static unsigned call_count=0;
-   call_count++;
-
-   if (all.size() && scan_count==0)
+   long t = runtime.msec();
+   if (t - hb_time >= hb_dt)
    {
-      if (debug & 0x2)
-         cout << "scan" << endl;
-      scan_count++;
-      SlaveList more = ::scan(all);
-      if (more.size())
+      hb_time += hb_dt;
+
+      broadcast.heartbeat();
+      if (debug & 0x4)
+         cout << broadcast << endl;
+   }
+
+   static SlaveList::iterator next_found = found.begin();
+   if (next_found == found.end())
+      next_found = found.begin();
+   if (next_found != found.end())
+   {
+      if (t - next_found->t_rx/1000 > ping_dt)
       {
-         cout << "Added " << more.size() << " slaves, "
-              << all.size() << " not found." << endl;
-         found.splice(found.end(), more);
+         next_found->ping();
+         if (debug & 0x2)
+            cout << *next_found << endl;
+         long age = t - next_found->t_rx/1000;
+         if (age > 4 * ping_dt && debug)
+            cout << "Lost contact with " << next_found->id << " age " << age << endl;  
+         next_found++;
       }
    }
-   for (auto i=found.begin(); i!=found.end(); i++)
+
+   static long pass = 0;
+   static long last_scan=0;
+   if (pass > 2 && t - last_scan < 100)
+      return;
+
+   static SlaveList::iterator next = all.begin();
+   if (next == all.end())
+      return;
+   last_scan = t;
+   if (next->ping() == 0)
    {
-      i->ping();
       if (debug & 0x2)
-         cout << *i << endl;
+         cout << *next << endl;
+      found.push_back(*next);
+      next = found.erase(next);
+   }
+   else
+   {
+      next++;
+      if (next == all.end())
+      {
+         next = all.begin();
+         pass++;
+      }
    }
 }

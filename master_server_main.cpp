@@ -1,215 +1,327 @@
-#include <cstdlib>
-#include <iostream>
-#include <vector>
-#include <string>
-#include <boost/bind.hpp>
-#include <boost/asio.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
+/*
+ * This is a hack of the test-echo program from the libwebsockets distro.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <getopt.h>
+#include <string.h>
+#include <assert.h>
+#include <signal.h>
+
+#include <syslog.h>
+#include <sys/time.h>
+#include <unistd.h>
+
+#include <libwebsockets.h>
 
 #include "server_msg.pb.h"
-#include "pb_helpers.hpp"
-
 #include "master_server.hpp"
 
-using boost::asio::ip::tcp;
-using namespace std;
+static volatile int force_exit = 0;
 
-int debug;
+// I think this is just for SSL certs
+#define LOCAL_RESOURCE_PATH "./www"
 
-class session
+#define max_payload 2048
+struct per_session_data__bling_protobuf
 {
-public:
-   session(boost::asio::io_service& io_service, Master_Server* _ms)
-      : socket_(io_service),
-        rx_buff(max_length),
-        ms(_ms)
-   {
-      if (debug)
-         cout << "session::session()" << endl;
-   }
+   unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + max_payload + LWS_SEND_BUFFER_POST_PADDING];
+   unsigned int len;
+   unsigned int index;
+};
 
-   ~session()
-   {
-      if (debug)
-         cout << "session::~session()" << endl;
-   }
+// Global ugh!
+Master_Server* ms = NULL;
 
-   tcp::socket& socket()
-   {
-      return socket_;
-   }
-
-   void start()
-   {
-      socket_.async_read_some(boost::asio::buffer(rx_buff),
-                              boost::bind(&session::handle_read, this,
-                                          boost::asio::placeholders::error,
-                                          boost::asio::placeholders::bytes_transferred));
-   }
-
-private:
-   void handle_read(const boost::system::error_code& error,
-                    size_t bytes_transferred)
-   {
-      if (!error)
-      {
-         if (debug>2)
-         {
-            cout << "session::handle_read: " << bytes_transferred << " bytes received."<< endl;
-            hexdump(&rx_buff[0], bytes_transferred);
-         }
-
-         string s1(rx_buff.begin(), rx_buff.begin()+header_length);
-         bling_pb::header hdr;
-         if (hdr.ParseFromString(s1))
-         {
-            if (debug>2)
-               cout << "header: " << hdr.ShortDebugString() << endl;
-         }
+void hexdump(const void *ptr, int buflen)
+{
+   printf("len:%d\n", buflen);
+   unsigned char *buf = (unsigned char*)ptr;
+   int i, j;
+   for (i=0; i<buflen; i+=16) {
+      printf("%06x: ", i);
+      for (j=0; j<16; j++) 
+         if (i+j < buflen)
+            printf("%02x ", buf[i+j]);
          else
-            cout << "error decoding header";
+            printf("   ");
+      printf(" ");
+      for (j=0; j<16; j++) 
+         if (i+j < buflen)
+            printf("%c", isprint(buf[i+j]) ? buf[i+j] : '.');
+      printf("\n");
+   }
+}
 
-         string s2(rx_buff.begin()+header_length, rx_buff.begin()+header_length+hdr.len());
+static int
+callback_bling_protobuf(struct libwebsocket_context *context,
+                        struct libwebsocket *wsi,
+                        enum libwebsocket_callback_reasons reason, void *user,
+                        void *in, size_t len)
+{
+   struct per_session_data__bling_protobuf *pss = (struct per_session_data__bling_protobuf *)user;
+   int n;
+   if (ms == NULL)
+   {
+      lwsl_err("master server object no initialized\n");
+      return 1;
+   }  
 
-         switch (hdr.msg_id())
+   switch (reason)
+   {
+      case LWS_CALLBACK_SERVER_WRITEABLE:
+         lwsl_notice("LWS_CALLBACK_SERVER_WRITEABLE: sending %d bytes",pss->len);
+         n = libwebsocket_write(wsi, &pss->buf[LWS_SEND_BUFFER_PRE_PADDING], pss->len, LWS_WRITE_BINARY);
+         
+         if (n < 0)
          {
-            case bling_pb::header::GET_SLAVE_LIST: tx_buff=ms->get_slave_list(s2); break;
-            case bling_pb::header::SET_SLAVE_TLC:  tx_buff=ms->set_slave_tlc(s2);  break;
-            default:
-               cout << "Unknown message:" << endl;
-               hexdump(s2);
-               time_t now = time(0);
-               string t(ctime(&now));
-               tx_buff=t;
+            lwsl_err("LWS_CALLBACK_SERVER_WRITEABLE: ERROR %d writing to socket, hanging up\n", n);
+            return 1;
+         }
+         if (n < (int)pss->len)
+         {
+            lwsl_err("LWS_CALLBACK_SERVER_WRITEABLE: Partial write\n");
+            return -1;
+         }
+         break;
+
+      case LWS_CALLBACK_RECEIVE:
+         if (len > max_payload)
+         {
+            lwsl_err("LWS_CALLBACK_RECEIVE: Server received packet bigger than %u, hanging up\n", max_payload);
+            return 1;
          }
 
-         if (tx_buff.size())
-            boost::asio::async_write(socket_,
-                                     boost::asio::buffer(tx_buff.c_str(), tx_buff.size()),
-                                     boost::bind(&session::handle_write, this,
-                                                 boost::asio::placeholders::error));
+         lwsl_notice("LWS_CALLBACK_RECEIVE: len=%d", len);
+         {
+            std::string s1((char*)in, 7);
+            bling_pb::header hdr;
+            if (hdr.ParseFromString(s1))
+               lwsl_notice("LWS_CALLBACK_RECEIVE: header=%s", hdr.ShortDebugString().c_str());
+            else
+               lwsl_notice("LWS_CALLBACK_RECEIVE error decoding header");
+            std::string s2((char*)in+7, len-7);
+            std::string s3;
+            switch (hdr.msg_id())
+            {
+               case bling_pb::header::SEND_ALL_STOP:  s3=ms->send_all_stop(s2);  break;
+               case bling_pb::header::GET_SLAVE_LIST: s3=ms->get_slave_list(s2); break;
+               case bling_pb::header::SET_SLAVE_TLC:  s3=ms->set_slave_tlc(s2);  break;
+               case bling_pb::header::START_EFFECT:   s3=ms->start_effect(s2);  break;
+               case bling_pb::header::REBOOT_SLAVE:   s3=ms->reboot_slave(s2);  break;
+               case bling_pb::header::PING_SLAVE:     s3=ms->ping_slave(s2);  break;
+               default:
+                  lwsl_notice("LWS_CALLBACK_RECEIVE: Ignoring unknown message.");
+            }
+            if (s3.length())
+            {
+               memcpy(&pss->buf[LWS_SEND_BUFFER_PRE_PADDING], s3.c_str(), s3.length());
+               pss->len = s3.length();
+               libwebsocket_callback_on_writable(context, wsi);
+            }
+         }
+         break;
 
-         // Always schedule the next read
-         socket_.async_read_some(boost::asio::buffer(rx_buff),
-                                 boost::bind(&session::handle_read, this,
-                                             boost::asio::placeholders::error,
-                                             boost::asio::placeholders::bytes_transferred));
-      }
-      else
-      {
-         delete this;
-      }
+      case LWS_CALLBACK_CLIENT_ESTABLISHED:
+         lwsl_notice("LWS_CALLBACK_CLIENT_ESTABLISHED:");
+         pss->index = 0;
+         break;
+
+      case LWS_CALLBACK_CLIENT_RECEIVE:
+         lwsl_notice("LWS_CALLBACK_CLIENT_RECEIVE:");
+         break;
+
+      case LWS_CALLBACK_CLIENT_WRITEABLE:
+         lwsl_notice("CALLBACK_CLIENT_WRITEABLE:");
+         break;
+
+      case LWS_CALLBACK_CLOSED:
+         lwsl_notice("LWS_CALLBACK_CLOSED:");
+         break;
+
+      case LWS_CALLBACK_ESTABLISHED:
+         lwsl_notice("LWS_CALLBACK_ESTABLISHED:");
+         break;
+
+      case LWS_CALLBACK_SERVER_NEW_CLIENT_INSTANTIATED:
+         lwsl_notice("LWS_CALLBACK_SERVER_NEW_CLIENT_INSTANTIATED:");
+         break;
+
+      case LWS_CALLBACK_CONFIRM_EXTENSION_OKAY:
+         lwsl_notice("LWS_CALLBACK_CONFIRM_EXTENSION_OKAY: %s", in);
+         if (strcmp((char*)in, "x-webkit-deflate-frame")==0)
+         {
+            // the node.js stuff doesn't seem to like x-webkit-deflate-frame
+            lwsl_notice("LWS_CALLBACK_CONFIRM_EXTENSION_OKAY: denying %s", in);
+            return -1;
+         }
+         break;
+
+      default:
+         break;
    }
 
-
-   void handle_write(const boost::system::error_code& error)
-   {
-      if (!error)
-      {
-         if (debug>2)
-            cout << "session::handle_write"<< endl;
-      }
-      else
-         delete this;
-   }
-
-
-   tcp::socket socket_;
-   string tx_buff;
-   vector<char> rx_buff;
-
-   Master_Server* ms;
-};
-
-
-class server
-{
-public:
-   server(boost::asio::io_service& io_service, short port,
-          Master_Server* _ms)
-      : io_service_(io_service),
-        acceptor_(io_service, tcp::endpoint(tcp::v4(), port)),
-        ms(_ms)
-   {
-      start_accept();
-   }
-
-private:
-   void start_accept()
-   {
-      session* new_session = new session(io_service_, ms);
-      acceptor_.async_accept(new_session->socket(),
-                             boost::bind(&server::handle_accept, this, new_session,
-                                         boost::asio::placeholders::error));
-   }
-
-   void handle_accept(session* new_session,
-                      const boost::system::error_code& error)
-   {
-      if (!error)
-         new_session->start();
-      else
-         delete new_session;
-
-      start_accept();
-   }
-
-   boost::asio::io_service& io_service_;
-   tcp::acceptor acceptor_;
-   Master_Server* ms;
-};
-
-
-void heartbeat(const boost::system::error_code& /*e*/,
-               boost::asio::deadline_timer* t, Master_Server* ms)
-{
-   ms->heartbeat();
-   t->expires_at(t->expires_at() + boost::posix_time::seconds(1));
-   t->async_wait(boost::bind(heartbeat, boost::asio::placeholders::error, t, ms));
+   return 0;
 }
 
 
-void scan(const boost::system::error_code& /*e*/,
-          boost::asio::deadline_timer* t, Master_Server* ms)
+static struct libwebsocket_protocols protocols[] =
 {
-   ms->scan();
-   t->expires_at(t->expires_at() + boost::posix_time::seconds(10));
-   t->async_wait(boost::bind(scan, boost::asio::placeholders::error, t, ms));
+   { "default", callback_bling_protobuf, sizeof(struct per_session_data__bling_protobuf)},
+   { NULL, NULL, 0 }
+};
+
+
+void sighandler(int sig)
+{
+   force_exit = 1;
 }
 
 
-int main(int argc, char* argv[])
+static struct option options[] = {
+   { "help",	no_argument,		NULL, 'h' },
+   { "debug",	required_argument,	NULL, 'd' },
+   { "port",	required_argument,	NULL, 'p' },
+   { "ssl",	no_argument,		NULL, 's' },
+   { "interface",  required_argument,	NULL, 'i' },
+   { "daemonize", 	no_argument,		NULL, 'D' },
+   { NULL, 0, 0, 0 }
+};
+
+
+int main(int argc, char **argv)
 {
    GOOGLE_PROTOBUF_VERIFY_VERSION;
-   try
+
+
+   int n = 0;
+   int port = 7681;
+   int use_ssl = 0;
+   struct libwebsocket_context *context;
+   int opts = 0;
+   char interface_name[128] = "";
+   const char *interface = NULL;
+
+   int syslog_options = LOG_PID | LOG_PERROR;
+
+   int client = 0;
+   int listen_port;
+   struct lws_context_creation_info info;
+
+   char address[256];
+   unsigned int oldus = 0;
+   struct libwebsocket *wsi;
+
+   int debug_level = 7;
+   int daemonize = 0;
+
+   memset(&info, 0, sizeof info);
+   
+   while (n >= 0)
    {
-      if (argc != 2)
+      n = getopt_long(argc, argv, "i:hsp:d:D", options, NULL);
+      if (n < 0)
+         continue;
+      switch (n)
       {
-         std::cerr << "Usage: async_tcp_echo_server <port>\n";
-         return 1;
+         case 'D':
+            daemonize = 1;
+            syslog_options &= ~LOG_PERROR;
+            break;
+         case 'd':
+            debug_level = atoi(optarg);
+            break;
+         case 's':
+            use_ssl = 1; /* 1 = take care about cert verification, 2 = allow anything */
+            break;
+         case 'p':
+            port = atoi(optarg);
+            break;
+         case 'i':
+            strncpy(interface_name, optarg, sizeof interface_name);
+            interface_name[(sizeof interface_name) - 1] = '\0';
+            interface = interface_name;
+            break;
+         case '?':
+         case 'h':
+            fprintf(stderr, "Usage: master_ws "
+                    "[--ssl] "
+                    "[--port=<p>] "
+                    "[-d <log bitfield>]\n");
+            exit(1);
       }
-
-      debug = 1;
-      Master_Server ms;
-      ms.debug = debug;
-
-      boost::asio::io_service io_service;
-
-      server s(io_service, atoi(argv[1]), &ms);
-
-      boost::asio::deadline_timer t0(io_service, boost::posix_time::seconds(1));
-      t0.async_wait(boost::bind(heartbeat, boost::asio::placeholders::error, &t0, &ms));
-
-      boost::asio::deadline_timer t1(io_service, boost::posix_time::millisec(100));
-      t1.async_wait(boost::bind(scan, boost::asio::placeholders::error, &t1, &ms));
-
-      io_service.run();
    }
-   catch (std::exception& e)
+
+
+
+   /*
+    * normally lock path would be /var/lock/lwsts or similar, to
+    * simplify getting started without having to take care about
+    * permissions or running as root, set to /tmp/.lwsts-lock
+    */
+   if (!client && daemonize && lws_daemonize("/tmp/.lwstecho-lock"))
    {
-      std::cerr << "Exception: " << e.what() << endl;
+      fprintf(stderr, "Failed to daemonize\n");
+      return 1;
+   }
+
+   /* we will only try to log things according to our debug_level */
+   setlogmask(LOG_UPTO (LOG_DEBUG));
+   openlog("lwsts", syslog_options, LOG_DAEMON);
+
+   /* tell the library what debug level to emit and to send it to syslog */
+   lws_set_log_level(debug_level & 0x7, lwsl_emit_syslog);
+   lwsl_notice("master_wc - bling master controller with websocket interface");
+   if (client)
+   {
+      lwsl_notice("Running in client mode\n");
+      listen_port = CONTEXT_PORT_NO_LISTEN;
+      if (use_ssl)
+         use_ssl = 2;
+   }
+   else
+   {
+      lwsl_notice("Running in server mode\n");
+      listen_port = port;
+   }
+
+   info.port = listen_port;
+   info.iface = interface;
+   info.protocols = protocols;
+   info.extensions = libwebsocket_get_internal_extensions();
+   if (use_ssl && !client)
+   {
+      info.ssl_cert_filepath = LOCAL_RESOURCE_PATH"/libwebsockets-test-server.pem";
+      info.ssl_private_key_filepath = LOCAL_RESOURCE_PATH"/libwebsockets-test-server.key.pem";
+   }
+   info.gid = -1;
+   info.uid = -1;
+   info.options = opts;
+
+   ms = new Master_Server(debug_level>>3);
+
+   context = libwebsocket_create_context(&info);
+
+   if (context == NULL)
+   {
+      lwsl_err("libwebsocket init failed\n");
+      return -1;
+   }
+
+   signal(SIGINT, sighandler);
+
+   int rc = 0;
+   int timeout_ms = 10;
+   while (rc >= 0 && !force_exit)
+   {
+      rc = libwebsocket_service(context, timeout_ms);
+      ms->heartbeat();
    }
    
-   google::protobuf::ShutdownProtobufLibrary();
+   libwebsocket_context_destroy(context);
+   lwsl_notice("master_wc exited cleanly\n");
+   closelog();
+   delete ms;
    return 0;
 }

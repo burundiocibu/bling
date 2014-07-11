@@ -7,7 +7,7 @@
 class Master_Server
 {
 public:
-   Master_Server();
+   Master_Server(int _debug=0);
 
    ~Master_Server();
 
@@ -24,8 +24,6 @@ public:
    std::string reboot_slave(std::string& msg);
 
    void heartbeat();
-
-   void scan();
 
    Slave* find_slave(unsigned slave_id);
 

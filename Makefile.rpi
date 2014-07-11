@@ -3,9 +3,8 @@
 # End:
 
 CXXFLAGS+=-std=c++0x
-ALL_BIN=master_curses master_logger master_scan master_loader show get_param flash_list\
- client_test master_server http_server master_ws
-
+ALL_BIN=master_curses master_logger master_scan master_loader master_server\
+ show get_param flash_list
 
 all: $(ALL_BIN)
 
@@ -56,16 +55,6 @@ get_param: get_param.cpp ensemble.hpp nrf_boot.h
 	gcc -o $@ $?
 #==============================================================
 
-client_test: LDLIBS+=-lboost_system -lstdc++ -lprotobuf
-client_test: client_test.o  server_msg.pb.o  pb_helpers.o
-client_test.o: client_test.cpp  server_msg.pb.h
-
-master_server: LDLIBS+=-lbcm2835 -lboost_system -lstdc++ -lprotobuf
-master_server: master_server_main.o master_server.o server_msg.pb.o \
-	pb_helpers.o  rt_utils.o nrf24l01.o messages.o Slave.o
-master_server.o: master_server.cpp master_server.hpp server_msg.pb.h
-master_server_main.o: master_server_main.cpp master_server.hpp  server_msg.pb.h
-
 server_msg.pb.o: server_msg.pb.cc server_msg.pb.h
 
 server_msg.pb.cc server_msg.pb.h: server_msg.proto
@@ -74,6 +63,8 @@ server_msg.pb.cc server_msg.pb.h: server_msg.proto
 http_server: LDLIBS+=-lwebsockets
 http_server: http_server.c
 
-master_ws: LDLIBS+=-lbcm2835 -lstdc++ -lwebsockets -lprotobuf
-master_ws: master_ws.cpp  master_server.o server_msg.pb.o \
+master_server.o: master_server.cpp server_msg.pb.h
+
+master_server: LDLIBS+=-lbcm2835 -lstdc++ -lwebsockets -lprotobuf
+master_server: master_server_main.o  master_server.o server_msg.pb.o \
 	rt_utils.o nrf24l01.o messages.o Slave.o
