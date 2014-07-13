@@ -80,6 +80,7 @@ The master server is based upon the node.js package and the custom
 code is in the js directory. To use the node package manager to
 download dependencies, do the following:
 $ cd js
+$ npm config set strict-ssl false
 $ npm install
 $ npm install nopt
 
@@ -91,8 +92,12 @@ debian packages required:
    libboost-asio, libboost-program-options
    libprotobuf-dev, protobuf-compiler
    python-protobuf (in case I write a python client)
-   nodejs node-nopt
-   
+   nodejs node-nopt npm
+   nodejs-legacy??
+
+--- Since node is called nodejs in the default install...
+$ sudo update-alternatives --install /usr/bin/node nodejs /usr/bin/nodejs 100
+
 Other libs required:
    git://git.libwebsockets.org/libwebsockets
    http://www.airspayce.com/mikem/bcm2835/
