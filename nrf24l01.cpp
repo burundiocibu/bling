@@ -6,18 +6,36 @@
 #include <inttypes.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
-
 #include "avr_spi.hpp"
 #else
 #include <cstdio>
 #include <ctime>
+
+#define BCMLIB 1
+#ifdef BCMLIB
 #include <bcm2835.h>
+#else
+#include <string>
+
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+#include <sys/ioctl.h>
+#include <linux/types.h>
+#include <linux/spi/spidev.h>
+#endif
 #endif
 
 #include "nrf24l01.hpp"
 #include "avr_rtc.hpp"
 #include "messages.hpp"
 #include "ensemble.hpp"
+#include "rt_utils.hpp"
+
+
+extern RunTime runtime;
 
 namespace nRF24L01
 {
@@ -27,13 +45,41 @@ namespace nRF24L01
    char slave_addr[addr_len];
    char iobuff[ensemble::message_size+1];
 
+#ifndef BCMLIB
+   int spi_fd=-1;
+   int ce_fd=-1;
+   uint8_t bits = 8;
+   uint32_t speed = 3900000;
+   uint16_t delay = 0;
+#endif
+
    void write_data(char* data, size_t len)
    {
+      long long t0=runtime.usec();
 #ifdef AVR
       avr_spi::tx(data, data, len);
 #else
+#ifdef BCMLIB
       bcm2835_spi_transfern(data, len);
+#else
+      static uint8_t rx[1024];
+      struct spi_ioc_transfer tr;
+      tr.tx_buf = (unsigned long)data;
+      tr.rx_buf = (unsigned long)rx;
+      tr.len = len;
+      tr.delay_usecs = delay;
+      tr.speed_hz = speed;
+      tr.bits_per_word = bits;
+      
+      int rc = ioctl(spi_fd, SPI_IOC_MESSAGE(1), &tr);
+      if (rc < 1)
+         printf("can't send spi message");
+      
+      memcpy(data, rx, len);
 #endif
+#endif
+      long long t1=runtime.usec();
+      printf("WR dt: %lld \n", t1-t0);
    }
 
 
@@ -43,7 +89,12 @@ namespace nRF24L01
       for (uint16_t i=0; i<us; i++)
          _delay_us(1);
 #else
+#ifdef BCMLIB
       bcm2835_delayMicroseconds(us);
+#else
+      usleep(us);
+      // nanosleep(us*1000);
+#endif
 #endif
    }
 
@@ -53,7 +104,12 @@ namespace nRF24L01
 #ifdef AVR
       PORTD &= ~_BV(PD3);
 #else
+#ifdef BCMLIB
       bcm2835_gpio_write(RPI_GPIO_P1_15, LOW);
+#else
+      if (write(ce_fd, "0", 1) != 1)
+         printf("Failed to clear CE\n");
+#endif
 #endif
    }
 
@@ -63,7 +119,12 @@ namespace nRF24L01
 #ifdef AVR
       PORTD |= _BV(PD3);
 #else
+#ifdef BCMLIB
       bcm2835_gpio_write(RPI_GPIO_P1_15, HIGH);
+#else
+   if (write(ce_fd, "1", 1) != 1)
+      printf("Failed to set CE\n");
+#endif
 #endif
    }
 
@@ -105,6 +166,8 @@ namespace nRF24L01
       
       return true;
 #else
+      
+#ifdef BCMLIB
       if (!bcm2835_init())
          return false;
 
@@ -118,8 +181,113 @@ namespace nRF24L01
       bcm2835_spi_setClockDivider(BCM2835_SPI_CLOCK_DIVIDER_64);    // 3.9 MHz
       bcm2835_spi_chipSelect(BCM2835_SPI_CS0);                      // The default
       bcm2835_spi_setChipSelectPolarity(BCM2835_SPI_CS0, LOW);      // the default
-
       delay_us(20);
+
+#else
+      const char *spi_device = "/dev/spidev0.0";
+      
+      spi_fd = open(spi_device, O_RDWR);
+      if (spi_fd < 0)
+      {
+         printf("can't open spi_device");
+         return false;
+      }
+
+      uint8_t mode=SPI_MODE_0;
+      int ret;
+      ret = ioctl(spi_fd, SPI_IOC_WR_MODE, &mode);
+      if (ret == -1)
+      {
+         close(spi_fd);
+         printf("can't set spi mode\n");
+         return false;
+      }
+
+      ret = ioctl(spi_fd, SPI_IOC_RD_MODE, &mode);
+      if (ret == -1)
+      {
+         close(spi_fd);
+         printf("can't get spi mode\n");
+         return false;
+      }
+
+      // bits per word
+      ret = ioctl(spi_fd, SPI_IOC_WR_BITS_PER_WORD, &bits);
+      if (ret == -1)
+      {
+         close(spi_fd);
+         printf("can't set bits per word\n");
+         return false;
+      }
+
+      ret = ioctl(spi_fd, SPI_IOC_RD_BITS_PER_WORD, &bits);
+      if (ret == -1)
+      {
+         close(spi_fd);
+         printf("can't get bits per word\n");
+         return false;
+      }
+
+      //max speed hz
+      ret = ioctl(spi_fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed);
+      if (ret == -1)
+      {
+         close(spi_fd);
+         printf("can't set max speed hz\n");
+         return false;
+      }
+
+      ret = ioctl(spi_fd, SPI_IOC_RD_MAX_SPEED_HZ, &speed);
+      if (ret == -1)
+      {
+         close(spi_fd);
+         printf("can't get max speed hz\n");
+         return false;
+      }
+
+      printf("spi mode: %d\n", mode);
+      printf("bits per word: %d\n", bits);
+      printf("speed: %d KHz\n", speed/1000);
+
+
+      // Now to set up the CE line
+      std::string pin="15"; // AKA header1 pin 10, AKA RxD
+      std::string dir_path="/sys/class/gpio/gpio"+pin+"/direction";
+      std::string dir="out";
+      std::string pin_path="/sys/class/gpio/gpio"+pin+"/value";
+      int fd;
+
+      fd = open("/sys/class/gpio/export", O_WRONLY);
+      if (fd == -1)
+      {
+         printf("Failed to open gpio for writing!\n");
+         return false;
+      }
+      write(fd, pin.c_str(), pin.length());
+      close(fd);
+        
+      fd = open(dir_path.c_str(), O_WRONLY);
+      if (fd == -1)
+      {
+         printf("Failed to open gpio direction for writing!\n");
+         return false;
+      }
+      if (write(fd, dir.c_str(), dir.length()) != dir.length())
+      {
+         printf("Failed to set direction!\n");
+         return false;
+      }
+      close(fd);
+
+      ce_fd = open(pin_path.c_str(), O_WRONLY);
+      if (ce_fd == -1)
+      {
+         printf("Failed to open pin for I/O!\n");
+         return false;
+      }
+   
+#endif
+
       return true;
 #endif
    }
@@ -128,7 +296,11 @@ namespace nRF24L01
    {
 #ifdef AVR
 #else
+#ifdef BCMLIB
       bcm2835_spi_end();
+#else
+#endif
+      printf("Need to write shutdown code for gpio & spi\n");
 #endif
    }
 
@@ -290,9 +462,12 @@ namespace nRF24L01
       write_reg(RX_ADDR_P0, buff, addr_len);
 
       // pulse CE
+      long long t0=runtime.usec();
       set_CE();
       delay_us(10);
       clear_CE();
+      long long t1=runtime.usec();
+      printf("CE dt: %lld \n", t1-t0);
    }
 
 

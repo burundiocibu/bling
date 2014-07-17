@@ -68,3 +68,6 @@ master_server.o: master_server.cpp server_msg.pb.h
 master_server: LDLIBS+=-lbcm2835 -lstdc++ -lwebsockets -lprotobuf
 master_server: master_server_main.o  master_server.o server_msg.pb.o \
 	rt_utils.o nrf24l01.o messages.o Slave.o
+
+spi_dev_test0: LDLIBS+=-lm
+spi_dev_test0: spi_dev_test0.c

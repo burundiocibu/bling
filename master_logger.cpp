@@ -63,7 +63,8 @@ int main(int argc, char **argv)
    // Reset all the slaves, and give them a chance to come back up
    Slave broadcast(0);
    broadcast.reboot();
-   bcm2835_delayMicroseconds(50000);
+
+   usleep(50000);
 
    cout << broadcast.stream_header << endl;
 
@@ -113,7 +114,7 @@ int main(int argc, char **argv)
       if (key == 0xff)
       {
          // sleep 10 ms
-         bcm2835_delayMicroseconds(10000);
+         usleep(10000);
          continue;
       } else
          cout << "ch:" << key << endl;

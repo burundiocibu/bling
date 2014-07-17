@@ -55,6 +55,19 @@ int main(int argc, char **argv)
       mlockall(MCL_CURRENT | MCL_FUTURE);
 #endif
 
+   nRF24L01::channel = ensemble::default_channel;
+   memcpy(nRF24L01::master_addr,    ensemble::master_addr,   nRF24L01::addr_len);
+   memcpy(nRF24L01::broadcast_addr, ensemble::slave_addr[0], nRF24L01::addr_len);
+   memcpy(nRF24L01::slave_addr,     ensemble::slave_addr[2], nRF24L01::addr_len);
+
+   if (!nRF24L01::setup() || !nRF24L01::configure_base())
+   {
+      cout << "Failed to find nRF24L01. Exiting." << endl;
+      return -1;
+   }
+   nRF24L01::configure_PTX();
+   nRF24L01::flush_tx();
+
    WINDOW *win;
    int prev_curs;
 
@@ -66,21 +79,6 @@ int main(int argc, char **argv)
    intrflush(win, true);
    keypad(win, true);
    prev_curs = ::curs_set(0);   // we want an invisible cursor.
-
-   nRF24L01::channel = ensemble::default_channel;
-   memcpy(nRF24L01::master_addr,    ensemble::master_addr,   nRF24L01::addr_len);
-   memcpy(nRF24L01::broadcast_addr, ensemble::slave_addr[0], nRF24L01::addr_len);
-   memcpy(nRF24L01::slave_addr,     ensemble::slave_addr[2], nRF24L01::addr_len);
-
-   nRF24L01::setup();
-
-   if (!nRF24L01::configure_base())
-   {
-      cout << "Failed to find nRF24L01. Exiting." << endl;
-      return -1;
-   }
-   nRF24L01::configure_PTX();
-   nRF24L01::flush_tx();
 
    mvprintw(0, 0, Slave::stream_header.c_str());
 
