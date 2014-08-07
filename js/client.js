@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-
+// -*- mode: javascript; -*-
 // A command line client for the master_ws
 var http = require("http"),
     fs = require("fs"),

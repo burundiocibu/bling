@@ -21,7 +21,8 @@ for (var i=0, dep, data; i<deps.length; i++)
         console.log("Copying "+dep[0]+" from "+dep[1]);
         try
         {
-            fs.writeFileSync(path.join(__dirname, "www", dep[0]), fs.readFileSync(path.join(__dirname, dep[1])));
+            fs.writeFileSync(path.join(__dirname, "www", dep[0]),
+                             fs.readFileSync(path.join(__dirname, dep[1])));
         } catch (err) {
             console.log("Copying failed: "+err.message);
             console.log("\nDid you run `npm install` ?");
@@ -69,7 +70,7 @@ var server = http.createServer(function(req, res) {
                 res.writeHead(200, {"Content-Type": type});
                 res.write(data);
                 res.end();
-                console.log("Served www/"+file);
+                //console.log("Served www/"+file);
             }
         });
     }
@@ -81,10 +82,10 @@ var server = http.createServer(function(req, res) {
     }
 });
 
-server.listen(8080);
+server.listen(80);
 server.on("listening", function() {
     console.log("Server started");
-    open("http://localhost:8080/");
+    //open("http://localhost:8080/");
 });
 
 server.on("error", function(err) {
