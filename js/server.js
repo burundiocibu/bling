@@ -47,6 +47,14 @@ var server = http.createServer(function(req, res) {
             type = "text/javascript";
         }
     }
+    else if (/^\/(\w+(?:\.min)?\.(?:ico|png))$/.test(req.url))
+    {
+        file = req.url.substring(1);
+        if (/\.js$/.test(file))
+        {
+        type = "image/x-icon";
+        }
+    }
     else if ( req.url == "/favicon.ico")
     {
         file = "favicon.ico";
