@@ -11,9 +11,12 @@
 
 <meta name="viewport" content="width=device-width, user-scalable=no">
 <center>
-<button id="prev_effect" onclick="prev_effect()" style="height:4em; width:4em">Prev</button>
-<button id="play_effect" onclick="start_effect()" style="height:4em; width:9em" value="1">Play Effect 1</button>
-<button id="next_effect" onclick="next_effect()" style="height:4em; width:4em">Next</button>
+<button id="prev_effect" onclick="prev_effect()" style="height:4em; width:4em">
+    Prev</button>
+<button id="play_effect" onclick="start_effect()" style="height:4em; width:9em" value="1">
+    Play Effect 1</button>
+<button id="next_effect" onclick="next_effect()" style="height:4em; width:4em">
+    Next</button>
 </center>
 <br />
 <center>
@@ -31,10 +34,9 @@ var text = document.getElementById("text");
 var eb = document.getElementById("play_effect");
 
 // Connect to the websocket server
-//var socket = new WebSocket("ws://192.168.10.1:9321/ws");
-var socket = new WebSocket("ws://fourpi:9321/ws");
+var socket = new WebSocket("ws://master:9321/ws");
+//var socket = new WebSocket("ws://fourpi:9321/ws");
 socket.binaryType = "arraybuffer"; // We are talking binary
-
 
 
 function get_slave_list()
