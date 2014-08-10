@@ -11,22 +11,49 @@
 
 <meta name="viewport" content="width=device-width, user-scalable=no">
 <center>
-<button id="prev_effect" onclick="prev_effect()" style="height:4em; width:4em">
-    Prev</button>
-<button id="play_effect" onclick="start_effect()" style="height:4em; width:9em" value="1">
-    Play Effect 1</button>
-<button id="next_effect" onclick="next_effect()" style="height:4em; width:4em">
-    Next</button>
+
+<style>
+body {
+    font-family: "Verdana";
+}
+button.big {
+    background-repeat:no-repeat;
+    font-family: "Verdana";
+    border: none;
+    background-size: contain;
+}
+</style>
+Play Effect
+
+<br/>
+<button id="prev_effect" onclick="prev_effect()" class="big"
+style="background: url(left.ico); background-size: contain; height:5em; width:5em">
+-
+</button>
+
+<button id="play_effect" onclick="start_effect()" class="big" value="1"
+style="background: url(play.ico); background-size: contain; height:5em; width:5em">
+1
+</button>
+
+<button id="next_effect" onclick="next_effect()" class="big"
+style="background: url(right.ico); background-size: contain; height:5em; width:5em">
++
+</button>
+
+<br/>
+<button onclick="all_stop()" class="big"
+style="background: url(stop_alt.ico); background-size: contain; height:5em; width:5em">
+</button>
+
 </center>
-<br />
-<center>
-<button onclick="all_stop()" style="height:4em; width:8em">All Stop</button><br />
-</center>
+
 <br />
 <button onclick="get_slave_list()">List Slaves</button>
-<button onclick="scan_slaves()">Scan Slaves</button><br />
+<button onclick="scan_slaves()">Scan Slaves</button>
 <br />
-<textarea id="log" style="width: 95%" rows="10"></textarea><br />
+Ensemble Status
+<textarea id="log" style="width: 95%; border: none;" rows="10"></textarea><br />
 
 <script>
 var log = document.getElementById("log");
@@ -92,13 +119,13 @@ function prev_effect()
     {
         eb.value = 0;
     }
-    eb.textContent="Play Effect "+eb.value;
+    eb.textContent=eb.value;
 }
 
 function next_effect()
 {
     eb.value++;
-    eb.textContent="Play Effect "+eb.value;
+    eb.textContent=eb.value;
 }
 
 socket.onerror = function(error)

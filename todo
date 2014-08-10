@@ -1,11 +1,16 @@
 TODO
 -----
+   * Add reflash option to web interface?
+   * Have a periodic update of ensemble status?
+   * Cull slaves that loose connection
 
+got icons from http://findicons.com/pack/811/developer_kit
+
+Done
+----
    * make rpi config resolve dns and
    * add hostname def for server (probably want a shared hostname like 'master')
    * make any webpage load from any host on the net be directed to master:8080
    * figure out how to attach value to eb.value
    * Autostart server.sh
-   * Add reflash option to web interface?
    * fix starting of server.js on boot
-   
