@@ -34,29 +34,25 @@
       <td>
         <button id="prev_effect" onclick="prev_effect()" class="big"
                 style="background: url(left.ico); background-size:
-                       contain; height:5em; width:5em">
+                       contain; height:6em; width:6em">
       </td>
       <td>
         <button id="play_effect" onclick="start_effect()" class="big"
                 value="1"
                 style="background: url(play.ico); background-size:
-                       contain; height:5em; width:5em">
+                       contain; height:6em; width:6em">
           1
       </td>
       <td>
         <button id="next_effect" onclick="next_effect()" class="big"
                 style="background: url(right.ico); background-size:
-                       contain; height:5em; width:5em">
+                       contain; height:6em; width:6em">
       </td>
-    </tr>
-    <tr>
-      <td> </td>
       <td>
         <button onclick="all_stop()" class="big"
-              style="background: url(stop_alt.ico); background-size:
-              contain; height:5em; width:5em">
+                style="background: url(stop_alt.ico); background-size:
+                       contain; height:6em; width:6em">
       </td>
-      <td> </td>
     </tr>
   </table>
   
@@ -71,12 +67,6 @@ Ensemble Status
 var log = document.getElementById("log");
 var text = document.getElementById("text");
 var eb = document.getElementById("play_effect");
-
-// Connect to the websocket server
-var socket = new WebSocket("ws://master:9321/ws");
-//var socket = new WebSocket("ws://fourpi:9321/ws");
-socket.binaryType = "arraybuffer"; // We are talking binary
-
 
 function get_slave_list()
 {
@@ -106,6 +96,7 @@ function all_stop()
     var hdr = new Header();
     hdr.msg_id = "SEND_ALL_STOP";
     send_msg(socket, hdr, msg);
+    log.value += "All Stop\n";
 }
 
 function start_effect()
@@ -123,23 +114,6 @@ function start_effect()
     hdr.msg_id = "START_EFFECT";
     send_msg(socket, hdr, msg);
 }
-
-function start_effect()
-{
-    log.value += "Start effect "+eb.value+"\n";
-    var msg = new Start_Effect();
-    msg.slave_id = 0; // broadcast
-    msg.effect_id = parseInt(eb.value);
-    eb.value++;
-    eb.textContent=eb.value
-    msg.start_time = 0;
-    msg.duration = 10000; // ms
-    msg.repeat = 10;
-    var hdr = new Header();
-    hdr.msg_id = "START_EFFECT";
-    send_msg(socket, hdr, msg);
-}
-
 
 function prev_effect()
 {
@@ -156,46 +130,6 @@ function next_effect()
     eb.value++;
     eb.textContent=eb.value;
 }
-
-socket.onerror = function(error)
-{    
-}
-
-socket.onopen = function() 
-{
-    log.value += "Connected\n";
-    get_slave_list();
-};
-
-socket.onclose = function() 
-{
-    log.value += "Disconnected\n";
-};
-    
-socket.onmessage = function(evt) 
-{
-    try
-    {
-        log.value += "Received "+evt.data.byteLength+" bytes\n";
-        var hdr = Header.decode(evt.data.slice(0,7));
-        log.value += "Received msg_id:" + hdr.msg_id + "\n";
-        if (hdr.msg_id == Msg_Ids.SLAVE_LIST)
-        {
-            var slave_list = Slave_List.decode(evt.data.slice(7));
-            log.value += "slaves found: ";
-            for (var i=0; i<slave_list.slave.length; i++)
-            {
-                slave=slave_list.slave[i]
-                log.value += slave.slave_id+"("+slave.soc.toFixed(2)+"%) ";
-            }
-            log.value += "\n";
-        }
-    }
-    catch (err)
-    {
-        log.value += "Error: "+err+"\n";
-    }
-};
 
 log.value = ""; // Clear log on reload
 

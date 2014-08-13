@@ -21,6 +21,13 @@ var Start_Effect = builder.build("bling_pb.start_effect");
 var Ping_Slave = builder.build("bling_pb.ping_slave");
 var Reboot_Slave = builder.build("bling_pb.reboot_slave");
 
+
+// Connect to the websocket server
+//var socket = new WebSocket("ws://master:9321/ws");
+var socket = new WebSocket("ws://fourpi:9321/ws");
+socket.binaryType = "arraybuffer"; // We are talking binary
+
+
 function appendBuffer( buffer1, buffer2 )
 {
   var tmp = new Uint8Array( buffer1.byteLength + buffer2.byteLength );
@@ -48,24 +55,46 @@ function send_msg(socket, header, body)
     }
     else
     {
-        log.value += "Not connected\n";
+        log.value += "Send failed: not connected\n";
     }
 }
 
-function get_message(socket, body)
-{
-    log.value += "Received "+evt.data.byteLength+" bytes\n";
-    var hdr = Header.decode(evt.data.slice(0,7));
-    log.value += "Received msg_id:" + hdr.msg_id + "\n";
-    if (hdr.msg_id == Msg_Ids.SLAVE_LIST)
-    {
-        var slave_list = Slave_List.decode(evt.data.slice(7));
-        log.value += "slaves found: ";
-        for (var i=0; i<slave_list.slave.length; i++)
-        {
-            slave=slave_list.slave[i]
-            log.value += slave.slave_id+"("+slave.soc.toFixed(2)+"%) ";
-        }
-        log.value += "\n";
-    }
+socket.onerror = function(error)
+{    
 }
+
+socket.onopen = function() 
+{
+    log.value += "Connected\n";
+    get_slave_list();
+};
+
+socket.onclose = function() 
+{
+    log.value += "Disconnected\n";
+};
+
+socket.onmessage = function(evt) 
+{
+    try
+    {
+        //log.value += "Received "+evt.data.byteLength+" bytes\n";
+        var hdr = Header.decode(evt.data.slice(0,7));
+        //log.value += "Received msg_id:" + hdr.msg_id + "\n";
+        if (hdr.msg_id == Msg_Ids.SLAVE_LIST)
+        {
+            var slave_list = Slave_List.decode(evt.data.slice(7));
+            log.value += "slaves found: ";
+            for (var i=0; i<slave_list.slave.length; i++)
+            {
+                slave=slave_list.slave[i]
+                log.value += slave.slave_id+"("+slave.soc.toFixed(2)+"%) ";
+            }
+            log.value += "\n";
+        }
+    }
+    catch (err)
+    {
+        log.value += "Error: "+err+"\n";
+    }
+};
