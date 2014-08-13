@@ -8,47 +8,59 @@
 <script src="./Ensemble.js"></script>
 </head>
 <body>
-
-<meta name="viewport" content="width=device-width, user-scalable=no">
-<center>
-
-<style>
-body {
+  
+  <meta name="viewport" content="width=device-width, user-scalable=no">
+  <style>
+    body {
     font-family: "Verdana";
-}
-button.big {
+    }
+    button.big {
     background-repeat:no-repeat;
     font-family: "Verdana";
     border: none;
     background-size: contain;
-}
-</style>
-Play Effect
+    }
+  </style>
 
-<br/>
-<button id="prev_effect" onclick="prev_effect()" class="big"
-style="background: url(left.ico); background-size: contain; height:5em; width:5em">
--
-</button>
-
-<button id="play_effect" onclick="start_effect()" class="big" value="1"
-style="background: url(play.ico); background-size: contain; height:5em; width:5em">
-1
-</button>
-
-<button id="next_effect" onclick="next_effect()" class="big"
-style="background: url(right.ico); background-size: contain; height:5em; width:5em">
-+
-</button>
-
-<br/>
-<button onclick="all_stop()" class="big"
-style="background: url(stop_alt.ico); background-size: contain; height:5em; width:5em">
-</button>
-
-</center>
-
-<br />
+  <table border="0">
+    <tr>
+      <td> </td>
+      <td>
+        Effect
+      </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>
+        <button id="prev_effect" onclick="prev_effect()" class="big"
+                style="background: url(left.ico); background-size:
+                       contain; height:5em; width:5em">
+      </td>
+      <td>
+        <button id="play_effect" onclick="start_effect()" class="big"
+                value="1"
+                style="background: url(play.ico); background-size:
+                       contain; height:5em; width:5em">
+          1
+      </td>
+      <td>
+        <button id="next_effect" onclick="next_effect()" class="big"
+                style="background: url(right.ico); background-size:
+                       contain; height:5em; width:5em">
+      </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>
+        <button onclick="all_stop()" class="big"
+              style="background: url(stop_alt.ico); background-size:
+              contain; height:5em; width:5em">
+      </td>
+      <td> </td>
+    </tr>
+  </table>
+  
+  <br />
 <button onclick="get_slave_list()">List Slaves</button>
 <button onclick="scan_slaves()">Scan Slaves</button>
 <br />
@@ -103,7 +115,7 @@ function start_effect()
     msg.slave_id = 0; // broadcast
     msg.effect_id = parseInt(eb.value);
     eb.value++;
-    eb.textContent="Play Effect "+eb.value
+    eb.textContent=eb.value
     msg.start_time = 0;
     msg.duration = 10000; // ms
     msg.repeat = 10;
@@ -111,6 +123,23 @@ function start_effect()
     hdr.msg_id = "START_EFFECT";
     send_msg(socket, hdr, msg);
 }
+
+function start_effect()
+{
+    log.value += "Start effect "+eb.value+"\n";
+    var msg = new Start_Effect();
+    msg.slave_id = 0; // broadcast
+    msg.effect_id = parseInt(eb.value);
+    eb.value++;
+    eb.textContent=eb.value
+    msg.start_time = 0;
+    msg.duration = 10000; // ms
+    msg.repeat = 10;
+    var hdr = new Header();
+    hdr.msg_id = "START_EFFECT";
+    send_msg(socket, hdr, msg);
+}
+
 
 function prev_effect()
 {
