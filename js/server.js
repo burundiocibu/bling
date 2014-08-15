@@ -39,6 +39,16 @@ var server = http.createServer(function(req, res) {
     {
         file = "index.html";
     }
+    else if (req.url == "/ensemble_master")
+    {
+        // This is how the client is told where to make the websocket connection
+        res.writeHead(200, {"Content-Type":"text/javascript"});
+        msg="ensemble_master=\"ws://"+req.connection.localAddress+":9321/ws\""
+        res.write(msg);
+        res.end();
+        console.log(msg);
+        return;
+    }
     else if (/^\/(\w+(?:\.min)?\.(?:js|html|proto))$/.test(req.url))
     {
         file = req.url.substring(1);

@@ -23,8 +23,8 @@ var Reboot_Slave = builder.build("bling_pb.reboot_slave");
 
 
 // Connect to the websocket server
-//var socket = new WebSocket("ws://master:9321/ws");
-var socket = new WebSocket("ws://fourpi:9321/ws");
+var socket = new WebSocket(ensemble_master);
+//var socket = new WebSocket("ws://fourpi:9321/ws");
 socket.binaryType = "arraybuffer"; // We are talking binary
 
 
@@ -61,11 +61,12 @@ function send_msg(socket, header, body)
 
 socket.onerror = function(error)
 {    
+    log.value += "Failed connecting to " + ensemble_master + "\n"
 }
 
 socket.onopen = function() 
 {
-    log.value += "Connected\n";
+    log.value += "Connected to " + ensemble_master + "\n"
     get_slave_list();
 };
 
