@@ -84,17 +84,18 @@ int main(int argc, char **argv)
 
    mvprintw(0, 0, Slave::stream_header.c_str());
 
-   // Reset all the slaves, and give them a chance to come back up
+   // Reset all the slaves
    Slave broadcast(0);
    broadcast.my_line=1;
    broadcast.reboot();
-   bcm2835_delayMicroseconds(100000);
 
    SlaveList all, found;
    for (int id=1; id < ensemble::num_slaves; id++)
       all.push_back(Slave(id));
+   SlaveList::iterator scanner=all.begin();
 
-   long t_hb=-1000, t_ping=-1000;
+   long t_hb=-1000, t_dump=-1000;
+   int line=2;
    while (true)
    {
       // A simple throbber
@@ -111,26 +112,17 @@ int main(int argc, char **argv)
          display(broadcast);
       }
 
-      // Ping slave every 5 seconds
-      if (t - t_ping >= 5)
+      scanner = scan_some(all, scanner, 2);
+      for (auto i=all.begin(); i!=all.end(); i++)
+         if (i->t_rx && i->my_line ==0)
+               i->my_line = line++;
+
+      if (t - t_dump > 5)
       {
-         t_ping = t;
-         if (all.size())
-         {
-            SlaveList more = scan(all);
-            if (more.size())
-            {
-               found.splice(found.end(), more);
-               int line = 2;
-               for (auto i = found.begin(); i != found.end(); i++)
-                  i->my_line = line++;
-            }
-         }
-         for (auto i=found.begin(); i!=found.end(); i++)
-         {
-            i->ping();
-            display(*i);
-         }
+         t_dump = t;
+         for (auto i=all.begin(); i!=all.end(); i++)
+            if (i->t_rx)
+               display(*i);
       }
 
       char key = getch();
@@ -144,8 +136,11 @@ int main(int argc, char **argv)
          continue;
       }
 
-      for (auto slave=found.begin(); slave!=found.end(); slave++)
+      for (auto slave=all.begin(); slave!=all.end(); slave++)
       {
+         if (!slave->t_rx)
+            continue;
+
          switch(key)
          {
             case 'w':

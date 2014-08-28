@@ -71,6 +71,7 @@ typedef std::list<Slave> SlaveList;
 
 SlaveList read_slaves(const std::string filename);
 SlaveList scan(SlaveList& slave_list, int tries=1);
+SlaveList::iterator scan_some(SlaveList& slave_list, SlaveList::iterator slave, int num_to_scan);
 
 std::ostream& operator<<(std::ostream& s, const Slave& slave);
 std::ostream& operator<<(std::ostream& s, const SlaveList& slave_list);

@@ -29,8 +29,8 @@ void do_ping(uint8_t* buff, uint8_t pipe);
 uint16_t slave_id;
 
 // 0.1 was original app load to slaves
-const int8_t major_version = 0;
-const int8_t minor_version = 9;
+const int8_t major_version = 1;
+const int8_t minor_version = 0;
 
 int main (void)
 {
@@ -61,6 +61,8 @@ int main (void)
    uint32_t t_hb=0;
    Effect effect(slave_id);
    typedef void APP(void);  // used to jump to the bootloader
+
+   effect.start(0, 4000); // Always start up with effect 0, flash my ID
 
    for (;;)
    {

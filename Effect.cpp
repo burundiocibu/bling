@@ -56,6 +56,20 @@ void Effect::init(uint8_t* buff)
    state = pending;
 }
 
+void Effect::start(uint8_t _id, uint32_t _duration)
+{
+   if (_id >= max_effect)
+   {
+      reset();
+      return;
+   }
+
+   id = _id;
+   start_time = avr_rtc::t_ms;
+   duration = _duration;
+   state = pending;
+}
+
 
 void Effect::execute()
 {
@@ -113,18 +127,6 @@ void Effect::all_stop(uint8_t* buff)
    reset();
 }
 
-
-void Effect::reset()
-{
-   state = stopped;
-   id = messages::all_stop_id;
-   start_time = 0;
-   duration = 0;
-
-   for (int ch=0; ch<14; ch++)
-      avr_tlc5940::set_channel(ch, 0);
-}
-
 void set_red(uint16_t v)
 {
    for (unsigned ch=1; ch<12; ch+=3)
@@ -150,33 +152,62 @@ void set_rgb(uint16_t r, uint16_t g, uint16_t b)
    set_blue(b);
 }
 
+void set_all(uint16_t v)
+{
+   for (unsigned ch=0; ch<14; ch++)
+      avr_tlc5940::set_channel(ch, v);
+}
+
+void Effect::reset()
+{
+   state = stopped;
+   id = messages::all_stop_id;
+   start_time = 0;
+   duration = 0;
+
+   set_all(0);
+}
+
+
+/* Flash the unit ID as an 8 bit code
+   id 19 = 00010100
+   0: __-_____
+   1: __------
+   Each bit is 500 ms long, whole code takes 4 seconds
+*/
+void Effect::e0()
+{
+   int n = dt / 500;
+   int m = dt % 500;
+   int mask = 1 << n;
+   int b = slave_id & mask;  // really want this to be marcher ID
+   int v = 64;
+   if (m<100)
+      set_all(0);
+   else if (m<120)
+      set_all(v);
+   else if (b)
+      set_all(v);
+   else
+      set_all(0);
+}
+
+
 /*
  Flash all full intensity and fade out over a the duration
 rgb:   
       |\
 ______| \____
 */
-void Effect::e0()
+void Effect::e1()
 {
    int v = vmax - dt * vmax / duration;
    if (v<0)
       v=0;
-   set_rgb(v, v, v);
+   set_all(v);
 }
 
-// Flash red/green/blue for the duration of the effect; mainly for testing.
-void Effect::e1()
-{
-   long cldt = dt & 0x3ff;
-   for (unsigned ch=0; ch<12; ch++)
-      avr_tlc5940::set_channel(ch, 1);
-   if (cldt < 170)
-      set_green(vmax>>3);
-   else if (341 < cldt && cldt < 511)
-      set_red(vmax>>3);
-   else if (680 < cldt && cldt < 852)
-      set_blue(vmax>>3);
-}
+
 
 
 /*

@@ -63,15 +63,16 @@ int main(int argc, char **argv)
    // Reset all the slaves, and give them a chance to come back up
    Slave broadcast(0);
    broadcast.reboot();
-   bcm2835_delayMicroseconds(50000);
 
    cout << broadcast.stream_header << endl;
 
    SlaveList all, found;
    for (int id=1; id < ensemble::num_slaves; id++)
       all.push_back(Slave(id));
+   SlaveList::iterator scanner=all.begin();
 
-   long t_hb=-1000, t_ping=-1000;
+   long t_hb=-1000, t_dump=0;
+   int line=2;
    while (true)
    {
       long t=runtime.sec();
@@ -81,29 +82,21 @@ int main(int argc, char **argv)
       {
          t_hb=t;
          broadcast.heartbeat();
-         if (debug)
+         if (debug>1)
             cout << broadcast << endl;
       }
 
-      // Ping slave every 5 seconds
-      if (t - t_ping >= 5)
+      scanner = scan_some(all, scanner, 10);
+      for (auto i=all.begin(); i!=all.end(); i++)
+         if (i->t_rx && i->my_line ==0)
+               i->my_line = line++;
+
+      if (t - t_dump > 5)
       {
-         t_ping = t;
-         if (all.size())
-         {
-            SlaveList more = scan(all);
-            if (more.size())
-            {
-               cout << "Added " << more.size() << " slaves, "
-                    << all.size() << " not found." << endl;
-               found.splice(found.end(), more);
-            }
-         }
-         for (auto i=found.begin(); i!=found.end(); i++)
-         {
-            i->ping();
-            cout << *i << endl;
-         }
+         t_dump = t;
+         for (auto i=all.begin(); i!=all.end(); i++)
+            if (i->t_rx)
+               cout << *i << endl;
       }
 
       char key = getch();

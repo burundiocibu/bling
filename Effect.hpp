@@ -18,6 +18,7 @@ struct Effect
    uint8_t noise[32];
 
    void init(uint8_t* buff);
+   void start(uint8_t id, uint32_t duration);
    void execute(void);
    void all_stop(uint8_t* buff);
    void reset();
@@ -34,13 +35,13 @@ struct Effect
 
    void e0(); // Fast on white, fades out over duration
    void e1(); // The LED test pattern
-   void e2(); // Fade up to full white over duration
-   void e3(); // Fade all up to full red over duration 
-   void e4(); // Fade all up to 20% RED
-   void e5(); // Sparkle red/purple brass & woodwinds for duration
-   void e6(); // Sparkle red/purple brass & ww fade out 
-   void e7(); // Fade 20% red to 0% from R to L in two groups
-   void e8(); // white wave back to front set13
+   void e2();
+   void e3();
+   void e4();
+   void e5();
+   void e6();
+   void e7();
+   void e8();
    void e9();
    void e10();
    void e11();

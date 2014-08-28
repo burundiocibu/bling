@@ -422,3 +422,18 @@ SlaveList scan(SlaveList& slave_list, int tries)
 
    return found;
 }
+
+SlaveList::iterator scan_some(SlaveList& slave_list,  SlaveList::iterator slave, int num_to_scan)
+{
+   if (slave_list.size() == 0)
+      return slave;
+
+   for (int n=0; n < num_to_scan; n++)
+   {
+      slave->ping();
+      slave++;
+      if (slave==slave_list.end())
+         slave=slave_list.begin();
+   }
+   return slave;
+}
