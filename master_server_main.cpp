@@ -1,7 +1,3 @@
-/*
- * This is a hack of the test-echo program from the libwebsockets distro.
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
@@ -111,6 +107,7 @@ callback_bling_protobuf(struct libwebsocket_context *context,
                case bling_pb::header::START_EFFECT:   s3=ms->start_effect(s2);  break;
                case bling_pb::header::REBOOT_SLAVE:   s3=ms->reboot_slave(s2);  break;
                case bling_pb::header::PING_SLAVE:     s3=ms->ping_slave(s2);  break;
+               case bling_pb::header::PROGRAM_SLAVE:  s3=ms->program_slave(s2);  break;
                default:
                   lwsl_notice("LWS_CALLBACK_RECEIVE: Ignoring unknown message.");
             }

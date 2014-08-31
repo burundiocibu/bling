@@ -12,7 +12,8 @@ namespace ensemble
    const size_t addr_len = 4;
    const size_t message_size = 22;
    const uint8_t master_addr[addr_len] = {0xA1, 0xA3, 0xA5, 0xA6};
-   const size_t num_slaves = 300;
+   const size_t num_slaves = 300;  // number of addresses defined
+   const size_t max_slave = 175;   // nmuber of boards assigned addresses
    const uint8_t slave_addr[num_slaves][addr_len]=
    {
       { 0x3f ,  0x5b ,  0x74 ,  0x38 }, // slave 0 (broadcast)

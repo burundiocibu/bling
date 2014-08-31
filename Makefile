@@ -9,7 +9,7 @@ MASTER_BIN=master_curses master_logger master_scan master_loader master_server\
 all: $(MASTER_BIN) $(SLAVE_BIN)
 
 clean:
-	-rm -f $(MASTER_BIN) $(SLAVE_BIN) *.o *.pb.cc *.pb.h
+	-rm -f $(MASTER_BIN) $(SLAVE_BIN) *.o *.pb.cc *.pb.h slave/*
 
 include Makefile.rpi
 include Makefile.avr

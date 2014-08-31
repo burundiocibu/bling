@@ -38,6 +38,8 @@ public:
 
    static std::string stream_header;
 
+   static int debug;
+
    unsigned id;
    std::string drill_id;
    std::string student_name;

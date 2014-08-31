@@ -35,16 +35,15 @@ Master_Server::Master_Server(int _debug)
    nRF24L01::configure_PTX();
    nRF24L01::flush_tx();
 
-   // Reset all the slaves, and give them a chance to come back up
    Slave broadcast(0);
-   broadcast.reboot();
-   bcm2835_delayMicroseconds(50000);
 
    if (debug)
       cout << broadcast.stream_header << endl;
    
-   for (int id=1; id < ensemble::num_slaves; id++)
+   for (int id=1; id < ensemble::max_slave; id++)
       all.push_back(Slave(id));
+
+   Slave::debug = debug;
 
    bling_pb::nak nak_msg;
    nak_msg.SerializeToString(&nak);
@@ -63,7 +62,7 @@ Slave* Master_Server::find_slave(unsigned slave_id)
    if (slave_id == 0)
       return &broadcast;
    else
-      for (auto i=found.begin(); i!=found.end(); i++)
+      for (auto i=all.begin(); i!=all.end(); i++)
          if (i->id == slave_id)
             return &(*i);
    return NULL;
@@ -94,27 +93,19 @@ string Master_Server::get_slave_list(string& msg)
       cout << "body: " << gsl.ShortDebugString() << endl;
    if (gsl.scan())
    {
-      if (all.size())
-      {
-         SlaveList more = ::scan(all);
-         if (more.size())
-         {
-            cout << "Added " << more.size() << " slaves, "
-                 << all.size() << " not found." << endl;
-            found.splice(found.end(), more);
-         }
-      }
-      for (auto i=found.begin(); i!=found.end(); i++)
-      {
-         i->ping();
-         cout << *i << endl;
-      }
+      SlaveList wow = ::scan(all);
+      cout << "Found " << wow.size() << " slaves out of "
+           << all.size() << " defined." << endl;
    }
    bling_pb::slave_list sl;
-   for (auto i=found.begin(); i!=found.end(); i++)
+   for (auto i=all.begin(); i!=all.end(); i++)
    {
       if (gsl.has_slave_id() && i->id != gsl.slave_id())
          continue;
+
+      if (i->t_rx == 0)
+         continue;
+
       bling_pb::slave_list::slave_info* slave=sl.add_slave();
       slave->set_slave_id(i->id);
       slave->set_vcell(i->vcell);
@@ -214,12 +205,8 @@ void Master_Server::heartbeat()
 {
    // All times in ms
    const long hb_dt = 1000;
-   const long ping_dt = 5000;
    static long hb_time = -hb_dt;
-   static long ping_time = -ping_dt;
-
-   long t = runtime.msec();
-   if (t - hb_time >= hb_dt)
+   if (runtime.msec() - hb_time >= hb_dt)
    {
       hb_time += hb_dt;
 
@@ -228,46 +215,29 @@ void Master_Server::heartbeat()
          cout << broadcast << endl;
    }
 
-   static SlaveList::iterator next_found = found.begin();
-   if (next_found == found.end())
-      next_found = found.begin();
-   if (next_found != found.end())
+   static SlaveList::iterator scanner = all.begin();
+
+   const long dump_dt = 60*1000;
+   static long dump_time = 0;
+   scanner = scan_some(all, scanner, 3);
+   if (debug)
    {
-      if (t - next_found->t_rx/1000 > ping_dt)
+      if (runtime.msec() - dump_time >= dump_dt)
       {
-         next_found->ping();
-         if (debug & 0x2)
-            cout << *next_found << endl;
-         long age = t - next_found->t_rx/1000;
-         if (age > 4 * ping_dt && debug)
-            cout << "Lost contact with " << next_found->id << " age " << age << endl;  
-         next_found++;
+         cout << "rt=" << runtime.sec() << " s ---------------------" << endl;
+         dump_time += dump_dt;
+         for (auto i=all.begin(); i!=all.end(); i++)
+            if (i->t_rx == 0)
+               continue;
+            else
+               cout << *i << endl;
       }
    }
+}
 
-   static long pass = 0;
-   static long last_scan=0;
-   if (pass > 2 && t - last_scan < 100)
-      return;
 
-   static SlaveList::iterator next = all.begin();
-   if (next == all.end())
-      return;
-   last_scan = t;
-   if (next->ping() == 0)
-   {
-      if (debug & 0x2)
-         cout << *next << endl;
-      found.push_back(*next);
-      next = found.erase(next);
-   }
-   else
-   {
-      next++;
-      if (next == all.end())
-      {
-         next = all.begin();
-         pass++;
-      }
-   }
+string Master_Server::program_slave(string& msg)
+{
+   cout << "program_slave command not implimeented yet in master_server.cpp" << endl;
+   return ack;
 }

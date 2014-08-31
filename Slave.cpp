@@ -23,6 +23,9 @@ using namespace std;
 
 string Slave::stream_header("id     #     t_tx    tx_dt   err    t_rx      rx_dt    NR    ver   Vcell      SOC    MMC    dt   nac   arc ");
 
+int Slave::debug = 0;
+
+
 Slave::Slave(unsigned _id, const string& _drill_id, const string& _student_name)
    : id(_id), my_line(0), pwm(15),
      drill_id(_drill_id), student_name(_student_name),
@@ -173,12 +176,12 @@ int Slave::rx(void)
 
    delay_us(100);  // Not sure this is useful...
 
-   if (false && i>15)
+   if (debug>1 && i>15)
       cout << "Slave " << id << " rx: rx_read_cnt=" << i << endl;
 
    if (i==100)
    {
-      if (false)
+      if (debug>1)
          cout << "Slave " << id << " rx: error " << endl;
       no_resp++;
       return 1;
@@ -402,26 +405,26 @@ SlaveList scan(SlaveList& slave_list, int tries)
    SlaveList found;
    for (int pass=0; slave_list.size() > 0 && pass < tries; pass++)
    {
-      //cout << "Pass " << pass << " " << 1e-6*runtime.usec() << " " << endl;
-      for (auto i = slave_list.begin(); i != slave_list.end(); )
+      if (Slave::debug) 
+         cout << "Start scan at " << runtime.sec() << " s." << endl;
+      for (auto i = slave_list.begin(); i != slave_list.end(); i++)
       {
          if (i->ping() == 0)
-         {
             found.push_back(*i);
-            //cout << "." << flush;
-            i = slave_list.erase(i);
-         }
-         else
+         if (Slave::debug)
          {
-            // cout << "x" << flush;
-            i++;
+            if (i->t_rx) cout << "." << flush;
+            else         cout << "x" << flush;
          }
       }
-      //cout << endl;
+      if (Slave::debug)
+         cout << endl
+              << "Scan done at " << runtime.sec() << " s." << endl;;
    }
 
    return found;
 }
+
 
 SlaveList::iterator scan_some(SlaveList& slave_list,  SlaveList::iterator slave, int num_to_scan)
 {

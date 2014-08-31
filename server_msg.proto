@@ -24,6 +24,7 @@ message header
       REBOOT_SLAVE = 6;
       SLEEP_SLAVE = 7;
       WAKE_SLAVE = 8;
+      PROGRAM_SLAVE = 9;
    }
    required msg_id_type msg_id = 1;
    required fixed32 len = 2;
@@ -120,6 +121,15 @@ message ping_slave
 // master will send a reboot command to the indicated slave.
 // master sends no response.
 message reboot_slave
+{
+   required uint32 slave_id = 1;
+   optional uint32 repeat = 2 [default = 1];
+}
+
+// master will re-program the indicated slave.
+// master replys with slave_list message with only the indicated slave's info.
+// If the slave never responds, the slave_list will be empty.
+message program_slave
 {
    required uint32 slave_id = 1;
    optional uint32 repeat = 2 [default = 1];

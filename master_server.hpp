@@ -23,13 +23,13 @@ public:
 
    std::string reboot_slave(std::string& msg);
 
+   std::string program_slave(std::string& msg);
+
    void heartbeat();
 
    Slave* find_slave(unsigned slave_id);
 
    SlaveList all;
-   SlaveList found;
-   SlaveList::iterator last_scanned;
    Slave broadcast;
 
    int debug;
