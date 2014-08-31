@@ -3,14 +3,6 @@
 # End:
 
 CXXFLAGS+=-std=c++0x
-ALL_BIN=master_curses master_logger master_scan master_loader master_server\
- show get_param flash_list
-
-all: $(ALL_BIN)
-
-clean:
-	-rm -f $(ALL_BIN) *.o *.pb.cc *.pb.h
-
 
 spi-time: LDLIBS+=-lbcm2835
 spi-time: spi-time.cpp

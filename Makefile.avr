@@ -15,7 +15,7 @@ NUMBER_OF_TLC5940=1
 # This doesn't work!! Still have to do a clean build since
 #slave216_main.o: NUMBER_OF_TLC5940=14
 
-CFLAGS=-I. $(INC) -g -mmcu=$(MCU) -O$(OPTLEVEL) \
+slave%:CFLAGS=-I. $(INC) -g -mmcu=$(MCU) -O$(OPTLEVEL) \
 	-fpack-struct -fshort-enums             \
 	-DF_CPU=$(F_CPU)UL -DAVR=1              \
 	-DBOOTADDR=$(BOOTADDR)                  \
@@ -25,7 +25,7 @@ CFLAGS=-I. $(INC) -g -mmcu=$(MCU) -O$(OPTLEVEL) \
 	-Wa,-ahlms=$(firstword                  \
 	$(filter %.lst, $(<:.c=.lst)))
 
-CPPFLAGS=-fno-exceptions -Wall                   \
+slave%:CPPFLAGS=-fno-exceptions -Wall                   \
 	-I. $(INC) -g -mmcu=$(MCU) -O$(OPTLEVEL) \
 	-fpack-struct -fshort-enums              \
 	-DF_CPU=$(F_CPU)UL -DAVR=1               \
@@ -35,20 +35,13 @@ CPPFLAGS=-fno-exceptions -Wall                   \
 	-Wa,-ahlms=$(firstword                   \
 	$(filter %.lst, $(<:.cpp=.lst)))
 
-LDFLAGS=-lm
+slave%:LDFLAGS=-lm
 
-CC=avr-gcc
-CPP=avr-gcc
+slave%:CC=avr-gcc
+slave%:CPP=avr-gcc
 
 #=================================================================
-.PHONY: clean %.flash
 .PRECIOUS: %.hex
-
-all: slave/slave_main.hex slave/nrf_boot.hex
-
-clean:
-	rm -f slave/* Effect_sets.hpp
-
 
 slave/avr_throbber.o: avr_throbber.cpp
 slave/avr_spi.o: avr_spi.cpp
