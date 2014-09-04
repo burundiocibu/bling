@@ -1,15 +1,7 @@
-<!DOCTYPE html> <!-- -*- mode: javascript; -*- -->
+<!DOCTYPE html> <!-- -*- mode: html; -*- -->
 <html>
 <head>
-<script src="./ensemble_master"></script>
-<script src="./Long.min.js"></script>
-<script src="./ByteBufferAB.min.js"></script>
-<script src="./ProtoBuf.min.js"></script>
-<script src="./hexy.js"></script>
-<script src="./Ensemble.js"></script>
-</head>
 <body>
-  
   <meta name="viewport" content="width=device-width, user-scalable=no">
   <style>
     body {
@@ -22,118 +14,9 @@
     background-size: contain;
     }
   </style>
-
-  <table border="0">
-    <tr>
-      <td> </td>
-      <td>
-        Effect
-      </td>
-      <td> </td>
-    </tr>
-    <tr>
-      <td>
-        <button id="prev_effect" onclick="prev_effect()" class="big"
-                style="background: url(left.ico); background-size:
-                       contain; height:6em; width:6em">
-      </td>
-      <td>
-        <button id="play_effect" onclick="start_effect()" class="big"
-                value="1"
-                style="background: url(play.ico); background-size:
-                       contain; height:6em; width:6em">
-          1
-      </td>
-      <td>
-        <button id="next_effect" onclick="next_effect()" class="big"
-                style="background: url(right.ico); background-size:
-                       contain; height:6em; width:6em">
-      </td>
-      <td>
-        <button onclick="all_stop()" class="big"
-                style="background: url(stop_alt.ico); background-size:
-                       contain; height:6em; width:6em">
-      </td>
-    </tr>
-  </table>
-  
-  <br />
-<button onclick="get_slave_list()">List Slaves</button>
-<button onclick="scan_slaves()">Scan Slaves</button>
-<br />
-Ensemble Status
-<textarea id="log" style="width: 95%; border: none;" rows="10"></textarea><br />
-
-<script>
-var log = document.getElementById("log");
-var text = document.getElementById("text");
-var eb = document.getElementById("play_effect");
-
-function get_slave_list()
-{
-    var gsl = new Get_Slave_List();
-    gsl.scan = "false";
-    gsl.tries = 0;
-    var hdr = new Header();
-    hdr.msg_id = "GET_SLAVE_LIST";
-    send_msg(socket, hdr, gsl);
-}
-
-function scan_slaves()
-{
-    var gsl = new Get_Slave_List();
-    gsl.scan = "true";
-    gsl.tries = 1;
-    var hdr = new Header();
-    hdr.msg_id = "GET_SLAVE_LIST";
-    send_msg(socket, hdr, gsl);
-}
-
-function all_stop()
-{
-    var msg = new Send_All_Stop();
-    msg.slave_id = 0;
-    msg.tries = 10;
-    var hdr = new Header();
-    hdr.msg_id = "SEND_ALL_STOP";
-    send_msg(socket, hdr, msg);
-    log.value += "All Stop\n";
-}
-
-function start_effect()
-{
-    log.value += "Start effect "+eb.value+"\n";
-    var msg = new Start_Effect();
-    msg.slave_id = 0; // broadcast
-    msg.effect_id = parseInt(eb.value);
-    eb.value++;
-    eb.textContent=eb.value
-    msg.start_time = 0;
-    msg.duration = 10000; // ms
-    msg.repeat = 10;
-    var hdr = new Header();
-    hdr.msg_id = "START_EFFECT";
-    send_msg(socket, hdr, msg);
-}
-
-function prev_effect()
-{
-    eb.value--;
-    if (eb.value < 0)
-    {
-        eb.value = 0;
-    }
-    eb.textContent=eb.value;
-}
-
-function next_effect()
-{
-    eb.value++;
-    eb.textContent=eb.value;
-}
-
-log.value = ""; // Clear log on reload
-
-</script>
+<hr>
+Dark Hollow
+<hr>
+<meta http-equiv="refresh" content="2; show.html" />
 </body>
 </html>

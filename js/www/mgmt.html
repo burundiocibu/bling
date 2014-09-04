@@ -1,0 +1,86 @@
+<!DOCTYPE html> <!-- -*- mode: html; -*- -->
+<html>
+  <head>
+    Ensemble Management
+    <button onclick="location.href='show.html'">Show Control</button>
+    <hr>
+  </head>
+  <body>
+    
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <style>
+      body {
+    font-family: "Verdana";
+    }
+      button.big {
+      background-repeat:no-repeat;
+      font-family: "Verdana";
+      border: none;
+      background-size: contain;
+      }
+    </style>
+    <table border="0">
+      <tr> <!-- row 1 -->
+        <td>
+          <button id="up" onclick="set_tlc(1)" class="big"
+                  style="background: url(up.ico); background-size:
+                         contain; height:5em; width:5em">
+        </td>
+        <td>
+          <button id="effect0" onclick="start_effect(0)" class="big"
+                  style="background: url(play.ico); background-size:
+                         contain; height:5em; width:5em">
+            0
+        </td>
+        <td>
+          <button onclick="all_stop()" class="big"
+                  style="background: url(stop_alt.ico); background-size:
+                         contain; height:5em; width:5em">
+        </td>
+      </tr>
+      <tr> <!-- row 2 -->
+        <td>
+          <textarea id="tlc" style="width: 5em; border: none;
+                                    text-align:center; resize:none;" rows="1"></textarea>
+        </td>
+      </tr>
+      <tr> <!-- row 3 -->
+        <td>
+          <button id="down" onclick="set_tlc(-1)" class="big"
+                  style="background: url(down.ico); background-size:
+                         contain; height:5em; width:5em">
+        </td>
+        <td>
+          <button id="effect1" onclick="start_effect(1)" class="big"
+                  style="background: url(play.ico); background-size:
+                         contain; height:5em; width:5em">
+            1
+        </td>
+        <td>
+        </td>
+      </tr>
+  </table>
+    
+    <hr>
+    <textarea id="status_region" style="width: 10em; border: none; resize:none" rows="1"></textarea>
+  <hr>
+  <button onclick="get_slave_list()">List Slaves</button>
+  <button onclick="scan_slaves()">Scan Slaves</button>
+  <br/>
+  <button onclick="program_slaves()">Program Slaves</button>
+  <button onclick="shutdown_master()">Shutdown</button>
+
+  <br />
+  <textarea id="log_region" style="width: 95%; border: none;"
+            rows="10"></textarea>
+  <br/>
+  
+  <script src="./ensemble_master"></script>
+  <script src="./Long.min.js"></script>
+  <script src="./ByteBufferAB.min.js"></script>
+  <script src="./ProtoBuf.min.js"></script>
+  <script src="./hexy.js"></script>
+  <script src="./Ensemble.js"></script>
+  <script src="./mgmt.js"></script>
+</body>
+</html>

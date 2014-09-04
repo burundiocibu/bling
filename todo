@@ -1,10 +1,43 @@
-TODO
+Notes
 -----
-   * Add reflash option to web interface?
-   * Have a periodic update of ensemble status?
-   * Cull slaves that loose connection
+   * got icons from http://findicons.com/pack/811/developer_kit
 
-got icons from http://findicons.com/pack/811/developer_kit
+
+Makefile.avr todo:
+   * Have a file that identifies what version of slave_main has been built.
+
+Slave.cpp todo:
+   * see if rx_read_count ever goes past 100 on a successfull read.
+   * fix mmc accounting in Slave class when talking to multiple slaves
+
+slave_main todo:
+   * Add new effects!
+
+master_server todo:
+   add reprogramming of slaves (program_slave)
+   add reporting of host status (get_master_status)
+   add rebooting of master (shutdown_master)
+   initialize slave list from file when one is provided
+   add temp logging to output
+   find hang after it runs for 2+ hours
+   cull slaves that have t_rx over 10 minutes
+
+show web page todo:
+   * make like to management web page
+   * play, next, prev, and test button. Maybe a button for each effect?
+   * remove scan buttons
+
+management web page:
+   * create
+   * scan/list buttons
+   * status grid of all slaves?
+   * list slaves with soc & version
+   * master temp/load/disk status
+   * run slave test button
+   * flast slave(s)
+   * shutdown master
+
+Make rPi boot off flash
 
 Done
 ----

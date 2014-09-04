@@ -8,7 +8,7 @@ package bling_pb;
 // These messages are intended to be sent/received across a TCP/IP
 // connection. Every 'real' message is preceeded by a header message
 // which provides the length and type of the following message.
-// These messages are sent between the clinet and the master_server.
+// These messages are sent between the client and the master_server.
 // Many of these have corresponding messages that are sent from the
 // master to the slaves (defined in messages.hpp).
 message header
@@ -25,6 +25,9 @@ message header
       SLEEP_SLAVE = 7;
       WAKE_SLAVE = 8;
       PROGRAM_SLAVE = 9;
+      GET_MASTER_STATUS = 10; // No 'real' message follows
+      MASTER_STATUS = 11;
+      SHUTDOWN_MASTER = 12;  // No 'real' message follows
    }
    required msg_id_type msg_id = 1;
    required fixed32 len = 2;
@@ -132,5 +135,13 @@ message reboot_slave
 message program_slave
 {
    required uint32 slave_id = 1;
-   optional uint32 repeat = 2 [default = 1];
 }
+
+
+message master_status
+{
+   optional double temperature = 1;       // CPU die temp
+   optional double load = 2;        // 1 minute load average
+   optional uint64 disk_free = 3; // bytes free on disk
+}
+

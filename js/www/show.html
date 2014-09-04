@@ -1,175 +1,62 @@
-<!DOCTYPE html> <!-- -*- mode: javascript; -*- -->
+<!DOCTYPE html> <!-- -*- mode: html; -*- -->
 <html>
 <head>
-<script src="./Long.min.js"></script>
-<script src="./ByteBufferAB.min.js"></script>
-<script src="./ProtoBuf.min.js"></script>
-<script src="./hexy.js"></script>
-<script>
-if (typeof dcodeIO === 'undefined' || !dcodeIO.ProtoBuf)
-{
-    throw(new Error("ProtoBuf.js is not present. Please see www/index.html for manual setup instructions."));
-}
-
-// Initialize ProtoBuf.js
-var ProtoBuf = dcodeIO.ProtoBuf;
-var builder = ProtoBuf.loadProtoFile("./server_msg.proto");
-var Header = builder.build("bling_pb.header");
-var Msg_Ids = builder.build("bling_pb.header.msg_id_type");
-var Ack = builder.build("bling_pb.slave_list.ack");
-var Nak = builder.build("bling_pb.slave_list.nak");
-var Send_All_Stop = builder.build("bling_pb.send_all_stop");
-var Get_Slave_List = builder.build("bling_pb.get_slave_list");
-var Slave_List = builder.build("bling_pb.slave_list");
-var Slave_Info = builder.build("bling_pb.slave_list.slave_info");
-var Set_Slave_Tlc = builder.build("bling_pb.set_slave_tlc");
-var Start_Effect = builder.build("bling_pb.start_effect");
-var Ping_Slave = builder.build("bling_pb.ping_slave");
-var Reboot_Slave = builder.build("bling_pb.reboot_slave");
-
-</script>
+Show Control
+<button onclick="location.href='mgmt.html'">Ensemble Management</button>
+<hr>
 </head>
 <body>
 
-<meta name="viewport" content="width=device-width, user-scalable=no">
-<button id="effect_button" onclick="start_effect()" style="height:3.5em; width:8em">Play Effect</button>
-<input type="text" id="effect" value="1" /> <br />
-<br />
-
-<button onclick="all_stop()" style="height:3.5em; width:8em">All Stop</button><br />
-<br />
-
-<button onclick="get_slave_list()">List Slaves</button>
-<button onclick="scan_slaves()">Scan Slaves</button><br />
-
-<textarea id="log" style="width: 95%" rows="10"></textarea><br />
-
-<script>
-var log = document.getElementById("log");
-var text = document.getElementById("text");
-var eb = document.getElementById("effect_button");
-
-// Connect to the websocket server
-var socket = new WebSocket("ws://threepi:9321/ws");
-socket.binaryType = "arraybuffer"; // We are talking binary
-
-function appendBuffer( buffer1, buffer2 )
-{
-  var tmp = new Uint8Array( buffer1.byteLength + buffer2.byteLength );
-  tmp.set( new Uint8Array( buffer1 ), 0 );
-  tmp.set( new Uint8Array( buffer2 ), buffer1.byteLength );
-  return tmp.buffer;
-}
-
-function ab2str(buf)
-{
-    return String.fromCharCode.apply(null, new Uint8Array(buf));
-}
-
-function send_msg(header, body)
-{
-    if (socket.readyState == WebSocket.OPEN) 
-    {
-        var b2 = body.toArrayBuffer();
-        header.len = b2.byteLength;
-        var b1 = header.toArrayBuffer();
-        var b3 = appendBuffer(b1, b2);
-        socket.send(b3);
-        //log.value += "Sent " + b3.byteLength + " bytes\n";
-        //log.value += hexy(ab2str(msg_buff)) + "\n";
+  <meta name="viewport" content="width=device-width, user-scalable=no">
+  <style>
+    body {
+    font-family: "Verdana";
     }
-    else
-    {
-        log.value += "Not connected\n";
+    button.big {
+    background-repeat:no-repeat;
+    font-family: "Verdana";
+    border: none;
+    background-size: contain;
     }
-}
+  </style>
 
-function get_slave_list()
-{
-    var gsl = new Get_Slave_List();
-    gsl.scan = "false";
-    gsl.tries = 0;
-    var hdr = new Header();
-    hdr.msg_id = "GET_SLAVE_LIST";
-    send_msg(hdr, gsl);
-}
+  <table border="0">
+    <tr>
+      <td>
+        <button id="prev_effect" onclick="prev_effect()" class="big"
+                style="background: url(left.ico); background-size:
+                       contain; height:6em; width:6em">
+      </td>
+      <td>
+        <button id="play_effect" onclick="start_effect()" class="big"
+                value="1"
+                style="background: url(play.ico); background-size:
+                       contain; height:6em; width:6em">
+          1
+      </td>
+      <td>
+        <button id="next_effect" onclick="next_effect()" class="big"
+                style="background: url(right.ico); background-size:
+                       contain; height:6em; width:6em">
+      </td>
+      <td>
+        <button onclick="all_stop()" class="big"
+                style="background: url(stop_alt.ico); background-size:
+                       contain; height:6em; width:6em">
+      </td>
+    </tr>
+  </table>
+  <hr>
+  <textarea id="status_region" style="width: 10em; border: none; resize:none;" rows="1"></textarea>
+  <hr>
 
-function scan_slaves()
-{
-    var gsl = new Get_Slave_List();
-    gsl.scan = "true";
-    gsl.tries = 1;
-    var hdr = new Header();
-    hdr.msg_id = "GET_SLAVE_LIST";
-    send_msg(hdr, gsl);
-}
-
-function all_stop()
-{
-    var msg = new Send_All_Stop();
-    msg.slave_id = 0;
-    msg.tries = 10;
-    var hdr = new Header();
-    hdr.msg_id = "SEND_ALL_STOP";
-    send_msg(hdr, msg);
-}
-
-function start_effect()
-{
-    var msg = new Start_Effect();
-    msg.slave_id = 0; // broadcast
-    msg.effect_id = parseInt(effect.value);
-    //effect.value++;
-    msg.start_time = 0;
-    msg.duration = 10000; // ms
-    msg.repeat = 10;
-    var hdr = new Header();
-    hdr.msg_id = "START_EFFECT";
-    send_msg(hdr, msg);
-}
-
-socket.onerror = function(error)
-{    
-}
-
-socket.onopen = function() 
-{
-    log.value += "Connected\n";
-    get_slave_list();
-};
-
-socket.onclose = function() 
-{
-    log.value += "Disconnected\n";
-};
-    
-socket.onmessage = function(evt) 
-{
-    try
-    {
-        log.value += "Received "+evt.data.byteLength+" bytes\n";
-        var hdr = Header.decode(evt.data.slice(0,7));
-        log.value += "Received msg_id:" + hdr.msg_id + "\n";
-        if (hdr.msg_id == Msg_Ids.SLAVE_LIST)
-        {
-            var slave_list = Slave_List.decode(evt.data.slice(7));
-            log.value += "slaves found: ";
-            for (var i=0; i<slave_list.slave.length; i++)
-            {
-                slave=slave_list.slave[i]
-                log.value += slave.slave_id+"("+slave.soc.toFixed(2)+"%) ";
-            }
-            log.value += "\n";
-        }
-    }
-    catch (err)
-    {
-        log.value += "Error: "+err+"\n";
-    }
-};
-
-log.value = ""; // Clear log on reload
-
-</script>
+  <script src="./ensemble_master"></script>
+  <script src="./Long.min.js"></script>
+  <script src="./ByteBufferAB.min.js"></script>
+  <script src="./ProtoBuf.min.js"></script>
+  <script src="./hexy.js"></script>
+  <script src="./Ensemble.js"></script>
+  <script src="./show.js"></script>
+  
 </body>
 </html>

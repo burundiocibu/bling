@@ -2,7 +2,7 @@
 
 if (typeof dcodeIO === 'undefined' || !dcodeIO.ProtoBuf)
 {
-    throw(new Error("ProtoBuf.js is not present. Please see www/index.html for manual setup instructions."));
+    throw(new Error("ProtoBuf.js is not present. Please check server."));
 }
 
 // Initialize ProtoBuf.js
@@ -20,12 +20,31 @@ var Set_Slave_Tlc = builder.build("bling_pb.set_slave_tlc");
 var Start_Effect = builder.build("bling_pb.start_effect");
 var Ping_Slave = builder.build("bling_pb.ping_slave");
 var Reboot_Slave = builder.build("bling_pb.reboot_slave");
+var Program_Slave = builder.build("bling_pb.program_slave");
 
 
 // Connect to the websocket server
 var socket = new WebSocket(ensemble_master);
 //var socket = new WebSocket("ws://fourpi:9321/ws");
 socket.binaryType = "arraybuffer"; // We are talking binary
+
+function write_log(s)
+{
+    if (document.getElementById("log_region") !== null)
+    {
+        document.getElementById("log_region").value += s;
+    }
+}
+
+function set_status(s)
+{
+    if (document.getElementById("status_region") !== null)
+    {
+        document.getElementById("status_region").value = s;
+    }
+}
+
+set_status("Disconnected");
 
 
 function appendBuffer( buffer1, buffer2 )
@@ -55,24 +74,25 @@ function send_msg(socket, header, body)
     }
     else
     {
-        log.value += "Send failed: not connected\n";
+        write_log("Send failed: not connected\n");
     }
 }
 
 socket.onerror = function(error)
-{    
-    log.value += "Failed connecting to " + ensemble_master + "\n"
+{
+    write_log("Failed connecting to " + ensemble_master + "\n");
 }
 
 socket.onopen = function() 
 {
-    log.value += "Connected to " + ensemble_master + "\n"
-    get_slave_list();
+    write_log("Connected to " + ensemble_master + "\n");
+    set_status("Connected");
 };
 
 socket.onclose = function() 
 {
-    log.value += "Disconnected\n";
+    write_log("Disconnected\n");
+    set_status("Disconnected");
 };
 
 socket.onmessage = function(evt) 
@@ -85,17 +105,24 @@ socket.onmessage = function(evt)
         if (hdr.msg_id == Msg_Ids.SLAVE_LIST)
         {
             var slave_list = Slave_List.decode(evt.data.slice(7));
-            log.value += "slaves found: ";
+            write_log("slaves found: ");
             for (var i=0; i<slave_list.slave.length; i++)
             {
                 slave=slave_list.slave[i]
-                log.value += slave.slave_id+"("+slave.soc.toFixed(2)+"%) ";
+                write_log(slave.slave_id+"("+slave.soc.toFixed(2)+"%) ");
             }
-            log.value += "\n";
+            write_log("\n");
+        }
+        else if (hdr.msg_id == Msg_Ids.MASTER_STATUS)
+        {
+            var ms = Master_Status.decode(evt.data.slice(7));
+            write_log("Master temperature: "+ms.temperature+"\n");
         }
     }
     catch (err)
     {
-        log.value += "Error: "+err+"\n";
+        write_log("Error: "+err+"\n");
     }
 };
+
+

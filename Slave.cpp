@@ -101,7 +101,7 @@ int Slave::tx(unsigned repeat)
          delay_us(5);
       }
 
-      if (false && tx_read_cnt>85)
+      if (debug>1 && tx_read_cnt>85 && tx_read_cnt <300)
          cout << "Slave " << id << " tx: tx_read_cnt=" << tx_read_cnt << endl;
 
       if (status & STATUS_MAX_RT)

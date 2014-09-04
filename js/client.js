@@ -24,6 +24,8 @@ var Set_Slave_Tlc = builder.build("bling_pb.set_slave_tlc");
 var Start_Effect = builder.build("bling_pb.start_effect");
 var Ping_Slave = builder.build("bling_pb.ping_slave");
 var Reboot_Slave = builder.build("bling_pb.reboot_slave");
+var Program_Slave = builder.build("bling_pb.program_slave");
+// get_master_status and shutdown_master don't have unique messages
 
 
 // Connect to the websocket server

@@ -238,6 +238,6 @@ void Master_Server::heartbeat()
 
 string Master_Server::program_slave(string& msg)
 {
-   cout << "program_slave command not implimeented yet in master_server.cpp" << endl;
+   cout << "program_slave command not implimented yet in master_server.cpp" << endl;
    return ack;
 }

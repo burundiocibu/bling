@@ -50,6 +50,23 @@ void hexdump(const void *ptr, int buflen)
    }
 }
 
+std::string get_master_status()
+{
+   return std::string();
+}
+
+std::string shutdown_master()
+{
+   std::string ack;
+   bling_pb::ack ack_msg;
+   ack_msg.SerializeToString(&ack);
+
+   return ack;
+}
+
+
+
+
 static int
 callback_bling_protobuf(struct libwebsocket_context *context,
                         struct libwebsocket *wsi,
@@ -85,7 +102,8 @@ callback_bling_protobuf(struct libwebsocket_context *context,
       case LWS_CALLBACK_RECEIVE:
          if (len > max_payload)
          {
-            lwsl_err("LWS_CALLBACK_RECEIVE: Server received packet bigger than %u, hanging up\n", max_payload);
+            lwsl_err("LWS_CALLBACK_RECEIVE: Server received packet bigger than %u, hanging up\n",
+                     max_payload);
             return 1;
          }
 
@@ -101,13 +119,15 @@ callback_bling_protobuf(struct libwebsocket_context *context,
             std::string s3;
             switch (hdr.msg_id())
             {
-               case bling_pb::header::SEND_ALL_STOP:  s3=ms->send_all_stop(s2);  break;
-               case bling_pb::header::GET_SLAVE_LIST: s3=ms->get_slave_list(s2); break;
-               case bling_pb::header::SET_SLAVE_TLC:  s3=ms->set_slave_tlc(s2);  break;
-               case bling_pb::header::START_EFFECT:   s3=ms->start_effect(s2);  break;
-               case bling_pb::header::REBOOT_SLAVE:   s3=ms->reboot_slave(s2);  break;
-               case bling_pb::header::PING_SLAVE:     s3=ms->ping_slave(s2);  break;
-               case bling_pb::header::PROGRAM_SLAVE:  s3=ms->program_slave(s2);  break;
+               case bling_pb::header::SEND_ALL_STOP:     s3=ms->send_all_stop(s2);  break;
+               case bling_pb::header::GET_SLAVE_LIST:    s3=ms->get_slave_list(s2); break;
+               case bling_pb::header::SET_SLAVE_TLC:     s3=ms->set_slave_tlc(s2);  break;
+               case bling_pb::header::START_EFFECT:      s3=ms->start_effect(s2);   break;
+               case bling_pb::header::REBOOT_SLAVE:      s3=ms->reboot_slave(s2);   break;
+               case bling_pb::header::PING_SLAVE:        s3=ms->ping_slave(s2);     break;
+               case bling_pb::header::PROGRAM_SLAVE:     s3=ms->program_slave(s2);  break;
+               case bling_pb::header::GET_MASTER_STATUS: s3=get_master_status();    break;
+               case bling_pb::header::SHUTDOWN_MASTER:   s3=shutdown_master();      break;
                default:
                   lwsl_notice("LWS_CALLBACK_RECEIVE: Ignoring unknown message.");
             }

@@ -30,7 +30,7 @@ uint16_t slave_id;
 
 // 0.1 was original app load to slaves
 const int8_t major_version = 1;
-const int8_t minor_version = 0;
+const int8_t minor_version = 1;
 
 int main (void)
 {
@@ -62,7 +62,8 @@ int main (void)
    Effect effect(slave_id);
    typedef void APP(void);  // used to jump to the bootloader
 
-   effect.start(0, 4000); // Always start up with effect 0, flash my ID
+   // Not really a good idea in case the system reboots during a show...
+   //effect.start(0, 4000); // Start up with effect 0, flash my ID
 
    for (;;)
    {
