@@ -3,8 +3,6 @@ Notes
    * got icons from http://findicons.com/pack/811/developer_kit
 
 
-Makefile.avr todo:
-   * Have a file that identifies what version of slave_main has been built.
 
 Slave.cpp todo:
    * see if rx_read_count ever goes past 100 on a successfull read.
@@ -16,7 +14,6 @@ slave_main todo:
 master_server todo:
    add reprogramming of slaves (program_slave)
    add reporting of host status (get_master_status)
-   add rebooting of master (shutdown_master)
    initialize slave list from file when one is provided
    add temp logging to output
    find hang after it runs for 2+ hours
@@ -52,3 +49,7 @@ Done
    * figure out how to attach value to eb.value
    * Autostart server.sh
    * fix starting of server.js on boot
+   * add rebooting of master (shutdown_master)
+
+Makefile.avr todo:
+   * Have a file that identifies what version of slave_main has been built.
