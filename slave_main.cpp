@@ -19,6 +19,7 @@
 #include "ensemble.hpp"
 #include "Effect.hpp"
 
+#include "slave_main_version.hpp"
 
 void do_heartbeat(uint8_t* buff, uint32_t& t_hb);
 void do_set_tlc_ch(uint8_t* buff);
@@ -28,9 +29,6 @@ void do_ping(uint8_t* buff, uint8_t pipe);
 
 uint16_t slave_id;
 
-// 0.1 was original app load to slaves
-const int8_t major_version = 1;
-const int8_t minor_version = 1;
 
 int main (void)
 {

@@ -57,7 +57,7 @@ slave/Effect.o: Effect.cpp Effect.hpp Effect_sets.hpp
 slave/lcd_plate.o: lcd_plate.cpp
 
 
-slave/slave_main.o: slave_main.cpp
+slave/slave_main.o: slave_main.cpp slave_main_version.hpp
 slave/tlc-test.o: slave_main.cpp
 slave/rtc-test.o: rtc-test.cpp
 
