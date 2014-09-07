@@ -433,7 +433,9 @@ SlaveList::iterator scan_some(SlaveList& slave_list,  SlaveList::iterator slave,
 
    for (int n=0; n < num_to_scan; n++)
    {
-      slave->ping();
+      long age = runtime.usec() - slave->t_rx;
+      if (age > 5e6)
+         slave->ping();
       slave++;
       if (slave==slave_list.end())
          slave=slave_list.begin();

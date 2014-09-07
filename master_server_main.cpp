@@ -4,6 +4,7 @@
 #include <string.h>
 #include <assert.h>
 #include <signal.h>
+#include <string>
 
 #include <syslog.h>
 #include <sys/time.h>
@@ -208,9 +209,10 @@ static struct option options[] = {
    { "help",	no_argument,		NULL, 'h' },
    { "debug",	required_argument,	NULL, 'd' },
    { "port",	required_argument,	NULL, 'p' },
+   { "slaves",	required_argument,	NULL, 'l' },
    { "ssl",	no_argument,		NULL, 's' },
    { "interface",  required_argument,	NULL, 'i' },
-   { "daemonize", 	no_argument,		NULL, 'D' },
+   { "daemonize", 	no_argument,	NULL, 'D' },
    { NULL, 0, 0, 0 }
 };
 
@@ -220,11 +222,12 @@ int main(int argc, char **argv)
    GOOGLE_PROTOBUF_VERIFY_VERSION;
 
    int n = 0;
-   int port = 7681;
+   int port = 9321;
    int use_ssl = 0;
    struct libwebsocket_context *context;
    int opts = 0;
    char interface_name[128] = "";
+   std::string slave_list_fn;
    const char *interface = NULL;
 
    int syslog_options = LOG_PID | LOG_PERROR;
@@ -267,9 +270,12 @@ int main(int argc, char **argv)
             interface_name[(sizeof interface_name) - 1] = '\0';
             interface = interface_name;
             break;
+         case 'l':
+            slave_list_fn = std::string(optarg);
+            break;
          case '?':
          case 'h':
-            fprintf(stderr, "Usage: master_ws "
+            fprintf(stderr, "Usage: master_server "
                     "[--ssl] "
                     "[--port=<p>] "
                     "[-d <log bitfield>]\n");
@@ -323,7 +329,7 @@ int main(int argc, char **argv)
    info.uid = -1;
    info.options = opts;
 
-   ms = new Master_Server(debug_level>>3);
+   ms = new Master_Server(debug_level>>3, slave_list_fn);
 
    context = libwebsocket_create_context(&info);
 

@@ -7,7 +7,7 @@
 class Master_Server
 {
 public:
-   Master_Server(int _debug=0);
+   Master_Server(int _debug, std::string& slave_list_fn);
 
    ~Master_Server();
 

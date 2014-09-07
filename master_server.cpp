@@ -15,7 +15,7 @@
 
 using namespace std;
 
-Master_Server::Master_Server(int _debug)
+Master_Server::Master_Server(int _debug, string& slave_list_fn)
    : debug(_debug)
 {
    Lock lock;
@@ -40,8 +40,11 @@ Master_Server::Master_Server(int _debug)
    if (debug)
       cout << broadcast.stream_header << endl;
    
-   for (int id=1; id < ensemble::max_slave; id++)
-      all.push_back(Slave(id));
+   if (slave_list_fn.size())
+      all = read_slaves(slave_list_fn);
+   else
+      for (int id=1; id < ensemble::max_slave; id++)
+         all.push_back(Slave(id));
 
    Slave::debug = debug;
 
