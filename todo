@@ -22,10 +22,15 @@ master_server todo:
    find hang after it runs for 2+ hours
    cull slaves that have t_rx over 10 minutes
 
+server.js:
+   * have it start master_server automagically?
+    
+
 show web page todo:
    * make like to management web page
    * play, next, prev, and test button. Maybe a button for each effect?
-   * remove scan buttons
+   * make it use fast touch events
+   * have it respond to keypresses (space to play, left and right arrow, x to stop)
 
 management web page:
    * create

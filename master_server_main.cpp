@@ -52,15 +52,23 @@ void hexdump(const void *ptr, int buflen)
 
 std::string get_master_status()
 {
+   lwsl_notice("get_master_status()");
    return std::string();
 }
 
 std::string shutdown_master()
 {
+   lwsl_warn("shutdown_master()");
    std::string ack;
    bling_pb::ack ack_msg;
    ack_msg.SerializeToString(&ack);
-
+   FILE* fp = popen("/sbin/poweroff", "r");
+   if (fp == NULL)
+   {
+      lwsl_err("error running poweroff");
+   }
+   else
+      pclose(fp);
    return ack;
 }
 
@@ -210,7 +218,6 @@ static struct option options[] = {
 int main(int argc, char **argv)
 {
    GOOGLE_PROTOBUF_VERIFY_VERSION;
-
 
    int n = 0;
    int port = 7681;

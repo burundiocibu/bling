@@ -46,7 +46,7 @@ var server = http.createServer(function(req, res) {
         msg="ensemble_master=\"ws://"+req.connection.localAddress+":9321/ws\""
         res.write(msg);
         res.end();
-        console.log(msg);
+        //console.log(msg);
         return;
     }
     else if (/^\/(\w+(?:\.min)?\.(?:js|html|proto))$/.test(req.url))

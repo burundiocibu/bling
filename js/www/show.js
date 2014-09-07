@@ -1,24 +1,9 @@
-//<!-- -*- mode: javascript; -*- -->
+// -*- mode: javascript; -*-
 
-function get_slave_list()
-{
-    var gsl = new Get_Slave_List();
-    gsl.scan = "false";
-    gsl.tries = 0;
-    var hdr = new Header();
-    hdr.msg_id = "GET_SLAVE_LIST";
-    send_msg(socket, hdr, gsl);
-}
-
-function scan_slaves()
-{
-    var gsl = new Get_Slave_List();
-    gsl.scan = "true";
-    gsl.tries = 1;
-    var hdr = new Header();
-    hdr.msg_id = "GET_SLAVE_LIST";
-    send_msg(socket, hdr, gsl);
-}
+new FastButton(document.getElementById('play_effect'), function() { start_effect(); });
+new FastButton(document.getElementById('prev_effect'), function() { prev_effect(); });
+new FastButton(document.getElementById('next_effect'), function() { next_effect(); });
+new FastButton(document.getElementById('all_stop'),    function() { all_stop(); });
 
 function all_stop()
 {

@@ -1,0 +1,82 @@
+<!DOCTYPE html> <!-- -*- mode: html; -*- -->
+<html>
+<head>
+Test Page
+<button onclick="location.href='mgmt.html'">Ensemble Management</button>
+<button onclick="location.href='show.html'">Show Control</button>
+<hr>
+</head>
+<body>
+
+  <meta name="viewport" content="width=device-width, user-scalable=no">
+  <style>
+    body {
+    font-family: "Verdana";
+    }
+    button.big {
+    background-repeat:no-repeat;
+    font-family: "Verdana";
+    border: none;
+    background-size: contain;
+    }
+  </style>
+
+  <button id="play_effect" class="big"
+          style="background: url(play.ico); background-size:
+                 contain; height:6em; width:6em">
+  </button>
+  <br/>
+  <button onclick="all_stop()" class="big"
+          style="background: url(stop_alt.ico); background-size:
+                 contain; height:5em; width:5em">
+  </button>
+  <br/>
+  Log: <pre id="log" style="border: 1px solid #ccc;"></pre>
+  
+</body>
+
+
+</script>
+<script src="./ensemble_master"></script>
+<script src="./Long.min.js"></script>
+<script src="./ByteBufferAB.min.js"></script>
+<script src="./ProtoBuf.min.js"></script>
+<script src="./Ensemble.js"></script>
+<script src="./googleFastButton.js"></script>
+<script>
+
+function log(msg) {
+  var p = document.getElementById('log');
+  p.innerHTML = msg + "\n" + p.innerHTML;
+}
+
+new FastButton(document.getElementById('play_effect'), function() { start_effect(1); });
+new FastButton(document.getElementById('all_stop'), function() { all_stop(); });
+
+function all_stop()
+{
+var msg = new Send_All_Stop();
+msg.slave_id = 0;
+msg.tries = 10;
+var hdr = new Header();
+hdr.msg_id = "SEND_ALL_STOP";
+send_msg(socket, hdr, msg);
+log('all stop');
+}
+
+function start_effect(e)
+{
+var msg = new Start_Effect();
+msg.slave_id = 0; // broadcast
+msg.effect_id = parseInt(e);
+msg.start_time = 0;
+msg.duration = 1000; // ms
+msg.repeat = 1;
+var hdr = new Header();
+hdr.msg_id = "START_EFFECT";
+send_msg(socket, hdr, msg);
+log('start_effect('+e+')');
+}
+</script>      
+
+</html>

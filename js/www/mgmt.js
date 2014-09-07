@@ -3,6 +3,12 @@
 var tlc=0;
 document.getElementById("tlc").value = tlc;
 
+new FastButton(document.getElementById('up'),       function() { set_tlc(1); });
+new FastButton(document.getElementById('down'),     function() { set_tlc(-1); });
+new FastButton(document.getElementById('effect0'),  function() { start_effect(0); });
+new FastButton(document.getElementById('effect1'),  function() { start_effect(1); });
+new FastButton(document.getElementById('all_stop'), function() { all_stop(); });
+
 function get_slave_list()
 {
     var gsl = new Get_Slave_List();
@@ -21,7 +27,7 @@ function scan_slaves()
     var hdr = new Header();
     hdr.msg_id = "GET_SLAVE_LIST";
     send_msg(socket, hdr, gsl);
-    write_log("Scanning Slaves\n");
+    log("scan_slaves()");
 }
 
 function all_stop()
@@ -34,7 +40,7 @@ function all_stop()
     var hdr = new Header();
     hdr.msg_id = "SEND_ALL_STOP";
     send_msg(socket, hdr, msg);
-    write_log("All Stop\n");
+    log("all_stop");
 }
 
 function start_effect(e)
@@ -48,17 +54,14 @@ function start_effect(e)
     var hdr = new Header();
     hdr.msg_id = "START_EFFECT";
     send_msg(socket, hdr, msg);
-    write_log("Start effect "+e+"\n");
+    log("start_effect("+e+")");
 }
 
 function set_tlc(v)
 {
     if (v>0)
     {
-        if (tlc<=0)
-            tlc = 1;
-        else
-            tlc = tlc << 1;
+        tlc = (tlc << 1) | 1;
         if (tlc >= 4096)
             tlc = 4096-1;
     }
@@ -68,12 +71,14 @@ function set_tlc(v)
     }
     var msg = new Set_Slave_Tlc();
     msg.slave_id = 0;
-    msg.tlc = tlc;
-    msg.repeat = 10;
+    for (i=0;i<15; i++)
+        msg.tlc[i] = tlc;
+    msg.repeat = 2;
     var hdr = new Header();
     hdr.msg_id = "SET_SLAVE_TLC";
     send_msg(socket, hdr, msg);
     document.getElementById("tlc").value = tlc;
+    log("set_tlc("+tlc+")");
 }
 
 function shutdown_master()
@@ -81,7 +86,17 @@ function shutdown_master()
     var hdr = new Header();
     hdr.msg_id = "SHUTDOWN_MASTER";
     send_msg(socket, hdr);
-    write_log("Shutting down master\n");
+    log("shutdown_master");
+}
+
+function program_slaves()
+{
+    var msg = new Program_Slave();
+    msg.slave_id = 0;
+    var hdr = new Header();
+    hdr.msg_id = "PROGRAM_SLAVE";
+    send_msg(socket, hdr, msg);
+    log("program_slave:"+msg.slave_id);
 }
 
 function get_master_status()
@@ -89,15 +104,5 @@ function get_master_status()
     var hdr = new Header();
     hdr.msg_id = "GET_MASTER_STATUS";
     send_msg(socket, hdr);
-    write_log("Getting master status (no rx written yet)\n");
-}
-
-function program_slave()
-{
-    var msg = new Program_Slave();
-    msg.slave_id = 0;
-    var hdr = new Header();
-    hdr.msg_id = "PROGRAM_SLAVE";
-    send_msg(socket, hdr, msg);
-    write_log("Programming slave:"+slave_id+"\n");
+    log("get_master_status");
 }

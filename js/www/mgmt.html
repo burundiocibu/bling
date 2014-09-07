@@ -3,6 +3,7 @@
   <head>
     Ensemble Management
     <button onclick="location.href='show.html'">Show Control</button>
+    <button onclick="location.href='test.html'">test.html</button>
     <hr>
   </head>
   <body>
@@ -22,20 +23,20 @@
     <table border="0">
       <tr> <!-- row 1 -->
         <td>
-          <button id="up" onclick="set_tlc(1)" class="big"
+          <button id="up" class="big"
                   style="background: url(up.ico); background-size:
-                         contain; height:5em; width:5em">
+                         contain; height:5em; width:5em"/>
         </td>
         <td>
-          <button id="effect0" onclick="start_effect(0)" class="big"
+          <button id="effect0" class="big"
                   style="background: url(play.ico); background-size:
-                         contain; height:5em; width:5em">
+                         contain; height:5em; width:5em"/>
             0
         </td>
         <td>
-          <button onclick="all_stop()" class="big"
+          <button id="all_stop" class="big"
                   style="background: url(stop_alt.ico); background-size:
-                         contain; height:5em; width:5em">
+                         contain; height:5em; width:5em"/>
         </td>
       </tr>
       <tr> <!-- row 2 -->
@@ -46,34 +47,34 @@
       </tr>
       <tr> <!-- row 3 -->
         <td>
-          <button id="down" onclick="set_tlc(-1)" class="big"
+          <button id="down"class="big"
                   style="background: url(down.ico); background-size:
-                         contain; height:5em; width:5em">
+                         contain; height:5em; width:5em"/>
         </td>
         <td>
-          <button id="effect1" onclick="start_effect(1)" class="big"
+          <button id="effect1" class="big"
                   style="background: url(play.ico); background-size:
-                         contain; height:5em; width:5em">
+                         contain; height:5em; width:5em"/>
             1
         </td>
         <td>
+          <button onclick="location.href='slaves.html'">Slaves</button>
+
         </td>
       </tr>
   </table>
     
     <hr>
-    <textarea id="status_region" style="width: 10em; border: none; resize:none" rows="1"></textarea>
+<textarea id="status_region" style="border: none; resize:none" rows="1"></textarea>
+
   <hr>
   <button onclick="get_slave_list()">List Slaves</button>
   <button onclick="scan_slaves()">Scan Slaves</button>
   <br/>
   <button onclick="program_slaves()">Program Slaves</button>
   <button onclick="shutdown_master()">Shutdown</button>
-
-  <br />
-  <textarea id="log_region" style="width: 95%; border: none;"
-            rows="10"></textarea>
   <br/>
+  <pre id="log" style="border: 1px solid #ccc;"></pre>
   
   <script src="./ensemble_master"></script>
   <script src="./Long.min.js"></script>
@@ -81,6 +82,8 @@
   <script src="./ProtoBuf.min.js"></script>
   <script src="./hexy.js"></script>
   <script src="./Ensemble.js"></script>
+  <script src="./googleFastButton.js"></script>
   <script src="./mgmt.js"></script>
+
 </body>
 </html>
