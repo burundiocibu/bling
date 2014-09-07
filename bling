@@ -1,0 +1,58 @@
+#!/bin/bash
+
+base=/home/littlej/dev/bling
+ms=master_server
+server=server.js
+
+case "$1" in
+    start)
+        pid=`pgrep -f $server`
+        if [ $pid ]; then
+           printf  "$server already running ($pid)\n"
+        else
+            printf "starting $server\n"
+            $base/js/$server  >> $base/server.js.log &
+        fi
+        pid=`pgrep $ms`
+        if [ $pid ]; then
+            printf "$ms already running ($pid)\n"
+        else
+            printf "starting $ms\n"
+            $base/$ms --port 9321 --slaves test_slaves -d 0  2>&1 >>$base/master_server.log&
+        fi
+	;;
+  stop)
+        pid=`pgrep -f $server`
+        if [ $pid ]; then
+            printf  "killing $server ($pid)\n"
+           pkill -f $server
+        fi
+        pid=`pgrep -f $ms`
+        if [ $pid ]; then
+            printf  "killing $ms ($pid)\n"
+            pkill -f $ms
+        fi
+	;;
+  status)
+        pid=`pgrep -f $server`
+        if [ "$pid" ]; then
+            printf  "$server running ($pid)\n"
+        else
+            printf  "$server not found\n"
+        fi
+        pid=`pgrep -f $ms`
+        if [ "$pid" ]; then
+            printf  "$ms running ($pid)\n"
+        else
+            printf  "$ms not found\n"
+        fi
+	;;
+  restart|force-reload)
+	;;
+  *)
+	echo "Usage: bling {start|stop|status|restart|force-reload}" >&2
+	exit 3
+	;;
+esac
+
+:
