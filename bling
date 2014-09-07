@@ -11,14 +11,14 @@ case "$1" in
            printf  "$server already running ($pid)\n"
         else
             printf "starting $server\n"
-            $base/js/$server  >> $base/server.js.log &
+            $base/js/$server 2>&1 >> $base/server.js.log &
         fi
         pid=`pgrep $ms`
         if [ $pid ]; then
             printf "$ms already running ($pid)\n"
         else
             printf "starting $ms\n"
-            $base/$ms --port 9321 --slaves test_slaves -d 0  2>&1 >>$base/master_server.log&
+            $base/$ms --port 9321 --slaves $base/slaves -d 0  2>&1 >>$base/master_server.log &
         fi
 	;;
   stop)

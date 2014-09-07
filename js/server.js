@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/local/bin/node
 //
 // Set up: npm install
 var http = require("http"),

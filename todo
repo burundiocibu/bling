@@ -11,11 +11,14 @@ Slave.cpp todo:
 slave_main todo:
    * Add new effects!
 
+master_server.cpp todo:
+   * cull slaves that have t_rx over 10 minutes
+
+
 master_server_main.cpp todo:
-   add reporting of cpu and disk stats in master_status
-   add temp logging to output
-   find hang after it runs for 2+ hours
-   cull slaves that have t_rx over 10 minutes
+   * add reporting of cpu and disk stats in master_status
+   * add temp logging to output
+   * find hang after it runs for 2+ hours
 
 server.js:
    * have it start master_server automagically?
@@ -26,8 +29,8 @@ show web page todo:
    * have it respond to keypresses (space to play, left and right arrow, x to stop)
 
 management web page:
-   * scan/list buttons
    * status grid of all slaves?
+   * list missing slaves only
    * master temp/load/disk status
 
 Make rPi boot off flash
