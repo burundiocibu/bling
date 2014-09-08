@@ -36,6 +36,8 @@ public:
    void set_tlc_ch(uint8_t* p, uint8_t  ch, uint16_t  value, unsigned repeat=1);
    void set_tlc(uint8_t* p, uint16_t value[], unsigned repeat=1);
 
+   void program(std::string& slave_main_fn);
+
    static std::string stream_header;
 
    static int debug;

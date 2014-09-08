@@ -14,6 +14,7 @@
 
 #include "Slave.hpp"
 #include "ensemble.hpp"
+#include "nrf_boot.h"
 
 extern RunTime runtime;
 
@@ -58,7 +59,7 @@ bool Slave::operator<(const Slave& slave) const
 
 // Across this whole routine (i.e. dt_tx at the end), I see
 // a delay of about 360 us for an tx that does not request
-// ACK. Returns false if there was an ack requested and none was received.
+// ACK. Returns non-zero if there was an ack requested and none was received.
 int Slave::tx(unsigned repeat)
 {
    using namespace nRF24L01;
@@ -79,8 +80,7 @@ int Slave::tx(unsigned repeat)
    {
       cout << "Slave " << id << " tx: could not clear status of nrf." << endl;
       tx_err++;
-      rc=3;
-      return rc;
+      return 3;
    }
    else if (clear_count)
       cout << "Slave " << id << " tx: took " << clear_count << " writes to reset status." << endl;
@@ -114,6 +114,7 @@ int Slave::tx(unsigned repeat)
       }
       else if (status & STATUS_TX_DS)
       {
+         rc=0;
          write_reg(STATUS, STATUS_TX_DS); // Clear the data sent notice
          // No need to resend if we get an ack...
          if (ack)
@@ -176,7 +177,7 @@ int Slave::rx(void)
 
    delay_us(100);  // Not sure this is useful...
 
-   if (debug>1 && i>15)
+   if (debug>1 && i>15 && i<100)
       cout << "Slave " << id << " rx: rx_read_cnt=" << i << endl;
 
    if (i==100)
@@ -305,6 +306,126 @@ void Slave::set_pwm(unsigned repeat)
          tx(repeat);
       }
 };
+
+
+std::string timestamp(void)
+{
+   struct timeval tv;
+   gettimeofday(&tv, NULL);
+   time_t now_time = tv.tv_sec;
+   struct tm now_tm;
+   localtime_r((const time_t*)&tv.tv_sec, &now_tm);
+   char b1[32], b2[32];
+   strftime(b1, sizeof(b1), "%H:%M:%S", &now_tm);
+   snprintf(b2, sizeof(b2), "%s.%03d", b1, tv.tv_usec/1000);
+   return string(b2);
+}
+
+void Slave::program(string& slave_main_fn)
+{
+   FILE* fp = fopen(slave_main_fn.c_str(), "r");
+   if (fp == NULL)
+   {
+      cout << "Could not open " << slave_main_fn << ". Aborting programming." << endl;
+      return;
+   }
+
+   bool got_image=false;
+   char line[80];
+   size_t image_size=0;
+   uint8_t *image_buff;
+   uint8_t *p;
+
+   const size_t ibsize = 0x8000;
+   image_buff = (uint8_t*)malloc(ibsize);
+   memset(image_buff, 0xff, ibsize);
+   
+   p = image_buff;
+   while (!got_image)
+   {
+      if (fgets(line, sizeof(line), fp) == NULL)
+         break;
+      if (line[0] != ':')
+         break;
+      int len, addr, id;
+      sscanf(line+1, "%02x%04x%02x", &len, &addr, &id);
+
+      if (id==0)
+      {
+         for (int i=0; i<len; i++)
+            sscanf(line+9+2*i, "%02x", p++);
+
+         image_size+=len;
+      }
+      else if (id==1)
+         got_image = true;
+   }
+
+   if (!got_image)
+   {
+      printf("Failed to read image to load. Aborting programming.\n");
+      return;
+   }
+
+   const unsigned num_pages = image_size/boot_page_size + 1;
+   const unsigned chunks_per_page = boot_page_size/boot_chunk_size;
+
+   if (id == 0)
+   {
+      printf("Can't program slave 0. Specify specific slave.\n");
+      return;
+   }
+
+   printf("%s Programming slave %d [", timestamp().c_str(), id);
+   for (int i=0; i<4; i++)
+      printf("%02x", (int)ensemble::slave_addr[id][i]);
+   printf("]\n");
+
+   struct timeval tv;
+   gettimeofday(&tv, NULL);
+   double t0 = tv.tv_sec + 1e-6*tv.tv_usec;
+   double t_hb = t0;
+
+   buff[0] = boot_magic_word >> 8;
+   buff[1] = 0xff & boot_magic_word;
+
+   buff[2] = bl_no_op;
+   if (debug>1) printf("%s Looking for slave.\n", timestamp().c_str());
+   if (tx(10))
+   {
+      printf("%s Slave not found. Aborting programming.\n", timestamp().c_str());
+      return;
+   }
+   if (debug>1) printf("%s Found Slave.\n", timestamp().c_str());
+
+   for (int page=0; page < num_pages; page++)
+   {
+      uint16_t page_addr=page*boot_page_size;
+      for (int chunk=0; chunk < chunks_per_page; chunk++)
+      {
+         uint16_t chunk_start=page*boot_page_size + chunk*boot_chunk_size;
+         buff[2] = bl_load_flash_chunk;
+         buff[3] = chunk;
+         buff[4] = page_addr>>8;
+         buff[5] = 0xff & page_addr;
+         memcpy(buff+6, image_buff + chunk_start, boot_chunk_size);
+         if (tx(10))
+            printf("%s Missed bl_load_flash_chunk ACK\n", timestamp().c_str());
+      }
+      buff[2] = bl_write_flash_page;
+      if (tx(10)) 
+         printf("%s Missed write_flash_page ACK\n", timestamp().c_str());
+
+      buff[2] = bl_check_write_complete;
+      if (tx(10))
+         printf("%s Missed write_complete ACK\n", timestamp().c_str());
+   }
+
+   buff[2] = bl_start_app;
+   printf("%s Starting app\n", timestamp().c_str());
+   tx(10);
+   bcm2835_delayMicroseconds(1000);
+}
 
 
 std::ostream& operator<<(std::ostream& s, const Slave& slave)
@@ -442,3 +563,4 @@ SlaveList::iterator scan_some(SlaveList& slave_list,  SlaveList::iterator slave,
    }
    return slave;
 }
+

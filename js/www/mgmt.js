@@ -92,7 +92,7 @@ function shutdown_master()
 function program_slaves()
 {
     var msg = new Program_Slave();
-    msg.slave_id = 0;
+    msg.slave_id = 3;
     var hdr = new Header();
     hdr.msg_id = "PROGRAM_SLAVE";
     send_msg(socket, hdr, msg);

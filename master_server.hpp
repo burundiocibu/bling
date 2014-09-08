@@ -7,7 +7,7 @@
 class Master_Server
 {
 public:
-   Master_Server(int _debug, std::string& slave_list_fn);
+   Master_Server(int _debug, std::string& slave_list_fn, std::string& slave_main_fn);
 
    ~Master_Server();
 
@@ -36,5 +36,7 @@ public:
    RunTime runtime;
 
    std::string nak, ack;
+
+   std::string slave_main_fn;
 };
 #endif

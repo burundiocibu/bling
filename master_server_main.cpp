@@ -210,6 +210,7 @@ static struct option options[] = {
    { "debug",	required_argument,	NULL, 'd' },
    { "port",	required_argument,	NULL, 'p' },
    { "slaves",	required_argument,	NULL, 'l' },
+   { "slave_main", required_argument,	NULL, 'x' },
    { "ssl",	no_argument,		NULL, 's' },
    { "interface",  required_argument,	NULL, 'i' },
    { "daemonize", 	no_argument,	NULL, 'D' },
@@ -228,6 +229,7 @@ int main(int argc, char **argv)
    int opts = 0;
    char interface_name[128] = "";
    std::string slave_list_fn;
+   std::string slave_main_fn = "slave/slave_main.hex";
    const char *interface = NULL;
 
    int syslog_options = LOG_PID | LOG_PERROR;
@@ -272,6 +274,9 @@ int main(int argc, char **argv)
             break;
          case 'l':
             slave_list_fn = std::string(optarg);
+            break;
+         case 'x':
+            slave_main_fn = std::string(optarg);
             break;
          case '?':
          case 'h':
@@ -329,7 +334,7 @@ int main(int argc, char **argv)
    info.uid = -1;
    info.options = opts;
 
-   ms = new Master_Server(debug_level>>3, slave_list_fn);
+   ms = new Master_Server(debug_level>>3, slave_list_fn, slave_main_fn);
 
    context = libwebsocket_create_context(&info);
 

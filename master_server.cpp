@@ -15,8 +15,8 @@
 
 using namespace std;
 
-Master_Server::Master_Server(int _debug, string& slave_list_fn)
-   : debug(_debug)
+Master_Server::Master_Server(int _debug, string& slave_list_fn, string& slave_main_fn)
+   : debug(_debug), slave_main_fn(slave_main_fn)
 {
    Lock lock;
 
@@ -241,6 +241,14 @@ void Master_Server::heartbeat()
 
 string Master_Server::program_slave(string& msg)
 {
-   cout << "program_slave command not implimented yet in master_server.cpp" << endl;
+   bling_pb::program_slave ps;
+   if (!ps.ParseFromString(msg))
+      return nak;
+
+   Slave* slave = find_slave(ps.slave_id());
+   if (slave == NULL)
+      return nak;
+
+   slave->program(slave_main_fn);
    return ack;
 }
