@@ -3,7 +3,6 @@ Notes
    * got icons from http://findicons.com/pack/811/developer_kit
 
 
-
 Slave.cpp todo:
    * see if rx_read_count ever goes past 100 on a successfull read.
    * fix mmc accounting in Slave class when talking to multiple slaves
@@ -15,6 +14,8 @@ master_server_main.cpp todo:
    add reporting of cpu and disk stats in master_status
    add temp logging to output
    find hang after it runs for 2+ hours
+
+master_server.cpp todo:
    cull slaves that have t_rx over 10 minutes
 
 server.js:
@@ -24,11 +25,13 @@ show web page todo:
    * Maybe a button for each effect?
    * have a descriptive name for each effect
    * have it respond to keypresses (space to play, left and right arrow, x to stop)
+   * have it auto-reconnect?
 
 management web page:
    * scan/list buttons
    * status grid of all slaves?
    * master temp/load/disk status
+   * have it auto-reconnect?
 
 Make rPi boot off flash
 
