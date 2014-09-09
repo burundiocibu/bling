@@ -4,6 +4,7 @@
 #include <string.h>
 #include <assert.h>
 #include <signal.h>
+#include <fstream>
 #include <string>
 
 #include <syslog.h>
@@ -54,7 +55,24 @@ void hexdump(const void *ptr, int buflen)
 std::string get_master_status()
 {
    lwsl_notice("get_master_status()");
-   return std::string();
+   std::ifstream tfs("/sys/class/thermal/thermal_zone0/temp");
+   double t;
+   tfs >> t;
+   
+   bling_pb::master_status ms;
+   ms.set_temperature(t/1000);
+   ms.set_load(0.34);
+   ms.set_disk_free(2047);
+
+   std::cout << "ms:" << ms.ShortDebugString() << std::endl;
+
+   std::string s1,s2;
+   ms.SerializeToString(&s2);
+   bling_pb::header header;
+   header.set_msg_id(bling_pb::header::MASTER_STATUS);
+   header.set_len(s2.size());
+   header.SerializeToString(&s1);
+   return s1+s2;
 }
 
 std::string shutdown_master()

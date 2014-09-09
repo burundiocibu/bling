@@ -21,6 +21,7 @@ var Start_Effect = builder.build("bling_pb.start_effect");
 var Ping_Slave = builder.build("bling_pb.ping_slave");
 var Reboot_Slave = builder.build("bling_pb.reboot_slave");
 var Program_Slave = builder.build("bling_pb.program_slave");
+var Master_Status = builder.build("bling_pb.master_status");
 
 
 // Connect to the websocket server

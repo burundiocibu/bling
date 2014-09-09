@@ -218,8 +218,6 @@ string Master_Server::ping_slave(string& msg)
    header.set_len(s2.size());
    header.SerializeToString(&s1);
    return s1+s2;
-
-   return ack;
 }
 
 string Master_Server::reboot_slave(string& msg)
