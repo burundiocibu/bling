@@ -68,6 +68,10 @@ Slave* Master_Server::find_slave(unsigned slave_id)
       for (auto i=all.begin(); i!=all.end(); i++)
          if (i->id == slave_id)
             return &(*i);
+
+   if (debug>1)
+      cout << "Slave " << slave_id << " not found in list." << endl;
+
    return NULL;
 }
 
@@ -179,6 +183,7 @@ string Master_Server::start_effect(string& msg)
 string Master_Server::ping_slave(string& msg)
 {
    bling_pb::ping_slave ps;
+
    if (!ps.ParseFromString(msg))
       return nak;
 
@@ -187,6 +192,33 @@ string Master_Server::ping_slave(string& msg)
       return nak;
 
    slave->ping(ps.repeat());
+
+   bling_pb::slave_list sl;
+   if (slave->t_rx != 0)
+   {
+      bling_pb::slave_list::slave_info* s=sl.add_slave();
+      s->set_slave_id(slave->id);
+      s->set_vcell(slave->vcell);
+      s->set_version(slave->version);
+      s->set_t_rx(slave->t_rx);
+      s->set_soc(slave->soc);
+      s->set_mmc(slave->mmc);
+      s->add_tlc(slave->tlc[0]);
+      s->add_tlc(slave->tlc[1]);
+      s->add_tlc(slave->tlc[2]);
+   }
+
+   if (debug)
+      cout << "slave_list:" << sl.ShortDebugString() << endl;
+
+   string s1,s2;
+   sl.SerializeToString(&s2);
+   bling_pb::header header;
+   header.set_msg_id(bling_pb::header::SLAVE_LIST);
+   header.set_len(s2.size());
+   header.SerializeToString(&s1);
+   return s1+s2;
+
    return ack;
 }
 
@@ -199,6 +231,7 @@ string Master_Server::reboot_slave(string& msg)
    Slave* slave = find_slave(rs.slave_id());
    if (slave == NULL)
       return nak;
+
 
    slave->reboot(rs.repeat());
    return ack;

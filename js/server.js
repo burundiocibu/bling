@@ -49,6 +49,16 @@ var server = http.createServer(function(req, res) {
         //console.log(msg);
         return;
     }
+    else if (req.url == "/slave_main_version")
+    {
+        // This is how the client is told where to make the websocket connection
+        res.writeHead(200, {"Content-Type":"text/javascript"});
+        msg="slave_version=1.1"
+        res.write(msg);
+        res.end();
+        //console.log(msg);
+        return;
+    }
     else if (/^\/(\w+(?:\.min)?\.(?:js|html|proto))$/.test(req.url))
     {
         file = req.url.substring(1);

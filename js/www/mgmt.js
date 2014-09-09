@@ -91,12 +91,29 @@ function shutdown_master()
 
 function program_slaves()
 {
-    var msg = new Program_Slave();
-    msg.slave_id = 3;
-    var hdr = new Header();
-    hdr.msg_id = "PROGRAM_SLAVE";
-    send_msg(socket, hdr, msg);
-    log("program_slave:"+msg.slave_id);
+    if (typeof slave_list === "undefined")
+    {
+        log("No slaves found. Try 'List Slaves'");
+        return;
+    }
+
+    log("slave_main file is version "+slave_version);
+
+    for (var i=0; i<slave_list.slave.length; i++)
+    {
+        var slave=slave_list.slave[i]
+        if (slave.version == slave_version)
+        {
+            log("Slave "+slave.slave_id+" already running version "+slave_version);
+            continue;
+        }
+        var msg = new Program_Slave();
+        msg.slave_id = slave.slave_id;
+        var hdr = new Header();
+        hdr.msg_id = "PROGRAM_SLAVE";
+        send_msg(socket, hdr, msg);
+        log("program_slave:"+msg.slave_id);
+    }
 }
 
 function get_master_status()

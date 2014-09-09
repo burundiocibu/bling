@@ -108,16 +108,14 @@ socket.onmessage = function(evt)
 {
     try
     {
-        //log.value += "Received "+evt.data.byteLength+" bytes\n";
         var hdr = Header.decode(evt.data.slice(0,7));
-        //log.value += "Received msg_id:" + hdr.msg_id + "\n";
         if (hdr.msg_id == Msg_Ids.SLAVE_LIST)
         {
-            var slave_list = Slave_List.decode(evt.data.slice(7));
+            slave_list = Slave_List.decode(evt.data.slice(7));
             for (var i=0; i<slave_list.slave.length; i++)
             {
-                slave=slave_list.slave[i]
-                log(slave.slave_id+"("+slave.soc.toFixed(2)+"%) ");
+                var slave=slave_list.slave[i]
+                log(slave.slave_id+", soc="+slave.soc.toFixed(1)+"%, v="+slave.version);
             }
         }
         else if (hdr.msg_id == Msg_Ids.MASTER_STATUS)
@@ -131,5 +129,3 @@ socket.onmessage = function(evt)
         log("Error: "+err);
     }
 };
-
-
