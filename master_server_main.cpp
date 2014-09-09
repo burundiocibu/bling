@@ -61,10 +61,8 @@ std::string get_master_status()
    
    bling_pb::master_status ms;
    ms.set_temperature(t/1000);
-   ms.set_load(0.34);
-   ms.set_disk_free(2047);
-
-   std::cout << "ms:" << ms.ShortDebugString() << std::endl;
+   ms.set_load(0.0);
+   ms.set_disk_free(0);
 
    std::string s1,s2;
    ms.SerializeToString(&s2);

@@ -11,45 +11,26 @@ Slave.cpp todo:
 slave_main todo:
    * Add new effects!
 
-master_server todo:
-   add reprogramming of slaves (program_slave)
-   add reporting of host status (get_master_status)
-   initialize slave list from file when one is provided
+master_server_main.cpp todo:
+   add reporting of cpu and disk stats in master_status
    add temp logging to output
    find hang after it runs for 2+ hours
    cull slaves that have t_rx over 10 minutes
 
 server.js:
    * have it start master_server automagically?
-    
 
 show web page todo:
-   * make like to management web page
-   * play, next, prev, and test button. Maybe a button for each effect?
-   * make it use fast touch events
+   * Maybe a button for each effect?
+   * have a descriptive name for each effect
    * have it respond to keypresses (space to play, left and right arrow, x to stop)
 
 management web page:
-   * create
    * scan/list buttons
    * status grid of all slaves?
-   * list slaves with soc & version
    * master temp/load/disk status
-   * run slave test button
-   * flast slave(s)
-   * shutdown master
 
 Make rPi boot off flash
 
-Done
-----
-   * make rpi config resolve dns and
-   * add hostname def for server (probably want a shared hostname like 'master')
-   * make any webpage load from any host on the net be directed to master:8080
-   * figure out how to attach value to eb.value
-   * Autostart server.sh
-   * fix starting of server.js on boot
-   * add rebooting of master (shutdown_master)
-
-Makefile.avr todo:
-   * Have a file that identifies what version of slave_main has been built.
+server.sh:
+    * rewrite to be like an init script

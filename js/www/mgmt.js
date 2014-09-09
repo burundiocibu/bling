@@ -27,7 +27,7 @@ function scan_slaves()
     var hdr = new Header();
     hdr.msg_id = "GET_SLAVE_LIST";
     send_msg(socket, hdr, gsl);
-    log("scan_slaves()");
+    log("scan_slaves");
 }
 
 function all_stop()
@@ -78,7 +78,7 @@ function set_tlc(v)
     hdr.msg_id = "SET_SLAVE_TLC";
     send_msg(socket, hdr, msg);
     document.getElementById("tlc").value = tlc;
-    log("set_tlc("+tlc+")");
+    //log("set_tlc("+tlc+")");
 }
 
 function shutdown_master()
@@ -121,5 +121,5 @@ function get_master_status()
     var hdr = new Header();
     hdr.msg_id = "GET_MASTER_STATUS";
     send_msg(socket, hdr);
-    log("get_master_status");
+    //log("get_master_status");
 }
