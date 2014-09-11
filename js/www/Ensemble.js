@@ -116,7 +116,10 @@ socket.onmessage = function(evt)
             for (var i=0; i<slave_list.slave.length; i++)
             {
                 var slave=slave_list.slave[i]
-                log(slave.slave_id+", soc="+slave.soc.toFixed(1)+"%, v="+slave.version);
+                log(slave.slave_id+", soc="+slave.soc.toFixed(1)+
+                    "%, v="+slave.version+
+                   ", age="+slave.age.toFixed(3)+
+                   ", mid="+slave.drill_id);
             }
         }
         else if (hdr.msg_id == Msg_Ids.MASTER_STATUS)

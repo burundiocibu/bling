@@ -91,6 +91,25 @@ string Master_Server::send_all_stop(string& msg)
    return ack;
 }
 
+
+void Master_Server::set(bling_pb::slave_list::slave_info* s, const Slave& slave)
+{
+   double age = slave.t_rx ? (runtime.usec() - slave.t_rx) * 1e-6 : 999999;
+
+   s->set_slave_id(slave.id);
+   s->set_student_name(slave.student_name);
+   s->set_drill_id(slave.drill_id);
+   s->set_vcell(slave.vcell);
+   s->set_version(slave.version);
+   s->set_age(age);
+   s->set_soc(slave.soc);
+   s->set_mmc(slave.mmc);
+   s->add_tlc(slave.tlc[0]);
+   s->add_tlc(slave.tlc[1]);
+   s->add_tlc(slave.tlc[2]);
+}
+
+
 string Master_Server::get_slave_list(string& msg)
 {
    bling_pb::get_slave_list gsl;
@@ -110,19 +129,11 @@ string Master_Server::get_slave_list(string& msg)
       if (gsl.has_slave_id() && i->id != gsl.slave_id())
          continue;
 
-      if (i->t_rx == 0)
+      double age = (runtime.usec() - i->t_rx) * 1e-6;
+      if (gsl.active() && (i->t_rx == 0 || age > 30))
          continue;
 
-      bling_pb::slave_list::slave_info* slave=sl.add_slave();
-      slave->set_slave_id(i->id);
-      slave->set_vcell(i->vcell);
-      slave->set_version(i->version);
-      slave->set_t_rx(i->t_rx);
-      slave->set_soc(i->soc);
-      slave->set_mmc(i->mmc);
-      slave->add_tlc(i->tlc[0]);
-      slave->add_tlc(i->tlc[1]);
-      slave->add_tlc(i->tlc[2]);
+      set(sl.add_slave(), *i);
    }
 
    if (debug)
@@ -195,18 +206,7 @@ string Master_Server::ping_slave(string& msg)
 
    bling_pb::slave_list sl;
    if (slave->t_rx != 0)
-   {
-      bling_pb::slave_list::slave_info* s=sl.add_slave();
-      s->set_slave_id(slave->id);
-      s->set_vcell(slave->vcell);
-      s->set_version(slave->version);
-      s->set_t_rx(slave->t_rx);
-      s->set_soc(slave->soc);
-      s->set_mmc(slave->mmc);
-      s->add_tlc(slave->tlc[0]);
-      s->add_tlc(slave->tlc[1]);
-      s->add_tlc(slave->tlc[2]);
-   }
+      set(sl.add_slave(), *slave);
 
    if (debug)
       cout << "slave_list:" << sl.ShortDebugString() << endl;

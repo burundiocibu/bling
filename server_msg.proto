@@ -63,6 +63,10 @@ message get_slave_list
 {
    required bool scan = 1;       // Whether or not to scan for slaves or use the existing known list
    optional uint32 tries = 2;    // How many scans to conduct before returning
+
+   // Set true to return just those slaves that have responded recently
+   // false means all the master knows about
+   optional bool active = 4 [default = true];
    optional uint32 slave_id = 3; // used to just get one (or more slave's info)
 }
 
@@ -70,11 +74,14 @@ message get_slave_list
 // A list of slaves and their info
 message slave_list
 {
+   // Most of these come from the Slave.hpp
    message slave_info
    {
       required uint32 slave_id = 1;
+      optional string student_name = 17;
+      optional string drill_id = 18;
       optional string version = 2;
-      optional uint32 t_rx = 3;
+      optional float age = 3;  // seconds since last response
       optional float vcell = 4;
       optional float soc = 5;
       optional uint32 mmc = 6;

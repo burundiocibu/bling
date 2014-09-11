@@ -14,6 +14,7 @@ function get_slave_list()
     var gsl = new Get_Slave_List();
     gsl.scan = "false";
     gsl.tries = 0;
+    gsl.active = 'false';
     var hdr = new Header();
     hdr.msg_id = "GET_SLAVE_LIST";
     send_msg(socket, hdr, gsl);

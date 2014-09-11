@@ -38,5 +38,8 @@ public:
    std::string nak, ack;
 
    std::string slave_main_fn;
+
+private:
+   void set(bling_pb::slave_list::slave_info* s, const Slave& slave);
 };
 #endif

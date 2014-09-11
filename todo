@@ -10,17 +10,13 @@ Slave.cpp todo:
 slave_main todo:
    * Add new effects!
 
-master_server.cpp todo:
-   * cull slaves that have t_rx over 10 minutes
-
-
 master_server_main.cpp todo:
    * add reporting of cpu and disk stats in master_status
    * add temp logging to output
    * find hang after it runs for 2+ hours
 
 master_server.cpp todo:
-   * cull slaves that have t_rx over 10 minutes
+
 
 server.js:
    * have it start master_server automagically?
@@ -38,6 +34,3 @@ management web page:
    * have it auto-reconnect?
 
 Make rPi boot off flash
-
-server.sh:
-    * rewrite to be like an init script
