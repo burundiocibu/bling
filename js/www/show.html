@@ -29,10 +29,8 @@ Show Control
       </td>
       <td>
         <button id="play_effect" class="big"
-                value="1"
                 style="background: url(play.ico); background-size:
                        contain; height:6em; width:6em"/>
-          1
       </td>
       <td>
         <button id="next_effect" class="big"
@@ -44,6 +42,11 @@ Show Control
                 style="background: url(stop_alt.ico); background-size:
                        contain; height:6em; width:6em"/>
       </td>
+    <tr>
+      <td colspan="3">
+        <textarea id="effect_region" style="border: none; resize:none;" rows="1"></textarea>
+      </td>
+    </tr>
     </tr>
   </table>
   <hr>
@@ -54,7 +57,6 @@ Show Control
   <script src="./Long.min.js"></script>
   <script src="./ByteBufferAB.min.js"></script>
   <script src="./ProtoBuf.min.js"></script>
-  <script src="./hexy.js"></script>
   <script src="./Ensemble.js"></script>
   <script src="./googleFastButton.js"></script>
   <script src="./show.js"></script>
