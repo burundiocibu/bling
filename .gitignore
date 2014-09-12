@@ -29,3 +29,4 @@ client_test
 client_cmd
 master_ws
 http_server
+print_slave_version

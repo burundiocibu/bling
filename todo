@@ -17,20 +17,16 @@ master_server_main.cpp todo:
 
 master_server.cpp todo:
 
-
 server.js:
    * have it start master_server automagically?
 
 show web page todo:
    * Maybe a button for each effect?
-   * have a descriptive name for each effect
-   * have it respond to keypresses (space to play, left and right arrow, x to stop)
    * have it auto-reconnect?
 
 management web page:
    * status grid of all slaves?
    * list missing slaves only
    * master temp/load/disk status
-   * have it auto-reconnect?
 
 Make rPi boot off flash

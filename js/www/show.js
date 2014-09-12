@@ -26,6 +26,20 @@ function update_effect()
 
 update_effect();
 
+document.onkeydown = function kph(e)
+{
+    k = e.keyCode;
+    switch (e.keyCode)
+    {
+        case 37: prev_effect(); break; // left arrow
+        case 39: next_effect(); break; // right arrow
+        case 13: play_effect(); break; // enter key
+        case 88: all_stop();    break; // x
+    }
+
+    document.getElementById("all_stop").textContent = k;
+};
+
 new FastButton(document.getElementById('play_effect'), function() { start_effect(); });
 new FastButton(document.getElementById('prev_effect'), function() { prev_effect(); });
 new FastButton(document.getElementById('next_effect'), function() { next_effect(); });

@@ -9,6 +9,18 @@ new FastButton(document.getElementById('effect0'),  function() { start_effect(0)
 new FastButton(document.getElementById('effect1'),  function() { start_effect(1); });
 new FastButton(document.getElementById('all_stop'), function() { all_stop(); });
 
+document.onkeydown = function kph(e)
+{
+    k = e.keyCode;
+    switch (e.keyCode)
+    {
+        case 38: set_tlc(1); break; // up arrow
+        case 40: set_tlc(-1); break; // down arrow
+    }
+
+    document.getElementById("all_stop").textContent = k;
+};
+
 function get_slave_list()
 {
     var gsl = new Get_Slave_List();
