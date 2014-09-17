@@ -27,7 +27,7 @@ Effect::Effect(uint16_t slave)
    slave_id = slave;
    srand(slave);
    my_rand = rand();
-   for (int i=0; i<sizeof(noise); i++)
+   for (size_t i=0; i<sizeof(noise); i++)
       noise[i] = rand();
    reset();
 };
@@ -92,27 +92,13 @@ void Effect::execute()
 
    switch(id)
    {
-      case 0: e0(); break;
-      case 1: e1(); break;
-      case 2: e2(); break;
-      case 3: e3(); break;
-      case 4: e4(); break;
-      case 5: e5(); break;
-      case 6: e6(); break;
-      case 7: e7(); break;
-      case 8: e8(); break;
-      case 9: e9(); break;
-      case 10: e10(); break;
-      case 11: e11(); break;
-      case 12: e12(); break;
-      case 13: e13(); break;
-      case 14: e14(); break;
-      case 15: e15(); break;
-      case 16: e16(); break;
-      case 17: e17(); break;
-      case 18: e18(); break;
-      case 19: e19(); break;
-      case 20: e20(); break;
+      case 0: reset(); break;
+      case 1: flash_id(); break;
+      case 2: pulse(); break;
+      case 3: sel_on(); break;
+      case 4: all_on(); break;
+      case 5: all_white_sparkle(); break;
+      default: break;
    }
    prev_dt = dt;
 }
@@ -168,266 +154,6 @@ void Effect::reset()
    set_all(0);
 }
 
-
-/* Flash the unit ID as an 8 bit code
-   id 19 = 00010100
-   0: __-_____
-   1: __------
-   Each bit is 500 ms long, whole code takes 4 seconds
-*/
-void Effect::e0()
-{
-   int n = dt / 500;
-   int m = dt % 500;
-   int mask = 1 << n;
-   int b = slave_id & mask;  // really want this to be marcher ID
-   int v = 64;
-   if (m<100)
-      set_all(0);
-   else if (m<120)
-      set_all(v);
-   else if (b)
-      set_all(v);
-   else
-      set_all(0);
-}
-
-
-/*
- Flash all full intensity and fade out over a the duration
-rgb:   
-      |\
-______| \____
-*/
-void Effect::e1()
-{
-   int v = vmax - dt * vmax / duration;
-   if (v<0)
-      v=0;
-   set_all(v);
-}
-
-
-
-
-/*
-        _________
-all    /         |
-______/          |_____________
-T:    0 1        2
- */
-void Effect::e2()
-{
-   const long dwell = 500; // t2-t1
-   const long rise = duration - dwell; // t1-t0
-
-   int v;
-   if (dt < rise)
-      v = (vmax * dt) / rise;
-   else
-      v = vmax;
-
-   set_rgb(v, v, v);
-}
-
-
-/*
-        _________
-red    /         |
-______/          |_____________
-T:    0 1        2
- */
-void Effect::e3()
-{
-   const long rise_time = 5000;
-
-   int v;
-   if (dt < rise_time)
-      v = (vmax * dt) / rise_time;
-   else
-      v = vmax;
-
-   set_red(v);
-}
-
-
-
-/*
-red/blue sparkle
-      ____________________________
-Red  /
-____/
-           ______          ______
-Blue      /      |        /
-_________/       |_______/
-    | |  | |     |
-    t t  t t     t
-    0 1  2 3     4
- */
-void Effect::e4()
-{
-   // my rand = [0..7fff];
-   const long t0 = (my_rand >> 8) * 2; // length of cycle in ms 0 ... 127*5 
-   const long cl = (my_rand & 0xff) * 4 + 512; // 
-   const long dwell = 400; // time at full intensity
-   const long rise_time = 100; // time to ramp light
-
-   unsigned r=0;
-
-   if (dt < rise_time)
-      r = (vmax * dt) / rise_time;
-   else
-      r = vmax;
-
-   set_red(r);
-
-   unsigned b=0;
-   long cldt = dt<=0 ? 0 : dt % cl;
-
-   if (t0 < cldt && cldt < t0+dwell )
-   {
-      if (cldt < rise_time)
-         b = (vmax * cldt) / rise_time;
-      else
-         b = vmax;
-   }
-   set_blue(b);
-}
-
-
-// Same as 5 but fades out 
-void Effect::e5()
-{
-   // my rand = [0..7fff];
-   const long t0 = (my_rand >> 8) * 2; // length of cycle in ms 0 ... 127*5 
-   const long cl = (my_rand & 0xff) * 4 + 512; // 
-   const long dwell = 400; // time at full intensity
-   const long rise_time = 100; // time to ramp light
-   const long fade_time=1500;
-
-   unsigned v = dt < fade_time ? vmax * ( fade_time - dt) / fade_time : 0;
-
-   unsigned r=0;
-
-   r = v;
-
-   set_red(r);
-
-   unsigned b=0;
-   long cldt = dt<=0 ? 0 : dt % cl;
-
-   if (t0 < cldt && cldt < t0+dwell )
-   {
-      if (cldt < rise_time)
-         b = (v * cldt) / rise_time;
-      else
-         b = v;
-   }
-   set_blue(b);
-}
-
-
-/* just brings red up to 50% */
-void Effect::e6()
-{
-   const long rise_time = 2000;
-
-   int v;
-   if (dt > rise_time)
-      v = (vmax>>2);
-   else
-      v = ((vmax>>2) * dt) / rise_time;
-
-   set_red(v);
-}
-
-/* just turns all off */
-void Effect::e7()
-{
-   const uint8_t d = get_delay(all_l2r, sizeof(all_l2r));
-   if (d==0xff)
-      return;
-   const uint16_t delay = d*25;
-   if (dt <= delay)
-      return;
-
-   set_rgb(0, 0, 0);
-}
-
-
-/*
-        _________          ________
-all    /         \        /        \
-______/           \______/          \______
-T:    0 1       2 3      4...
- */
-void Effect::e8()
-{
-   const uint8_t d = get_delay(m1_set13, sizeof(m1_set13));
-   if (d==0xff)
-      return;
-   const uint16_t delay = d*25;
-
-   const long t1 = 150;
-   const long t2 = 675;
-   const long t3 = 825;
-   const long t4 = 2550; // cycle length
-
-   unsigned v=0;
-   long cldt = dt<=delay ? 0 : (dt-delay) % t4;
-
-   if (cldt < t1)
-      v = (vmax * cldt) / t1;
-   else if (cldt < t2)
-      v = vmax;
-   else if (cldt < t3)
-      v = (vmax * (t3-cldt)) / (t3-t2);
-   else
-      v = 0;
-
-   set_rgb(v, v, v);
-}
-
-
-
-/*
-movement 3, A1..9
-         ____
-rgb     |    \
-________|     \____
-T       0   1  2
-*/
-void Effect::e9()
-{
-   int v = vmax - dt * vmax / duration;
-   if (v<0)
-      v=0;
-   set_rgb(0, v, 0);
-}
-
-
-/*
-  movement 3, A10
-  everyone flashes on, ww+b off after
-*/
-void Effect::e10()
-{
-   const int32_t bww_len = 1411; // brass and wood winds turn off after this
-   const uint8_t s = get_delay(section, sizeof(section));
-   if (s==2 || s==3)
-   {
-      int v = vmax - dt * vmax / bww_len;
-      if (v<0 || dt > bww_len)
-         v=0;
-      set_rgb(0, v, 0);
-   }
-   else if (s==1 || s==100)
-   {
-      set_rgb(0, vmax, 0);
-   }
-      
-}
-
 /*
 A generic flash
           _________vmax
@@ -437,6 +163,7 @@ A generic flash
 ______/   |       | | 
 T     0   1       2 3
 */
+//             rise     dwell    fall              dwell
 uint16_t flash(long t1, long t2, long t3, long dt, uint16_t vmax, uint16_t vmin)
 {
    if (dt < t1)
@@ -449,112 +176,102 @@ uint16_t flash(long t1, long t2, long t3, long dt, uint16_t vmax, uint16_t vmin)
 }
 
 
-void Effect::e11()
+/* Flash the unit ID as an 8 bit code
+   id 19 = 00010100
+   0: __-_____
+   1: __------
+   Each bit is 500 ms long, whole code takes 4 seconds
+*/
+void Effect::flash_id()
 {
-   const uint8_t d = get_delay(m3_set21, sizeof(m3_set21));
-   if (d==0xff)
-      return;
-   const uint16_t delay = d*25;
-   if (dt < delay)
-      return;
-   dt -= delay;
-
-   if (id==11)      set_rgb(0, flash(100, 650, 1500, dt, vmax, vmax>>3), 0);
-   else if (id==12) set_rgb(0, 0, flash(100, 650, 1500, dt, vmax, vmax>>3));
-   else if (id==13) set_rgb(0, flash(100, 650, 3000, dt, vmax, 0), 0);
-}
-
-void Effect::e12()
-{
-   e11();
-}
-
-void Effect::e13()
-{
-   e11();
-}
-
-void Effect::e14()
-{
-   const uint8_t d = get_delay(m3_set30_AB, sizeof(m3_set30_AB));
-   if (d==0)
-      set_rgb(vmax, 0, vmax);
+   int n = dt / 500;
+   int m = dt % 500;
+   int mask = 1 << n;
+   int b = slave_id & mask;  // really want this to be marcher ID
+   int v = vmax / 64;
+   if (m<100)
+      set_all(0);
+   else if (m<120)
+      set_all(v);
+   else if (b)
+      set_all(v);
    else
-      set_rgb(0, vmax, 0);
-}
-
-void Effect::e15()
-{
-   const uint8_t d = get_delay(m3_set30_AB, sizeof(m3_set30_AB));
-   if (d==0)
-      set_rgb(0, 0, vmax);
-   else
-      set_rgb(vmax, 0, 0);
-}
-
-void Effect::e16()
-{
-   const uint8_t d = get_delay(m3_set30_AB, sizeof(m3_set30_AB));
-   if (d==0)
-      set_rgb(0, vmax, 0);
-   else
-      set_rgb(vmax, 0, vmax);
-}
-
-void Effect::e17()
-{
-   const uint8_t d = get_delay(m3_set30_AB, sizeof(m3_set30_AB));
-   if (d==0)
-      set_rgb(vmax, 0, 0);
-   else
-      set_rgb(0, vmax, vmax);
-}
-
-void Effect::e18()
-{
-   const uint8_t d = get_delay(m3_set30_AB, sizeof(m3_set30_AB));
-   if (d==0)
-      set_rgb(0, 0, vmax);
-   else
-      set_rgb(0, 0, vmax);
+      set_all(0);
 }
 
 
 /*
-red/blue sparkle
+All slaves flash all channels on full intensity and fade out over a the duration
+rgb:   
+      |\
+______| \____
+*/
+void Effect::pulse()
+{
+   const int vm = vmax / 2;
+   int v = vm - dt * vm / duration;
+   if (v<0)
+      v=0;
+   set_all(v);
+}
+
+
+
+
+/*
+Selected slaves quickly turn on all channels 50% and stay on for duration
+rgb:    _________
+       /         |
+______/          |_____________
+T:    0 1        2
+ */
+void Effect::sel_on()
+{
+   //   const uint8_t d = get_delay(all_l2r, sizeof(all_l2r));
+   if (slave_id!= 47 && slave_id !=36)
+      return;
+   all_on();
+}
+
+
+/*
+All slaves quickly turn on all channels 50% and stay on for duration
+ */
+void Effect::all_on()
+{
+   int v = flash(100, duration - 100, 0, dt, vmax/2, 0);
+   set_all(v);
+}
+
+
+/*
+All slaves sparkle randomly for duration
        ___________           _____
-color  |         |           | 
+       |         |           | 
 _______|         |___________| 
 T      0         1           2 
 n      0                     1
 Cycle length = T2
 */
-void Effect::e19()
+void Effect::all_white_sparkle()
 {
+   const long v = vmax/2;
    // my_rand = [0..7fff];
-   const long t1 = 250 + (my_rand >> 8) * 5;        // length of pulse in ms, 250... 885
-   const long t2 = t1 + 250 + (my_rand & 0xff) * 3; // length of cycle 500...1650
+   const long t1 = 250 + (my_rand >> 8) * 5;        // length of pulse 250...885 ms
+   const long t2 = t1 + 250 + (my_rand & 0xff);     // length of cycle 500...1130 ms
    long cldt = dt<=0 ? 0 : dt % t2;
+
+   if (cldt < t1)
+      set_all(v);
+   else
+      set_all(0);
+   return;
+
    long i = dt / t2;
    i = i % sizeof(noise);
    uint8_t n = noise[i];
-
    if (cldt < t1)
       n = n>>3;
-   switch (n & 0x7)
-   {
-      case 0: set_rgb(vmax, 0,    vmax); break;
-      case 1: set_rgb(0,    vmax, 0);    break;
-      case 2: set_rgb(0,    0,    vmax); break;
-      case 3: set_rgb(vmax, 0,    0);    break;
-      case 4: set_rgb(0,    vmax, 0);    break;
-      case 5: set_rgb(vmax, 0,    0);    break;
-      case 6: set_rgb(0,    vmax, vmax); break;
-      case 7: set_rgb(0,    0,    vmax); break;
-   }
-}
-
-void Effect::e20()
-{
-   set_rgb(0,vmax,0);
+   int vm = vmax>>n;
+   set_all(v);
 }

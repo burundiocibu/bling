@@ -2,7 +2,7 @@
 # mode: makefile
 # End:
 
-SLAVE_BIN=slave/slave_main.hex slave/nrf_boot.hex
+SLAVE_BIN=slave/slave_main.hex slave/nrf_boot.hex slave_main_version
 MASTER_BIN=master_curses master_logger master_scan master_loader master_server\
  show get_param flash_list print_slave_version
 

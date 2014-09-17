@@ -9,6 +9,11 @@ Slave.cpp todo:
 
 slave_main todo:
    * Add new effects!
+   * 1 one on for at least 8 measures @ 120
+   * 2 all on 2 measures @ 150
+   * 3 all sparkle, 6 measures @ 150
+   * 4 all on, for lots of measures
+
 
 master_server_main.cpp todo:
    * add reporting of cpu and disk stats in master_status
@@ -20,13 +25,14 @@ master_server.cpp todo:
 server.js:
    * have it start master_server automagically?
 
-show web page todo:
+show.html page todo:
    * Maybe a button for each effect?
-   * have it auto-reconnect?
 
-management web page:
+mgmt.(html|js) web page:
    * status grid of all slaves?
    * list missing slaves only
    * master temp/load/disk status
+   * only program slaves with recent pings
+   * provide feedback as slaves are being programed
 
 Make rPi boot off flash

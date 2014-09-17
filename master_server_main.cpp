@@ -21,7 +21,7 @@ static volatile int force_exit = 0;
 // I think this is just for SSL certs
 #define LOCAL_RESOURCE_PATH "./www"
 
-#define max_payload 2048
+#define max_payload 1024*16
 struct per_session_data__bling_protobuf
 {
    unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + max_payload + LWS_SEND_BUFFER_POST_PADDING];
@@ -250,7 +250,6 @@ int main(int argc, char **argv)
 
    int syslog_options = LOG_PID | LOG_PERROR;
 
-   int client = 0;
    int listen_port;
    struct lws_context_creation_info info;
 
@@ -311,7 +310,7 @@ int main(int argc, char **argv)
     * simplify getting started without having to take care about
     * permissions or running as root, set to /tmp/.lwsts-lock
     */
-   if (!client && daemonize && lws_daemonize("/tmp/.lwstecho-lock"))
+   if (daemonize && lws_daemonize("/tmp/.lwstecho-lock"))
    {
       fprintf(stderr, "Failed to daemonize\n");
       return 1;
@@ -323,25 +322,15 @@ int main(int argc, char **argv)
 
    /* tell the library what debug level to emit and to send it to syslog */
    lws_set_log_level(debug_level & 0x7, lwsl_emit_syslog);
-   lwsl_notice("master_wc - bling master controller with websocket interface");
-   if (client)
-   {
-      lwsl_notice("Running in client mode\n");
-      listen_port = CONTEXT_PORT_NO_LISTEN;
-      if (use_ssl)
-         use_ssl = 2;
-   }
-   else
-   {
-      lwsl_notice("Running in server mode\n");
-      listen_port = port;
-   }
+   lwsl_notice("bling master controller with websocket interface");
+   lwsl_notice("Running in server mode\n");
+   listen_port = port;
 
    info.port = listen_port;
    info.iface = interface;
    info.protocols = protocols;
    info.extensions = libwebsocket_get_internal_extensions();
-   if (use_ssl && !client)
+   if (use_ssl)
    {
       info.ssl_cert_filepath = LOCAL_RESOURCE_PATH"/libwebsockets-test-server.pem";
       info.ssl_private_key_filepath = LOCAL_RESOURCE_PATH"/libwebsockets-test-server.key.pem";

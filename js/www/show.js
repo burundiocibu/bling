@@ -9,11 +9,11 @@ function Event(name, id, duration)
 bpm=170; // beats per minute
 mpb = 1000 * 60 / bpm; // ms per beat
 events = [];
-events.push(new Event("set13",   8, 4500));
-events.push(new Event("flash",   1, 4500));
-events.push(new Event("sparkle", 4, 30000));
-events.push(new Event("M3 A1",   9, 5 * mpb));
-events.push(new Event("M3 A2",   9, 5 * mpb));
+events.push(new Event("sel_on",  3, 4500));
+events.push(new Event("all_on",  4, 4500));
+events.push(new Event("sparkle", 5, 10000));
+events.push(new Event("all_off", 0, 0));
+events.push(new Event("all_on",  4, 10000));
 
 ep=0;
 
@@ -33,7 +33,8 @@ document.onkeydown = function kph(e)
     {
         case 37: prev_effect(); break; // left arrow
         case 39: next_effect(); break; // right arrow
-        case 13: play_effect(); break; // enter key
+        case 32: start_effect(); break; // space key
+        case 13: start_effect(); break; // enter key
         case 88: all_stop();    break; // x
     }
 
@@ -66,9 +67,7 @@ function start_effect()
     var hdr = new Header();
     hdr.msg_id = "START_EFFECT";
     send_msg(socket, hdr, msg);
-
-    ep++;
-    update_effect();
+    next_effect();
 }
 
 function prev_effect()

@@ -67,8 +67,9 @@
 <textarea id="status_region" style="border: none; resize:none" rows="1"></textarea>
 
   <hr>
-  <button onclick="get_slave_list()">List Slaves</button>
-  <button onclick="scan_slaves()">Scan Slaves</button>
+  <button onclick="get_slave_list('true')">Active Slaves</button>
+  <button onclick="get_slave_list('false')">All Slaves</button>
+  <button onclick="scan_slaves('false')">Scan Slaves</button>
   <button onclick="program_slaves()">Program Slaves</button>
   <br/>
   <button onclick="get_master_status()">Master Status</button>

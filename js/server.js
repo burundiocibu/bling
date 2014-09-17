@@ -4,7 +4,8 @@
 var http = require("http"),
     fs = require("fs"),
     path = require("path"),
-    open = require("open");
+    open = require("open"),
+    exec = require('child_process').exec;
 
 // Copy dependencies to "www/" (example specific, you usually don't have to care
 var deps = [
@@ -46,17 +47,23 @@ var server = http.createServer(function(req, res) {
         msg="ensemble_master=\"ws://"+req.connection.localAddress+":9321/ws\""
         res.write(msg);
         res.end();
-        //console.log(msg);
         return;
     }
     else if (req.url == "/slave_main_version")
     {
-        // This is how the client is told where to make the websocket connection
-        res.writeHead(200, {"Content-Type":"text/javascript"});
-        msg="slave_version=1.1"
-        res.write(msg);
-        res.end();
-        //console.log(msg);
+        fs.readFile(path.join(__dirname, "..", req.url), function(err, data) {
+            if (err)
+            {
+                res.writeHead(500, {"Content-Type": type});
+                res.end("Internal Server Error: "+err);
+            }
+            else
+            {
+                res.writeHead(200, {"Content-Type":"text/javascript"});
+                res.write("slave_main_version="+data);
+                res.end();
+            }
+        });
         return;
     }
     else if (/^\/(\w+(?:\.min)?\.(?:js|html|proto))$/.test(req.url))

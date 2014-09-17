@@ -33,27 +33,12 @@ struct Effect
    // slave/effect specific delay, indexed by effect number
    static const unsigned max_effect = 21;
 
-   void e0(); // Fast on white, fades out over duration
-   void e1(); // The LED test pattern
-   void e2();
-   void e3();
-   void e4();
-   void e5();
-   void e6();
-   void e7();
-   void e8();
-   void e9();
-   void e10();
-   void e11();
-   void e12();
-   void e13();
-   void e14();
-   void e15();
-   void e16();
-   void e17();
-   void e18();
-   void e19();
-   void e20();
+   void flash_id(); // Blinks slave id 
+   void pulse(); // Fast on white 50%, fades for duration
+
+   void sel_on(); // Fast on white 50%, stays on for duration
+   void all_on(); // Fast on white 50%, stays on for duration
+   void all_white_sparkle(); // flash randomly (each slave differently)
 };
 
 #endif

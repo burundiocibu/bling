@@ -5,9 +5,11 @@ document.getElementById("tlc").value = tlc;
 
 new FastButton(document.getElementById('up'),       function() { set_tlc(1); });
 new FastButton(document.getElementById('down'),     function() { set_tlc(-1); });
-new FastButton(document.getElementById('effect0'),  function() { start_effect(0); });
-new FastButton(document.getElementById('effect1'),  function() { start_effect(1); });
+new FastButton(document.getElementById('effect0'),  function() { start_effect(1); });
+new FastButton(document.getElementById('effect1'),  function() { start_effect(2); });
 new FastButton(document.getElementById('all_stop'), function() { all_stop(); });
+
+log("slave_main_version: "+slave_main_version);
 
 document.onkeydown = function kph(e)
 {
@@ -21,12 +23,12 @@ document.onkeydown = function kph(e)
     document.getElementById("all_stop").textContent = k;
 };
 
-function get_slave_list()
+function get_slave_list(active)
 {
     var gsl = new Get_Slave_List();
     gsl.scan = "false";
     gsl.tries = 0;
-    gsl.active = 'false';
+    gsl.active = active;
     var hdr = new Header();
     hdr.msg_id = "GET_SLAVE_LIST";
     send_msg(socket, hdr, gsl);
@@ -110,15 +112,15 @@ function program_slaves()
         return;
     }
 
-    log("slave_main file is version "+slave_version);
+    log("slave_main_version is "+slave_main_version);
 
     for (var i=0; i<slave_list.slave.length; i++)
     {
         var slave=slave_list.slave[i]
-        if (slave.version == slave_version)
+        if (slave.version == slave_main_version)
         {
-            log("Slave "+slave.slave_id+" already running version "+slave_version);
-            continue;
+            log("Slave "+slave.slave_id+" already running version "+slave_main_version);
+            // continue;
         }
         var msg = new Program_Slave();
         msg.slave_id = slave.slave_id;

@@ -36,6 +36,9 @@ master_blaster: master_blaster.o
 
 print_slave_version: print_slave_version.cpp slave_main_version.hpp
 
+slave_main_version: print_slave_version
+	print_slave_version > $@
+
 flash_list: LDLIBS+=-lbcm2835 -lstdc++
 flash_list: flash_list.o Slave.o rt_utils.o nrf24l01.o messages.o Flasher.o
 

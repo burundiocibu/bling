@@ -511,6 +511,8 @@ SlaveList read_slaves(const std::string filename)
          continue;
       size_t i=line.find(',');
       size_t j=line.find(',', i+1);
+      if (i==string::npos || j==string::npos)
+         continue;
       string name(trim(line.substr(0,i)));
       int slave_id=stoi(line.substr(i+1,j-i-1));
       string drill_id(trim(line.substr(j+1)));
