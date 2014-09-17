@@ -117,6 +117,8 @@ function program_slaves()
     for (var i=0; i<slave_list.slave.length; i++)
     {
         var slave=slave_list.slave[i]
+        if (slave.age > 30)
+            continue;
         if (slave.version == slave_main_version)
         {
             log("Slave "+slave.slave_id+" already running version "+slave_main_version);

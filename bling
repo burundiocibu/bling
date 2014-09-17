@@ -21,7 +21,7 @@ do_start()
             printf "$ms already running ($pid)\n"
         else
             printf "starting $ms\n"
-            $base/$ms --port 9321 $slaves -d 0  2>&1 >>$base/master_server.log &
+            $base/$ms --port 9321 $slaves -d 8  2>&1 >>$base/master_server.log &
         fi
 }
 

@@ -281,5 +281,7 @@ string Master_Server::program_slave(string& msg)
       return nak;
 
    slave->program(slave_main_fn);
+   if (debug)
+      cout << "Done programming " << slave->id << endl;
    return ack;
 }
