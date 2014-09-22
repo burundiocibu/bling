@@ -122,6 +122,7 @@ callback_bling_protobuf(struct libwebsocket_context *context,
             lwsl_err("LWS_CALLBACK_SERVER_WRITEABLE: Partial write\n");
             return -1;
          }
+         else pss->len = 0;
          break;
 
       case LWS_CALLBACK_RECEIVE:
@@ -158,6 +159,9 @@ callback_bling_protobuf(struct libwebsocket_context *context,
             }
             if (s3.length())
             {
+               lwsl_notice("LWS_CALLBACK_RECEIVE: Sending %d bytes", s3.length());
+               if (pss->len)
+                  lwsl_notice("LWS_CALLBACK_RECEIVE: already %d bytes queued", pss->len);
                memcpy(&pss->buf[LWS_SEND_BUFFER_PRE_PADDING], s3.c_str(), s3.length());
                pss->len = s3.length();
                libwebsocket_callback_on_writable(context, wsi);

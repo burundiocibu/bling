@@ -281,7 +281,17 @@ string Master_Server::program_slave(string& msg)
       return nak;
 
    slave->program(slave_main_fn);
-   if (debug)
-      cout << "Done programming " << slave->id << endl;
-   return ack;
+   
+   slave->ping(5);
+
+   bling_pb::slave_list sl;
+   set(sl.add_slave(), *slave);
+
+   string s1,s2;
+   sl.SerializeToString(&s2);
+   bling_pb::header header;
+   header.set_msg_id(bling_pb::header::SLAVE_LIST);
+   header.set_len(s2.size());
+   header.SerializeToString(&s1);
+   return s1+s2;
 }

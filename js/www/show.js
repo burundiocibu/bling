@@ -9,11 +9,11 @@ function Event(name, id, duration)
 bpm=170; // beats per minute
 mpb = 1000 * 60 / bpm; // ms per beat
 events = [];
-events.push(new Event("sel_on",  3, 4500));
-events.push(new Event("all_on",  4, 4500));
-events.push(new Event("sparkle", 5, 10000));
-events.push(new Event("all_off", 0, 0));
-events.push(new Event("all_on",  4, 10000));
+events.push(new Event("36 On",  3, 30000));
+events.push(new Event("All On",  4, 30000));
+events.push(new Event("All Sparkle", 5, 30000));
+events.push(new Event("All On",  4, 30000));
+events.push(new Event("All Off", 0, 1));
 
 ep=0;
 

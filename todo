@@ -21,6 +21,7 @@ master_server_main.cpp todo:
    * find hang after it runs for 2+ hours
 
 master_server.cpp todo:
+   * have it return a slave list with programmed slave after programming
 
 server.js:
    * have it start master_server automagically?

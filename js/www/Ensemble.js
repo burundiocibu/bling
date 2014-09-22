@@ -34,7 +34,7 @@ function log(msg)
     if (document.getElementById("log") !== null)
     {
         var p = document.getElementById('log');
-        p.innerHTML = msg + "\n" + p.innerHTML;
+        p.innerHTML = p.innerHTML + msg  + "\n";
     }
 }
 
@@ -112,6 +112,7 @@ socket.onmessage = function(evt)
         var hdr = Header.decode(evt.data.slice(0,7));
         if (hdr.msg_id == Msg_Ids.SLAVE_LIST)
         {
+            log("Slaves:");
             slave_list = Slave_List.decode(evt.data.slice(7));
             for (var i=0; i<slave_list.slave.length; i++)
             {

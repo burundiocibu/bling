@@ -9,8 +9,6 @@ new FastButton(document.getElementById('effect0'),  function() { start_effect(1)
 new FastButton(document.getElementById('effect1'),  function() { start_effect(2); });
 new FastButton(document.getElementById('all_stop'), function() { all_stop(); });
 
-log("slave_main_version: "+slave_main_version);
-
 document.onkeydown = function kph(e)
 {
     k = e.keyCode;
@@ -104,7 +102,7 @@ function shutdown_master()
     log("shutdown_master");
 }
 
-function program_slaves()
+function program_slaves(force)
 {
     if (typeof slave_list === "undefined")
     {
@@ -119,18 +117,19 @@ function program_slaves()
         var slave=slave_list.slave[i]
         if (slave.age > 30)
             continue;
-        if (slave.version == slave_main_version)
+        if (slave.version == slave_main_version && !force)
         {
             log("Slave "+slave.slave_id+" already running version "+slave_main_version);
-            // continue;
+            continue;
         }
         var msg = new Program_Slave();
         msg.slave_id = slave.slave_id;
         var hdr = new Header();
         hdr.msg_id = "PROGRAM_SLAVE";
         send_msg(socket, hdr, msg);
-        log("program_slave:"+msg.slave_id);
+        //log("program_slave:"+msg.slave_id);
     }
+    log("Slaves being programmed...");
 }
 
 function get_master_status()

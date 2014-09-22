@@ -246,32 +246,26 @@ void Effect::all_on()
 
 /*
 All slaves sparkle randomly for duration
-       ___________           _____
-       |         |           | 
-_______|         |___________| 
-T      0         1           2 
-n      0                     1
+        ___________           
+        |         |             
+  ______|         |
+T 0     1         2
 Cycle length = T2
 */
 void Effect::all_white_sparkle()
 {
    const long v = vmax/2;
-   // my_rand = [0..7fff];
-   const long t1 = 250 + (my_rand >> 8) * 5;        // length of pulse 250...885 ms
-   const long t2 = t1 + 250 + (my_rand & 0xff);     // length of cycle 500...1130 ms
+   size_t n = 0x1f & (dt>>8);
+   const long t1 = 128 + 16*(noise[n]>>4); // 128 to 256 ms
+   const long t2 = t1 + 64 + 4*(0xf & noise[n]); // on for 64..192 ms
    long cldt = dt<=0 ? 0 : dt % t2;
 
    if (cldt < t1)
+      set_all(0);
+   else if (cldt < t2)
       set_all(v);
    else
       set_all(0);
    return;
 
-   long i = dt / t2;
-   i = i % sizeof(noise);
-   uint8_t n = noise[i];
-   if (cldt < t1)
-      n = n>>3;
-   int vm = vmax>>n;
-   set_all(v);
 }
