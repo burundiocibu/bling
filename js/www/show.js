@@ -12,7 +12,7 @@ events = [];
 events.push(new Event("36 On",  3, 30000));
 events.push(new Event("All On",  4, 30000));
 events.push(new Event("All Sparkle", 5, 30000));
-events.push(new Event("All On",  4, 30000));
+events.push(new Event("All On",  4, 70000));
 events.push(new Event("All Off", 0, 1));
 
 ep=0;
@@ -50,7 +50,7 @@ function all_stop()
 {
     var msg = new Send_All_Stop();
     msg.slave_id = 0;
-    msg.tries = 10;
+    msg.repeat = 50;
     var hdr = new Header();
     hdr.msg_id = "SEND_ALL_STOP";
     send_msg(socket, hdr, msg);
@@ -63,7 +63,7 @@ function start_effect()
     msg.effect_id = events[ep].id;
     msg.start_time = 0;
     msg.duration = events[ep].duration; // ms
-    msg.repeat = 10;
+    msg.repeat = 20;
     var hdr = new Header();
     hdr.msg_id = "START_EFFECT";
     send_msg(socket, hdr, msg);

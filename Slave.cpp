@@ -26,6 +26,19 @@ string Slave::stream_header("id     #     t_tx    tx_dt   err    t_rx      rx_dt
 
 int Slave::debug = 0;
 
+std::string timestamp(void)
+{
+   struct timeval tv;
+   gettimeofday(&tv, NULL);
+   time_t now_time = tv.tv_sec;
+   struct tm now_tm;
+   localtime_r((const time_t*)&tv.tv_sec, &now_tm);
+   char b1[32], b2[32];
+   strftime(b1, sizeof(b1), "%H:%M:%S", &now_tm);
+   snprintf(b2, sizeof(b2), "%s.%03d", b1, tv.tv_usec/1000);
+   return string(b2);
+}
+
 
 Slave::Slave(unsigned _id, const string& _drill_id, const string& _student_name)
    : id(_id), my_line(0), pwm(15),
@@ -85,6 +98,9 @@ int Slave::tx(unsigned repeat)
    else if (clear_count)
       cout << "Slave " << id << " tx: took " << clear_count << " writes to reset status." << endl;
 
+   if (debug>1 && repeat>1)
+      cout << timestamp() << " slave " << id << " repeat=" << repeat << endl;
+
    int tx_read_cnt;
    for (int i=0; i<repeat; i++)
    {
@@ -128,6 +144,8 @@ int Slave::tx(unsigned repeat)
 
       if (i<repeat-1)
          delay_us(2500);
+      else if (debug>1 && repeat>1)
+         cout << timestamp() << " slave " << id << " i=" << i << endl;
    }
 
    if (ack)
@@ -308,18 +326,6 @@ void Slave::set_pwm(unsigned repeat)
 };
 
 
-std::string timestamp(void)
-{
-   struct timeval tv;
-   gettimeofday(&tv, NULL);
-   time_t now_time = tv.tv_sec;
-   struct tm now_tm;
-   localtime_r((const time_t*)&tv.tv_sec, &now_tm);
-   char b1[32], b2[32];
-   strftime(b1, sizeof(b1), "%H:%M:%S", &now_tm);
-   snprintf(b2, sizeof(b2), "%s.%03d", b1, tv.tv_usec/1000);
-   return string(b2);
-}
 
 void Slave::program(string& slave_main_fn)
 {
