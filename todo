@@ -19,6 +19,7 @@ master_server_main.cpp todo:
    * add reporting of cpu and disk stats in master_status
    * add temp logging to output
    * find hang after it runs for 2+ hours
+   * find a way to restart it
 
 master_server.cpp todo:
    * have it return a slave list with programmed slave after programming
@@ -35,5 +36,6 @@ mgmt.(html|js) web page:
    * master temp/load/disk status
    * only program slaves with recent pings
    * provide feedback as slaves are being programed
+   * add a restart server command
 
 Make rPi boot off flash

@@ -120,8 +120,7 @@ socket.onmessage = function(evt)
                 log(slave.slave_id+", soc="+slave.soc.toFixed(1)+                    
                     "%, vcell="+slave.vcell.toFixed(3)+
                     "V, v="+slave.version+
-                   ", age="+slave.age.toFixed(3)+
-                   "s, mid="+slave.drill_id);
+                   ", age="+slave.age.toFixed(3));
             }
         }
         else if (hdr.msg_id == Msg_Ids.MASTER_STATUS)

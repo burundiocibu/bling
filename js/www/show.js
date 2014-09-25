@@ -9,11 +9,11 @@ function Event(name, id, duration)
 bpm=170; // beats per minute
 mpb = 1000 * 60 / bpm; // ms per beat
 events = [];
-events.push(new Event("36 On",  3, 30000));
-events.push(new Event("All On",  4, 30000));
-events.push(new Event("All Sparkle", 5, 30000));
-events.push(new Event("All On",  4, 70000));
-events.push(new Event("All Off", 0, 1));
+events.push(new Event("36 On",       3, 11000)); // B
+events.push(new Event("All On",      4, 6000));  // 2 bars before C
+events.push(new Event("All Sparkle", 5, 13000)); // C
+events.push(new Event("All On",      4, 80000)); // Massive
+events.push(new Event("All Off",     0, 1));
 
 ep=0;
 
@@ -63,7 +63,7 @@ function start_effect()
     msg.effect_id = events[ep].id;
     msg.start_time = 0;
     msg.duration = events[ep].duration; // ms
-    msg.repeat = 20;
+    msg.repeat = 25;
     var hdr = new Header();
     hdr.msg_id = "START_EFFECT";
     send_msg(socket, hdr, msg);

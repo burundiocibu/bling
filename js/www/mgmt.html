@@ -67,14 +67,21 @@
 <textarea id="status_region" style="border: none; resize:none" rows="1"></textarea>
 
   <hr>
-  <button onclick="get_slave_list('true')">Active Slaves</button>
-  <button onclick="get_slave_list('false')">All Slaves</button>
-  <button onclick="scan_slaves('false')">Scan Slaves</button>
-  <button onclick="program_slaves(false)">Program Slaves</button>
-  <button onclick="program_slaves(true)">Reprogram Slaves</button>
+  Slaves:<br/>
+  <button onclick="get_slave_list('true')" style="height:3em;
+                                                  width:5em; centered">Active</button>
+  <button onclick="get_slave_list('false')" style="height:3em;
+                                                   width:5em; centered">All</button>
+  <button onclick="scan_slaves('false')" style="height:3em;
+                                                width:5em">Scan</button>
   <br/>
-  <button onclick="get_master_status()">Master Status</button>
-  <button onclick="shutdown_master()">Shutdown Master</button>
+  <button onclick="program_slaves(false)" style="height:3em; width:7em">Program</button>
+  <button onclick="program_slaves(true)"  style="height:3em; width:7em">Reprogram</button>
+  <br/>
+  Master:<br/>
+  <button onclick="get_master_status()" style="height:3.2em; width:7em">Status</button>
+  <button onclick="shutdown_master()" style="height:3.2em; width:7em">Shutdown</button>
+
   <br/>
   <pre id="log" style="border: 1px solid #ccc;"></pre>
   

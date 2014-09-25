@@ -2,7 +2,7 @@
 <html>
 <head>
 Show Control
-<button onclick="location.href='mgmt.html'">Ensemble Management</button>
+<button onclick="location.href='mgmt.html'" style="height:3em;">Ensemble Management</button>
 <hr>
 </head>
 <body>
@@ -20,37 +20,38 @@ Show Control
     }
   </style>
 
+  <textarea id="status_region" style="width: 10em; border: none; resize:none;" rows="1"></textarea>
   <table border="0">
     <tr>
+      <td colspan="2">
+        <textarea id="effect_region" style="border: none; resize:none;" rows="1"></textarea>
+      </td>
+    </tr>
+    <tr>
       <td>
-        <button id="prev_effect" class="big"
-                style="background: url(left.ico); background-size:
-                       contain; height:6em; width:6em"/>
+        <button id="all_stop" class="big"
+                style="background: url(stop_alt.ico); background-size:
+                       contain; height:7em; width:7em"/>
       </td>
       <td>
         <button id="play_effect" class="big"
                 style="background: url(play.ico); background-size:
-                       contain; height:6em; width:6em"/>
+                       contain; height:7em; width:7em"/>
+      </td>
+      </tr>
+    <tr>
+      <td>
+        <button id="prev_effect" class="big"
+                style="background: url(left.ico); background-size:
+                       contain; height:5em; width:5em"/>
       </td>
       <td>
         <button id="next_effect" class="big"
                 style="background: url(right.ico); background-size:
-                       contain; height:6em; width:6em"/>
+                       contain; height:5em; width:5em"/>
       </td>
-      <td>
-        <button id="all_stop" class="big"
-                style="background: url(stop_alt.ico); background-size:
-                       contain; height:6em; width:6em"/>
-      </td>
-    <tr>
-      <td colspan="3">
-        <textarea id="effect_region" style="border: none; resize:none;" rows="1"></textarea>
-      </td>
-    </tr>
     </tr>
   </table>
-  <hr>
-  <textarea id="status_region" style="width: 10em; border: none; resize:none;" rows="1"></textarea>
   <hr>
 
   <script src="./ensemble_master"></script>

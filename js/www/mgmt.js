@@ -49,7 +49,7 @@ function all_stop()
     document.getElementById("tlc").value = tlc;
     var msg = new Send_All_Stop();
     msg.slave_id = 0;
-    msg.tries = 50;
+    msg.repeat = 50;
     var hdr = new Header();
     hdr.msg_id = "SEND_ALL_STOP";
     send_msg(socket, hdr, msg);
