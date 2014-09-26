@@ -249,6 +249,10 @@ void Master_Server::heartbeat()
          cout << broadcast << endl;
    }
 
+   // For the moment, skip regular scanning since it
+   // increases the chances of the server process hanging
+   return;
+
    static SlaveList::iterator scanner = all.begin();
 
    const long dump_dt = 60*1000;
