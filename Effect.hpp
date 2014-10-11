@@ -37,8 +37,9 @@ struct Effect
    void pulse(); // Fast on white 50%, fades for duration
 
    void sel_on(); // Fast on white 50%, stays on for duration
-   void all_on(); // Fast on white 50%, stays on for duration
-   void all_white_sparkle(); // flash randomly (each slave differently)
+   void opener_on(); // Fast on white 50%, stays on for duration
+   void opener_white_sparkle(); // flash randomly (each slave differently)
+   void balad_on(); // Fast on white 50%, stays on for duration
 };
 
 #endif

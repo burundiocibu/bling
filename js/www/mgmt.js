@@ -106,7 +106,7 @@ function program_slaves(force)
 {
     if (typeof slave_list === "undefined")
     {
-        log("No slaves found. Try 'List Slaves'");
+        log("No slaves. Scan slaves first.");
         return;
     }
 
