@@ -12,7 +12,7 @@ events = [];
 events.push(new Event("One On",       3, 11000)); // B
 events.push(new Event("Intro On",      4, 6000));  // 2 bars before C
 events.push(new Event("Intro Sparkle", 5, 13000)); // C
-events.push(new Event("Massive On",      4, 80000)); // Massive
+events.push(new Event("Massive On",      4, 100*1000)); // Massive
 events.push(new Event("Balad On",      6, 4*60000)); // Start of movement 2? 
 events.push(new Event("All Off",       0, 1000));
 
@@ -22,7 +22,7 @@ function update_effect()
 {
     document.getElementById("play_effect").textContent = ep;
     document.getElementById("effect_region").value = events[ep].name+
-        " ("+events[ep].id+","+events[ep].duration+")";
+        " ("+events[ep].id+","+events[ep].duration/1000+"s)";
 }
 
 update_effect();
