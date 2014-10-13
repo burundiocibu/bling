@@ -95,10 +95,11 @@ void Effect::execute()
       case 0: reset(); break;
       case 1: flash_id(); break;
       case 2: pulse(); break;
-      case 3: sel_on(); break;
-      case 4: opener_on(); break;
-      case 5: opener_white_sparkle(); break;
-      case 6: balad_on(); break;
+      case 3: group_1_on(); break;
+      case 4: group_2_on(); break;
+      case 5: group_2_white_sparkle(); break;
+      case 6: group_3_on(); break;
+      case 7: group_3_white_sparkle(); break;
       default: break;
    }
    prev_dt = dt;
@@ -226,7 +227,7 @@ rgb:    _________
 ______/          |_____________
 T:    0 1        2
  */
-void Effect::sel_on()
+void Effect::group_1_on()
 {
    const uint8_t s=get_delay(section, sizeof(section));
    if (!(s & 0x1))
@@ -240,7 +241,7 @@ void Effect::sel_on()
 /*
 Slaves quickly turn on all channels 50% and stay on for duration
  */
-void Effect::opener_on()
+void Effect::group_2_on()
 {
    const uint8_t s=get_delay(section, sizeof(section));
    if (!(s & 0x2))
@@ -259,12 +260,8 @@ Slaves sparkle randomly for duration
 T 0     1         2
 Cycle length = T2
 */
-void Effect::opener_white_sparkle()
+void Effect::white_sparkle()
 {
-   const uint8_t s=get_delay(section, sizeof(section));
-   if (!(s & 0x2))
-      return;
-
    const long v = vmax/2;
    size_t n = 0x1f & (dt>>8);
    const long t1 = 128 + 16*(noise[n]>>4); // 128 to 256 ms
@@ -277,14 +274,19 @@ void Effect::opener_white_sparkle()
       set_all(v);
    else
       set_all(0);
-   return;
+}
 
+void Effect::group_2_white_sparkle()
+{
+   const uint8_t s=get_delay(section, sizeof(section));
+   if (s & 0x2)
+      white_sparkle();
 }
 
 /*
 Slaves quickly turn on all channels 50% and stay on for duration
 */
-void Effect::balad_on()
+void Effect::group_3_on()
 {
    const uint8_t s=get_delay(section, sizeof(section));
    if (!(s & 0x4))
@@ -292,4 +294,11 @@ void Effect::balad_on()
 
    int v = flash(100, duration - 100, 0, dt, vmax/2, 0);
    set_all(v);
+}
+
+void Effect::group_3_white_sparkle()
+{
+   const uint8_t s=get_delay(section, sizeof(section));
+   if (s & 0x4)
+      white_sparkle();
 }

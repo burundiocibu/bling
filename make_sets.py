@@ -55,6 +55,7 @@ with open("slaves", "r") as fh:
             did2sid[did] = sid
             sid2did[sid] = did
         except:
+            print "Error reading slaves"
             pass    
 
         
@@ -69,18 +70,18 @@ elif args.list==2:
     exit()
 
 
-one_special = ['DG36', 'X6']
+one_special = ['DG36', 'X1']
 
-all_intro = one_special + [
-    'DG22', 'DG9',  'DG18', 'DG12', 'DG23', 'DG26', 'DG11',
-    'DG29', 'DG13', 'DG27', 'DG10', 'DG20', 'DG14', 'DG22', 'DG15',
-    'X1', 'X2'
+all_intro = [
+    'DG9',  'DG10', 'DG11', 'DG12', 'DG13', 'DG14', 'DG15', 'DG16'
+    'DG18', 'DG20', 'DG22', 'DG23', 'DG26', 'DG27', 'DG29', 'DG36',
+    'X1', 'X2', 'X3'
     ]
-# need to un-underline 48
+
 all_balad = all_intro + [
-    'DG38', 'DG32', 'DG30', 'DG34', 'DG16', 'DG31', 'DG24', 'DG37',
-    'DG25', 'DG40', 'DG41', 'DG42', 'DG43', 'DG44', 'DG45', 'DG48', 'DG50',
-    'X3', 'X4', 'X5', 'X7'
+    'DG24', 'DG25', 'DG30', 'DG31', 'DG32', 'DG34', 'DG37', 'DG38', 
+    'DG40', 'DG41', 'DG42', 'DG43', 'DG44', 'DG45', 'DG48', 'DG50',
+    'X4', 'X5', 'X6'
     ]
 
 lut=[0x00 for i in range(max_sid)]

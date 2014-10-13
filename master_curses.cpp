@@ -90,7 +90,7 @@ int main(int argc, char **argv)
    broadcast.reboot();
 
    SlaveList all, found;
-   for (int id=1; id < 70; id++)//ensemble::num_slaves; id++)
+   for (int id=1; id < ensemble::num_slaves; id++)
       all.push_back(Slave(id));
    SlaveList::iterator scanner=all.begin();
 
@@ -112,7 +112,7 @@ int main(int argc, char **argv)
          display(broadcast);
       }
 
-      scanner = scan_some(all, scanner, 2);
+      scanner = scan_some(all, scanner, 6);
       for (auto i=all.begin(); i!=all.end(); i++)
          if (i->t_rx && i->my_line ==0)
                i->my_line = line++;

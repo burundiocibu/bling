@@ -35,11 +35,13 @@ struct Effect
 
    void flash_id(); // Blinks slave id 
    void pulse(); // Fast on white 50%, fades for duration
+   void white_sparkle(); // each slave flashes randomly at 50%
 
-   void sel_on(); // Fast on white 50%, stays on for duration
-   void opener_on(); // Fast on white 50%, stays on for duration
-   void opener_white_sparkle(); // flash randomly (each slave differently)
-   void balad_on(); // Fast on white 50%, stays on for duration
+   void group_1_on(); // Fast on white 50%, stays on for duration
+   void group_2_on(); // Fast on white 50%, stays on for duration
+   void group_2_white_sparkle(); // flash randomly (each slave differently)
+   void group_3_on(); // Fast on white 50%, stays on for duration
+   void group_3_white_sparkle(); // flash randomly (each slave differently)
 };
 
 #endif
