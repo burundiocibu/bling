@@ -93,7 +93,7 @@ socket.onerror = function(error)
     log("Failed connecting to " + ensemble_master);
 }
 
-socket.onopen = function() 
+socket.onopen = function()
 {
     log("Connected to " + ensemble_master);
     set_status("Connected");
