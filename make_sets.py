@@ -73,8 +73,8 @@ elif args.list==2:
 one_special = ['DG36', 'X1']
 
 all_intro = [
-    'DG9',  'DG10', 'DG11', 'DG12', 'DG13', 'DG14', 'DG15', 'DG16'
-    'DG18', 'DG20', 'DG22', 'DG23', 'DG26', 'DG27', 'DG29', 'DG36',
+    'DG9',  'DG10', 'DG11', 'DG12', 'DG13', 'DG14', 'DG15', 'DG18',
+    'DG20', 'DG22', 'DG23', 'DG26', 'DG27', 'DG35', 'DG36', 'DG47'
     'X1', 'X2', 'X3'
     ]
 
