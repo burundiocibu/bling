@@ -112,7 +112,7 @@ int main(int argc, char **argv)
          display(broadcast);
       }
 
-      scanner = scan_some(all, scanner, 2);
+      scanner = scan_some(all, scanner, 4);
       for (auto i=all.begin(); i!=all.end(); i++)
          if (i->t_rx && i->my_line ==0)
                i->my_line = line++;
@@ -132,7 +132,7 @@ int main(int argc, char **argv)
       if (key == '\377')
       {
          // sleep 10 ms
-         bcm2835_delayMicroseconds(10000);
+         bcm2835_delayMicroseconds(2000);
          continue;
       }
 

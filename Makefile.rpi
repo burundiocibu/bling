@@ -62,6 +62,6 @@ http_server: http_server.c
 
 master_server.o: master_server.cpp server_msg.pb.h
 
-master_server: LDLIBS+=-lbcm2835 -lstdc++ -lwebsockets -lprotobuf
+master_server: LDLIBS+=-lbcm2835 -lstdc++ -lwebsockets -lprotobuf -lpthread
 master_server: master_server_main.o  master_server.o server_msg.pb.o \
 	rt_utils.o nrf24l01.o messages.o Slave.o
