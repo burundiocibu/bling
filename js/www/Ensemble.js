@@ -93,7 +93,7 @@ socket.onerror = function(error)
     log("Failed connecting to " + ensemble_master);
 }
 
-socket.onopen = function() 
+socket.onopen = function()
 {
     log("Connected to " + ensemble_master);
     set_status("Connected");
@@ -112,15 +112,14 @@ socket.onmessage = function(evt)
         var hdr = Header.decode(evt.data.slice(0,7));
         if (hdr.msg_id == Msg_Ids.SLAVE_LIST)
         {
-            log("Slaves:");
             slave_list = Slave_List.decode(evt.data.slice(7));
+            log(slave_list.slave.length+" Slaves:");
             for (var i=0; i<slave_list.slave.length; i++)
             {
                 var slave=slave_list.slave[i]
                 log(slave.slave_id+", soc="+slave.soc.toFixed(1)+                    
                     "%, vcell="+slave.vcell.toFixed(3)+
-                    "V, v="+slave.version+
-                   ", age="+slave.age.toFixed(3));
+                    "V, v="+slave.version);
             }
         }
         else if (hdr.msg_id == Msg_Ids.MASTER_STATUS)

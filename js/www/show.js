@@ -9,11 +9,12 @@ function Event(name, id, duration)
 bpm=170; // beats per minute
 mpb = 1000 * 60 / bpm; // ms per beat
 events = [];
-events.push(new Event("36 On",       3, 11000)); // B
-events.push(new Event("All On",      4, 6000));  // 2 bars before C
-events.push(new Event("All Sparkle", 5, 13000)); // C
-events.push(new Event("All On",      4, 80000)); // Massive
-events.push(new Event("All Off",     0, 1));
+events.push(new Event("Intro On",      4, 17.1));  // 2 bars before C
+events.push(new Event("Intro Sparkle", 5, 13.0));  // C
+events.push(new Event("Massive On",    4, 110.0)); // Massive
+events.push(new Event("Balad On",      6, 240.0)); // Start of movement 2
+events.push(new Event("Flicker Off",   7, 1.25));   // End of movement 2
+events.push(new Event("All Off",       0, 1.0));
 
 ep=0;
 
@@ -21,7 +22,7 @@ function update_effect()
 {
     document.getElementById("play_effect").textContent = ep;
     document.getElementById("effect_region").value = events[ep].name+
-        " ("+events[ep].id+","+events[ep].duration+")";
+        " ("+events[ep].id+", "+events[ep].duration+"s)";
 }
 
 update_effect();
@@ -62,7 +63,7 @@ function start_effect()
     msg.slave_id = 0; // broadcast
     msg.effect_id = events[ep].id;
     msg.start_time = 0;
-    msg.duration = events[ep].duration; // ms
+    msg.duration = events[ep].duration*1000; // ms
     msg.repeat = 25;
     var hdr = new Header();
     hdr.msg_id = "START_EFFECT";

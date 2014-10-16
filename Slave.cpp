@@ -511,6 +511,7 @@ SlaveList read_slaves(const std::string filename)
    SlaveList slaves;
    ifstream s(filename);
    string line;
+   getline(s, line); // We toss the header line
    while (getline(s, line))
    {
       if (line[0] == '#')

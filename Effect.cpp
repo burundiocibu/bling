@@ -95,9 +95,11 @@ void Effect::execute()
       case 0: reset(); break;
       case 1: flash_id(); break;
       case 2: pulse(); break;
-      case 3: sel_on(); break;
-      case 4: all_on(); break;
-      case 5: all_white_sparkle(); break;
+      case 3: group_1_on(); break;
+      case 4: group_2_on(); break;
+      case 5: group_2_white_sparkle(); break;
+      case 6: group_3_on(); break;
+      case 7: group_3_white_sparkle(); break;
       default: break;
    }
    prev_dt = dt;
@@ -225,34 +227,40 @@ rgb:    _________
 ______/          |_____________
 T:    0 1        2
  */
-void Effect::sel_on()
+void Effect::group_1_on()
 {
-   //   const uint8_t d = get_delay(all_l2r, sizeof(all_l2r));
-   if (slave_id!= 47 && slave_id !=36)
+   const uint8_t s=get_delay(section, sizeof(section));
+   if (!(s & 0x1))
       return;
-   all_on();
-}
 
-
-/*
-All slaves quickly turn on all channels 50% and stay on for duration
- */
-void Effect::all_on()
-{
    int v = flash(100, duration - 100, 0, dt, vmax/2, 0);
    set_all(v);
 }
 
 
 /*
-All slaves sparkle randomly for duration
+Slaves quickly turn on all channels 50% and stay on for duration
+ */
+void Effect::group_2_on()
+{
+   const uint8_t s=get_delay(section, sizeof(section));
+   if (!(s & 0x2))
+      return;
+
+   int v = flash(100, duration - 100, 0, dt, vmax/2, 0);
+   set_all(v);
+}
+
+
+/*
+Slaves sparkle randomly for duration
         ___________           
         |         |             
   ______|         |
 T 0     1         2
 Cycle length = T2
 */
-void Effect::all_white_sparkle()
+void Effect::white_sparkle()
 {
    const long v = vmax/2;
    size_t n = 0x1f & (dt>>8);
@@ -266,6 +274,31 @@ void Effect::all_white_sparkle()
       set_all(v);
    else
       set_all(0);
-   return;
+}
 
+void Effect::group_2_white_sparkle()
+{
+   const uint8_t s=get_delay(section, sizeof(section));
+   if (s & 0x2)
+      white_sparkle();
+}
+
+/*
+Slaves quickly turn on all channels 50% and stay on for duration
+*/
+void Effect::group_3_on()
+{
+   const uint8_t s=get_delay(section, sizeof(section));
+   if (!(s & 0x4))
+      return;
+
+   int v = flash(100, duration - 100, 0, dt, vmax/2, 0);
+   set_all(v);
+}
+
+void Effect::group_3_white_sparkle()
+{
+   const uint8_t s=get_delay(section, sizeof(section));
+   if (s & 0x4)
+      white_sparkle();
 }

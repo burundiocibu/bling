@@ -20,13 +20,15 @@ Show Control
     }
   </style>
 
-  <textarea id="status_region" style="width: 10em; border: none; resize:none;" rows="1"></textarea>
-  <table border="0">
-    <tr>
-      <td colspan="2">
-        <textarea id="effect_region" style="border: none; resize:none;" rows="1"></textarea>
-      </td>
-    </tr>
+  <textarea id="status_region" rows="1"
+            style="font-size:large; border: none; resize:none;
+                   width:10em">
+  </textarea>
+  <textarea id="effect_region"rows="1"
+            style="font-size:large; border: none; resize:none;">
+  </textarea>
+
+  <table border="0" style="width:100%">
     <tr>
       <td>
         <button id="all_stop" class="big"
@@ -34,16 +36,22 @@ Show Control
                        contain; height:7em; width:7em"/>
       </td>
       <td>
+        <p style="text-align:right; font-size:large;">
         <button id="play_effect" class="big"
                 style="background: url(play.ico); background-size:
                        contain; height:7em; width:7em"/>
+        </p>
       </td>
-      </tr>
+    </tr>
+  </table>
+  <table border="0">
     <tr>
       <td>
         <button id="prev_effect" class="big"
                 style="background: url(left.ico); background-size:
                        contain; height:5em; width:5em"/>
+      </td>
+      <td>
       </td>
       <td>
         <button id="next_effect" class="big"
@@ -52,7 +60,6 @@ Show Control
       </td>
     </tr>
   </table>
-  <hr>
 
   <script src="./ensemble_master"></script>
   <script src="./Long.min.js"></script>

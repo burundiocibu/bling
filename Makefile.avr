@@ -61,7 +61,7 @@ slave/slave_main.o: slave_main.cpp slave_main_version.hpp
 slave/tlc-test.o: slave_main.cpp
 slave/rtc-test.o: rtc-test.cpp
 
-Effect_sets.hpp: hatList.csv make_sets.py
+Effect_sets.hpp: slaves make_sets.py
 	make_sets.py > $@
 
 slave/slave_main.elf: slave/slave_main.o slave/avr_rtc.o slave/avr_spi.o slave/i2c.o\
