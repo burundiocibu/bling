@@ -115,32 +115,42 @@ function reboot_slaves()
 
 function program_slaves(force)
 {
-    if (typeof slave_list === "undefined")
-    {
-        log("No slaves. Scan slaves first.");
-        return;
-    }
-
     log("slave_main_version is "+slave_main_version);
-
-    for (var i=0; i<slave_list.slave.length; i++)
+    if (force)
     {
-        var slave=slave_list.slave[i]
-        if (slave.age > 30)
-            continue;
-        if (slave.version == slave_main_version && !force)
-        {
-            log("Slave "+slave.slave_id+" already running version "+slave_main_version);
-            continue;
-        }
         var msg = new Program_Slave();
-        msg.slave_id = slave.slave_id;
+        msg.slave_id = 0;
         var hdr = new Header();
         hdr.msg_id = "PROGRAM_SLAVE";
         send_msg(socket, hdr, msg);
-        //log("program_slave:"+msg.slave_id);
+        log("program_slave:"+msg.slave_id);
     }
-    log("Slaves being programmed...");
+    else
+    {
+        if (typeof slave_list === "undefined")
+        {
+            log("No slaves. Scan slaves first.");
+            return;
+        }
+
+        for (var i=0; i<slave_list.slave.length; i++)
+        {
+            var slave=slave_list.slave[i]
+            if (slave.age > 30)
+                continue;
+            if (slave.version == slave_main_version)
+            {
+                continue;
+            }
+            
+            var msg = new Program_Slave();
+            msg.slave_id = slave.slave_id;
+            var hdr = new Header();
+            hdr.msg_id = "PROGRAM_SLAVE";
+            send_msg(socket, hdr, msg);
+            log("program_slave:"+msg.slave_id);
+        }
+    }
 }
 
 function get_master_status()
@@ -148,5 +158,4 @@ function get_master_status()
     var hdr = new Header();
     hdr.msg_id = "GET_MASTER_STATUS";
     send_msg(socket, hdr);
-    //log("get_master_status");
 }

@@ -285,22 +285,47 @@ string Master_Server::program_slave(string& msg)
    if (!ps.ParseFromString(msg))
       return nak;
 
-   Slave* slave = find_slave(ps.slave_id());
-   if (slave == NULL)
-      return nak;
+   if (ps.slave_id() == 0)
+   {
+      bling_pb::slave_list sl;
+      for (auto i=all.begin(); i!=all.end(); i++)
+      {
+         i->ping(5);
+         double age = (runtime.usec() - i->t_rx) * 1e-6;
+         if (i->t_rx == 0 || age > 30)
+            continue;
+         i->program(slave_main_fn);
+         i->ping(5);
+         set(sl.add_slave(), *i);
+      }
+      
+      string s1,s2;
+      sl.SerializeToString(&s2);
+      bling_pb::header header;
+      header.set_msg_id(bling_pb::header::SLAVE_LIST);
+      header.set_len(s2.size());
+      header.SerializeToString(&s1);
+      return s1+s2;
+   }
+   else
+   {
+      Slave* slave = find_slave(ps.slave_id());
+      if (slave == NULL)
+         return nak;
 
-   slave->program(slave_main_fn);
-   
-   slave->ping(5);
-
-   bling_pb::slave_list sl;
-   set(sl.add_slave(), *slave);
-
-   string s1,s2;
-   sl.SerializeToString(&s2);
-   bling_pb::header header;
-   header.set_msg_id(bling_pb::header::SLAVE_LIST);
-   header.set_len(s2.size());
-   header.SerializeToString(&s1);
-   return s1+s2;
+      slave->program(slave_main_fn);
+      
+      slave->ping(50);
+      
+      bling_pb::slave_list sl;
+      set(sl.add_slave(), *slave);
+      
+      string s1,s2;
+      sl.SerializeToString(&s2);
+      bling_pb::header header;
+      header.set_msg_id(bling_pb::header::SLAVE_LIST);
+      header.set_len(s2.size());
+      header.SerializeToString(&s1);
+      return s1+s2;
+   }
 }
