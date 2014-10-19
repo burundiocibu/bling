@@ -81,3 +81,16 @@ void dump(const void* buff, size_t len)
    puts("");
 }
 
+
+std::string timestamp(void)
+{
+   struct timeval tv;
+   gettimeofday(&tv, NULL);
+   time_t now_time = tv.tv_sec;
+   struct tm now_tm;
+   localtime_r((const time_t*)&tv.tv_sec, &now_tm);
+   char b1[32], b2[32];
+   strftime(b1, sizeof(b1), "%H:%M:%S", &now_tm);
+   snprintf(b2, sizeof(b2), "%s.%03d", b1, tv.tv_usec/1000);
+   return string(b2);
+}

@@ -27,9 +27,11 @@ Master_Server::Master_Server(int _debug, string& slave_list_fn, string& slave_ma
 
    nRF24L01::setup();
 
+   if (debug)
+      cout << timestamp() << " Master_Server initialized." << endl;
    if (!nRF24L01::configure_base())
    {
-      cout << "Failed to find nRF24L01. Exiting." << endl;
+      cout << timestamp() << " failed to find nRF24L01. Exiting." << endl;
       exit(-1);
    }
    nRF24L01::configure_PTX();
@@ -37,7 +39,7 @@ Master_Server::Master_Server(int _debug, string& slave_list_fn, string& slave_ma
 
    Slave broadcast(0);
 
-   if (debug)
+   if (debug>4)
       cout << broadcast.stream_header << endl;
    
    if (slave_list_fn.size())
@@ -120,7 +122,7 @@ string Master_Server::get_slave_list(string& msg)
    if (gsl.scan())
    {
       SlaveList wow = ::scan(all);
-      cout << "Found " << wow.size() << " slaves out of "
+      cout << timestamp() << " found " << wow.size() << " slaves out of "
            << all.size() << " defined." << endl;
    }
    bling_pb::slave_list sl;
@@ -137,7 +139,7 @@ string Master_Server::get_slave_list(string& msg)
    }
 
    if (debug)
-      cout << "slave_list:" << sl.ShortDebugString() << endl;
+      cout << timestamp() << " slave_list:" << sl.ShortDebugString() << endl;
 
    string s1,s2;
    sl.SerializeToString(&s2);
@@ -157,7 +159,7 @@ string Master_Server::set_slave_tlc(string& msg)
       return nak;
 
    if (debug)
-      cout << "set_slave_tlc:" << sst.ShortDebugString() << endl;
+      cout << timestamp() << " set_slave_tlc:" << sst.ShortDebugString() << endl;
 
    Slave* slave = find_slave(sst.slave_id());
    if (slave == NULL)
@@ -178,14 +180,14 @@ string Master_Server::start_effect(string& msg)
       return nak;
 
    if (debug)
-      cout << "start_effect:" << se.ShortDebugString() << endl;
+      cout << timestamp() << " start_effect:" << se.ShortDebugString() << endl;
 
    Slave* slave = find_slave(se.slave_id());
    if (slave == NULL)
       return nak;
 
    if (debug)
-      cout << "start_effect: found slave, id=" << slave->id << endl;
+      cout << timestamp() << " start_effect: found slave, id=" << slave->id << endl;
    
    slave->start_effect(se.effect_id(), runtime.msec() + se.start_time(), se.duration(), se.repeat());
    return ack;
@@ -209,7 +211,7 @@ string Master_Server::ping_slave(string& msg)
       set(sl.add_slave(), *slave);
 
    if (debug)
-      cout << "slave_list:" << sl.ShortDebugString() << endl;
+      cout << timestamp() << " slave_list:" << sl.ShortDebugString() << endl;
 
    string s1,s2;
    sl.SerializeToString(&s2);
@@ -230,8 +232,11 @@ string Master_Server::reboot_slave(string& msg)
    if (slave == NULL)
       return nak;
 
-
    slave->reboot(rs.repeat());
+
+   if (debug)
+      cout << timestamp() << " reboot_slave, id=" << slave->id << endl;
+
    return ack;
 }
 

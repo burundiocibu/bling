@@ -34,4 +34,7 @@ private:
 // does a hex dump of the memory pointed to
 void dump(const void* buff, size_t len);
 
+// prints current time as HH:MM:SS.fff 
+std::string timestamp(void);
+
 #endif

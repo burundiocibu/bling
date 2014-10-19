@@ -30,3 +30,4 @@ client_cmd
 master_ws
 http_server
 print_slave_version
+slave_main_version

@@ -26,20 +26,6 @@ string Slave::stream_header("id     #     t_tx    tx_dt   err    t_rx      rx_dt
 
 int Slave::debug = 0;
 
-std::string timestamp(void)
-{
-   struct timeval tv;
-   gettimeofday(&tv, NULL);
-   time_t now_time = tv.tv_sec;
-   struct tm now_tm;
-   localtime_r((const time_t*)&tv.tv_sec, &now_tm);
-   char b1[32], b2[32];
-   strftime(b1, sizeof(b1), "%H:%M:%S", &now_tm);
-   snprintf(b2, sizeof(b2), "%s.%03d", b1, tv.tv_usec/1000);
-   return string(b2);
-}
-
-
 Slave::Slave(unsigned _id, const string& _drill_id, const string& _student_name)
    : id(_id), my_line(0), pwm(15),
      drill_id(_drill_id), student_name(_student_name),
@@ -91,15 +77,12 @@ int Slave::tx(unsigned repeat)
 
    if (clear_count == 100)
    {
-      cout << "Slave " << id << " tx: could not clear status of nrf." << endl;
+      cout << timestamp() << " slave " << id << " tx: could not clear status of nrf." << endl;
       tx_err++;
       return 3;
    }
    else if (clear_count)
-      cout << "Slave " << id << " tx: took " << clear_count << " writes to reset status." << endl;
-
-   if (debug>1 && repeat>1)
-      cout << timestamp() << " slave " << id << " repeat=" << repeat << endl;
+      cout << timestamp() << " slave " << id << " tx: took " << clear_count << " writes to reset status." << endl;
 
    int tx_read_cnt;
    for (int i=0; i<repeat; i++)
@@ -118,7 +101,7 @@ int Slave::tx(unsigned repeat)
       }
 
       if (debug>1 && tx_read_cnt>85 && tx_read_cnt <300)
-         cout << "Slave " << id << " tx: tx_read_cnt=" << tx_read_cnt << endl;
+         cout << timestamp() << " slave " << id << " tx: tx_read_cnt=" << tx_read_cnt << endl;
 
       if (status & STATUS_MAX_RT)
       {
@@ -145,7 +128,7 @@ int Slave::tx(unsigned repeat)
       if (i<repeat-1)
          delay_us(2500);
       else if (debug>1 && repeat>1)
-         cout << timestamp() << " slave " << id << " i=" << i << endl;
+         cout << timestamp() << " slave " << id << " i=" << i << "/" << repeat << endl;
    }
 
    if (ack)
@@ -196,12 +179,12 @@ int Slave::rx(void)
    delay_us(100);  // Not sure this is useful...
 
    if (debug>1 && i>15 && i<100)
-      cout << "Slave " << id << " rx: rx_read_cnt=" << i << endl;
+      cout << timestamp() << " slave " << id << " rx: rx_read_cnt=" << i << endl;
 
    if (i==100)
    {
       if (debug>1)
-         cout << "Slave " << id << " rx: error " << endl;
+         cout << timestamp() << " slave " << id << " rx: error " << endl;
       no_resp++;
       return 1;
    }
@@ -536,7 +519,7 @@ SlaveList scan(SlaveList& slave_list, int tries)
    for (int pass=0; slave_list.size() > 0 && pass < tries; pass++)
    {
       if (Slave::debug) 
-         cout << "Start scan at " << runtime.sec() << " s." << endl;
+         cout << timestamp() << " start scan at " << runtime.sec() << " s." << endl;
       for (auto i = slave_list.begin(); i != slave_list.end(); i++)
       {
          if (i->ping() == 0)
@@ -549,7 +532,7 @@ SlaveList scan(SlaveList& slave_list, int tries)
       }
       if (Slave::debug)
          cout << endl
-              << "Scan done at " << runtime.sec() << " s." << endl;;
+              << timestamp() << " scan done at " << runtime.sec() << " s." << endl;;
    }
 
    return found;

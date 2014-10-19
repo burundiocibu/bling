@@ -7,18 +7,12 @@ Slave.cpp todo:
    * see if rx_read_count ever goes past 100 on a successfull read.
    * fix mmc accounting in Slave class when talking to multiple slaves
 
-slave_main todo:
-   * 1 one on for at least 8 measures @ 120
-   * 2 all on 2 measures @ 150
-   * 3 all sparkle, 6 measures @ 150
-   * 4 all on, for lots of measures, to end of movement 1
-
 
 master_server_main.cpp todo:
    * add reporting of cpu and disk stats in master_status
       (maybe use libstatgrab calls)
    * add temp logging to output
-   * find hang after it runs for 2+ hours
+   * find hang after it runs for 2+ hours + lots of pings to slaves
    * find a way to restart it
 
 master_server.cpp todo:

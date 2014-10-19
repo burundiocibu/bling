@@ -102,6 +102,17 @@ function shutdown_master()
     log("shutdown_master");
 }
 
+function reboot_slaves()
+{
+    var hdr = new Header();
+    hdr.msg_id = "REBOOT_SLAVE";
+    var msg = new Reboot_Slave();
+    msg.slave_id = 0; // broadcast
+    msg.repeat = 10;
+    send_msg(socket, hdr, msg);
+    log("reboot_slaves");
+}
+
 function program_slaves(force)
 {
     if (typeof slave_list === "undefined")

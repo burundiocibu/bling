@@ -5,13 +5,12 @@
     <button onclick="location.href='show.html'">Show Control</button>
     <hr>
   </head>
-  <body>
-    
+  <body>  
     <meta name="viewport" content="width=device-width, user-scalable=no">
     <style>
       body {
-    font-family: "Verdana";
-    }
+      font-family: "Verdana";
+      }
       button.big {
       background-repeat:no-repeat;
       font-family: "Verdana";
@@ -61,36 +60,38 @@
           <button onclick="location.href='test.html'">test</button>
         </td>
       </tr>
-  </table>
+    </table>
     
     <hr>
-<textarea id="status_region" style="border: none; resize:none" rows="1"></textarea>
-
-  <hr>
-  Slaves:<br/>
-  <button onclick="scan_slaves(false)" style="height:3em;
-                                              width:5em">Scan</button>
-  <button onclick="get_slave_list(false)" style="height:3em;
-                                                 width:5em; centered">All</button>
-  <button onclick="program_slaves(false)" style="height:3em; width:7em">Program</button>
-  <button onclick="program_slaves(true)"  style="height:3em; width:7em">Reprogram</button>
-  <br/>
-  Master:<br/>
-  <button onclick="get_master_status()" style="height:3.2em; width:7em">Status</button>
-  <button onclick="shutdown_master()" style="height:3.2em; width:7em">Shutdown</button>
-
-  <br/>
-  <pre id="log" style="border: 1px solid #ccc;"></pre>
-  
-  <script src="./ensemble_master"></script>
-  <script src="./slave_main_version"></script>
-  <script src="./Long.min.js"></script>
-  <script src="./ByteBufferAB.min.js"></script>
-  <script src="./ProtoBuf.min.js"></script>
-  <script src="./hexy.js"></script>
-  <script src="./Ensemble.js"></script>
-  <script src="./googleFastButton.js"></script>
-  <script src="./mgmt.js"></script>
-
-</body>
+    <textarea id="status_region" style="border: none; resize:none" rows="1"></textarea>
+    
+    <hr>
+    Slaves:<br/>
+    <button onclick="scan_slaves(false)"    style="height:3em; width:7em">Scan</button>
+    <button onclick="get_slave_list(false)" style="height:3em; width:7em">All</button>
+    <button onclick="program_slaves(false)" style="height:3em; width:7em">Program</button>
+    <button onclick="program_slaves(true)"  style="height:3em; width:7em">Reprogram</button>
+    <br/>
+    <br/>
+    <button onclick="reboot_slaves()"  style="height:3em; width:7em">Reboot</button>
+    <br/>
+    <br/>
+    Master:<br/>
+    <button onclick="get_master_status()" style="height:3.2em; width:7em">Status</button>
+    <button onclick="shutdown_master()" style="height:3.2em; width:7em">Shutdown</button>
+    
+    <br/>
+    <pre id="log" style="border: 1px solid #ccc;"></pre>
+    
+    <script src="./ensemble_master"></script>
+    <script src="./slave_main_version"></script>
+    <script src="./Long.min.js"></script>
+    <script src="./ByteBufferAB.min.js"></script>
+    <script src="./ProtoBuf.min.js"></script>
+    <script src="./hexy.js"></script>
+    <script src="./Ensemble.js"></script>
+    <script src="./googleFastButton.js"></script>
+    <script src="./mgmt.js"></script>
+    
+  </body>
 </html>
