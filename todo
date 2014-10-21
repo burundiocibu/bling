@@ -14,9 +14,9 @@ master_server_main.cpp todo:
    * add temp logging to output
    * find hang after it runs for 2+ hours + lots of pings to slaves
    * find a way to restart it
+   * fix the inability to queue more than one reply
 
 master_server.cpp todo:
-   * have it return a slave list with programmed slave after programming
 
 server.js:
    * have it start master_server automagically?
@@ -25,10 +25,7 @@ show.html page todo:
    * Maybe a button for each effect?
 
 mgmt.(html|js) web page:
-   * status grid of all slaves?
-   * list missing slaves only
    * master temp/load/disk status
-   * only program slaves with recent pings
    * provide feedback as slaves are being programed
    * add a restart server command
 

@@ -8,67 +8,107 @@
   <body>
     
     <meta name="viewport" content="width=device-width, user-scalable=no">
-    <style>
+
+    <style type="text/css">
       body {
-    font-family: "Verdana";
-    }
+      font-family: "Verdana";
+      }
+
       button.big {
       background-repeat:no-repeat;
       font-family: "Verdana";
       border: none;
       background-size: contain;
       }
+
+      textarea {
+      resize: none;
+      border: none;
+      font-family: monospace;
+      font-size: x-small;
+      }
+
+      table {
+      border-collapse: collapse;
+      border: 1px solid;
+      text-align: left;
+      }
+      table td {
+      border: 1px solid #009999;
+      }
     </style>
-    <table border="0">
-      <tr> <!-- row 1 -->
-        <td>
-          <textarea id="ta_r1_c1" style="width: 5em; border: none;
-                                    text-align:center; resize:none;"
-                                    rows="1"; value="r1c1"></textarea>
-        </td>
-        <td>
-          <textarea id="ta_r1_c2" style="width: 5em; border: none;
-                                    text-align:center; resize:none;"
-                                    rows="1"; value="r1c2"></textarea>
-        </td>
-        <td>
-          <textarea id="ta_r1_c3" style="width: 5em; border: none;
-                                    text-align:center; resize:none;"
-                                    rows="1"; value="r1c3"></textarea>
-        </td>
+
+    <textarea id="refresh_time" style="border: none; resize:none; font-family:Verdana" rows="1"></textarea>
+
+    <table>
+      <tr>
+        <td><textarea id="r0c0" rows="2" cols="8"></textarea></td>
+        <td><textarea id="r0c1" rows="2" cols="8"></textarea> </td>
+        <td><textarea id="r0c2" rows="2" cols="8"></textarea> </td>
+        <td><textarea id="r0c3" rows="2" cols="8"></textarea> </td>
       </tr>
-      <tr> <!-- row 2 -->
-        <td>
-          <textarea id="ta_r2_c1" style="width: 5em; border: none;
-                                    text-align:center; resize:none;"
-                                    rows="1"; value="r2c1"></textarea>
-        </td>
+      <tr>
+        <td><textarea id="r1c0" rows="2" cols="8"></textarea></td>
+        <td><textarea id="r1c1" rows="2" cols="8"></textarea> </td>
+        <td><textarea id="r1c2" rows="2" cols="8"></textarea> </td>
+        <td><textarea id="r1c3" rows="2" cols="8"></textarea> </td>
       </tr>
-      <tr> <!-- row 3 -->
-        <td>
-          <textarea id="ta_r3_c1" style="width: 5em; border: none;
-                                    text-align:center; resize:none;"
-                                    rows="1"; value="r3c1"></textarea>
-        </td>
-        <td>
-          <textarea id="ta_r3_c2" style="width: 5em; border: none;
-                                    text-align:center; resize:none;"
-                                    rows="1"; value="r3c2"></textarea>
-        </td>
-        <td>
-          <textarea id="ta_r3_c3" style="width: 5em; border: none;
-                                    text-align:center; resize:none;"
-                                    rows="1"; value="r3c3"></textarea>
-        </td>
+      <tr>
+        <td><textarea id="r2c0" rows="2" cols="8"></textarea></td>
+        <td><textarea id="r2c1" rows="2" cols="8"></textarea> </td>
+        <td><textarea id="r2c2" rows="2" cols="8"></textarea> </td>
+        <td><textarea id="r2c3" rows="2" cols="8"></textarea> </td>
       </tr>
-  </table>
- 
-  <script src="./ensemble_master"></script>
-  <script src="./Long.min.js"></script>
-  <script src="./ByteBufferAB.min.js"></script>
-  <script src="./ProtoBuf.min.js"></script>
-  <script src="./hexy.js"></script>
-  <script src="./Ensemble.js"></script>
-  <script src="./mgmt.js"></script>
-</body>
+      <tr>
+        <td><textarea id="r3c0" rows="2" cols="8"></textarea></td>
+        <td><textarea id="r3c1" rows="2" cols="8"></textarea> </td>
+        <td><textarea id="r3c2" rows="2" cols="8"></textarea> </td>
+        <td><textarea id="r3c3" rows="2" cols="8"></textarea> </td>
+      </tr>
+      <tr>
+        <td><textarea id="r4c0" rows="2" cols="8"></textarea></td>
+        <td><textarea id="r4c1" rows="2" cols="8"></textarea> </td>
+        <td><textarea id="r4c2" rows="2" cols="8"></textarea> </td>
+        <td><textarea id="r4c3" rows="2" cols="8"></textarea> </td>
+      </tr>
+      <tr>
+        <td><textarea id="r5c0" rows="2" cols="8"></textarea></td>
+        <td><textarea id="r5c1" rows="2" cols="8"></textarea> </td>
+        <td><textarea id="r5c2" rows="2" cols="8"></textarea> </td>
+        <td><textarea id="r5c3" rows="2" cols="8"></textarea> </td>
+      </tr>
+      <tr>
+        <td><textarea id="r6c0" rows="2" cols="8"></textarea></td>
+        <td><textarea id="r6c1" rows="2" cols="8"></textarea> </td>
+        <td><textarea id="r6c2" rows="2" cols="8"></textarea> </td>
+        <td><textarea id="r6c3" rows="2" cols="8"></textarea> </td>
+      </tr>
+      <tr>
+        <td><textarea id="r7c0" rows="2" cols="8"></textarea></td>
+        <td><textarea id="r7c1" rows="2" cols="8"></textarea> </td>
+        <td><textarea id="r7c2" rows="2" cols="8"></textarea> </td>
+        <td><textarea id="r7c3" rows="2" cols="8"></textarea> </td>
+      </tr>
+      <tr>
+        <td><textarea id="r8c0" rows="2" cols="8"></textarea></td>
+        <td><textarea id="r8c1" rows="2" cols="8"></textarea> </td>
+        <td><textarea id="r8c2" rows="2" cols="8"></textarea> </td>
+        <td><textarea id="r8c3" rows="2" cols="8"></textarea> </td>
+      </tr>
+      <tr>
+        <td><textarea id="r9c0" rows="2" cols="8"></textarea></td>
+        <td><textarea id="r9c1" rows="2" cols="8"></textarea> </td>
+        <td><textarea id="r9c2" rows="2" cols="8"></textarea> </td>
+        <td><textarea id="r9c3" rows="2" cols="8"></textarea> </td>
+      </tr>
+    </table>
+    <br/>
+    <pre id="log" style="border: 1px solid #ccc;"></pre>
+    
+    <script src="./ensemble_master"></script>
+    <script src="./Long.min.js"></script>
+    <script src="./ByteBufferAB.min.js"></script>
+    <script src="./ProtoBuf.min.js"></script>
+    <script src="./slaves.js"></script>
+  </body>
 </html>
