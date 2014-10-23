@@ -6,7 +6,7 @@ base=${0%/*}
 ms=master_server
 server=server.js
 slaves="--slaves $base/slaves"
-
+slave_main="--slave_main $base/slave/slave_main.hex"
 do_start()
 {
         pid=`pgrep -f $server`
@@ -21,7 +21,7 @@ do_start()
             printf "$ms already running ($pid)\n"
         else
             printf "starting $ms\n"
-            $base/$ms --port 9321 $slaves -d 8  2>&1 >>$base/master_server.log &
+            $base/$ms --port 9321 $slaves $slave_main -d $((8+16))  2>&1 >>$base/master_server.log &
         fi
 }
 

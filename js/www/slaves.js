@@ -10,17 +10,9 @@ var ProtoBuf = dcodeIO.ProtoBuf;
 var builder = ProtoBuf.loadProtoFile("./server_msg.proto");
 var Header = builder.build("bling_pb.header");
 var Msg_Ids = builder.build("bling_pb.header.msg_id_type");
-var Ack = builder.build("bling_pb.slave_list.ack");
-var Nak = builder.build("bling_pb.slave_list.nak");
-var Send_All_Stop = builder.build("bling_pb.send_all_stop");
 var Get_Slave_List = builder.build("bling_pb.get_slave_list");
 var Slave_List = builder.build("bling_pb.slave_list");
 var Slave_Info = builder.build("bling_pb.slave_list.slave_info");
-var Set_Slave_Tlc = builder.build("bling_pb.set_slave_tlc");
-var Start_Effect = builder.build("bling_pb.start_effect");
-var Ping_Slave = builder.build("bling_pb.ping_slave");
-var Reboot_Slave = builder.build("bling_pb.reboot_slave");
-var Program_Slave = builder.build("bling_pb.program_slave");
 var Master_Status = builder.build("bling_pb.master_status");
 
 
@@ -36,14 +28,6 @@ function log(msg)
     {
         var p = document.getElementById('log');
         p.innerHTML = p.innerHTML + msg  + "\n";
-    }
-}
-
-function set_status(s)
-{
-    if (document.getElementById("status_region") !== null)
-    {
-        document.getElementById("status_region").value = s;
     }
 }
 
@@ -81,7 +65,7 @@ function send_msg(socket, header, body)
     }
     else
     {
-        log("Send failed: not connected");
+        log("Socket not open...");
     }
 }
 
@@ -93,8 +77,6 @@ socket.onerror = function(error)
 socket.onopen = function()
 {
     log("Connected to " + ensemble_master);
-    set_status("Connected");
-    //get_master_status();
     get_slave_list();
 };
 
@@ -166,7 +148,7 @@ function get_slave_list(active)
 {
     var gsl = new Get_Slave_List();
     gsl.scan = "true";
-    gsl.tries = 3;
+    gsl.tries = 10;
     gsl.active = active;
     var hdr = new Header();
     hdr.msg_id = "GET_SLAVE_LIST";
