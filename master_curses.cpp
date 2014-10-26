@@ -96,6 +96,7 @@ int main(int argc, char **argv)
 
    long t_hb=-1000, t_dump=-1000;
    int line=2;
+
    while (true)
    {
       // A simple throbber
@@ -111,8 +112,8 @@ int main(int argc, char **argv)
          broadcast.heartbeat();
          display(broadcast);
       }
-
-      scanner = scan_some(all, scanner, 6);
+      
+      scanner = scan_some(all, scanner, 1);
       for (auto i=all.begin(); i!=all.end(); i++)
          if (i->t_rx && i->my_line ==0)
                i->my_line = line++;
@@ -131,8 +132,8 @@ int main(int argc, char **argv)
 
       if (key == '\377')
       {
-         // sleep 10 ms
-         bcm2835_delayMicroseconds(2000);
+         // sleep 1 ms
+         bcm2835_delayMicroseconds(1000);
          continue;
       }
 

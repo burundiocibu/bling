@@ -121,12 +121,16 @@ socket.onmessage = function(evt)
                     doc_id="r"+row+"c"+col
                     element = document.getElementById(doc_id)
                     element.value =
-                        slave.slave_id+" "+slave.version+"\n"+
-                        slave.vcell.toFixed(2)+"v";
+                        slave.slave_id+" "+slave.vcell.toFixed(2)+"v\n"+
+                        slave.version+" "+slave.age.toFixed(1)+"s";
                     if (slave.vcell < 7.4)
-                        element.style.backgroundColor="#ffb9b9"
+                        element.style.backgroundColor="#ff6666" // Red
+                    else if (slave.vcell < 7.7)
+                        element.style.backgroundColor="#ffff66" // pale yellow
+                    if (slave.age > 2)
+                        element.style.backgroundColor="#F1D9F1" // A pale pink
                     else
-                        element.style.backgroundColor="LightGreen"
+                        element.style.backgroundColor="White"
                 }
             }
             document.getElementById("refresh_time").value = timeStamp();
