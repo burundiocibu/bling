@@ -80,7 +80,7 @@ all_intro = [
 
 all_balad = all_intro + [
     'DG24', 'DG25', 'DG30', 'DG31', 'DG32', 'DG34', 'DG37', 'DG38', 
-    'DG40', 'DG41', 'DG42', 'DG43', 'DG44', 'DG45', 'DG48', 'DG50',
+    'DG40', 'DG41', 'DG42', 'DG43', 'DG44', 'DG45', 'DG50', 'DG55',
     'X4', 'X5', 'X6'
     ]
 

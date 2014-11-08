@@ -15,6 +15,7 @@ events.push(new Event("Massive On",    4, 110.0)); // Massive
 events.push(new Event("Balad On",      6, 240.0)); // Start of movement 2
 events.push(new Event("Flicker Off",   7, 1.25));   // End of movement 2
 events.push(new Event("All Off",       0, 1.0));
+events.push(new Event("Salute",        7, 2.15));   // Retreat Salute
 
 ep=0;
 
